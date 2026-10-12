@@ -1,0 +1,3331 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Immediate Theme Initialization
+        (function() {
+            const savedTheme = localStorage.getItem('novuscribe_theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.documentElement.classList.add('theme-light');
+                document.documentElement.classList.remove('theme-dark');
+            } else {
+                document.documentElement.classList.add('theme-dark');
+                document.documentElement.classList.remove('theme-light');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=22.0">
+    <style>
+        /* Shrunk / Collapsed Sidebar Live & Stream Recording Button Optimization */
+        #mainSidebar.sidebar-collapsed .btn-live-text {
+            display: none !important;
+        }
+        #mainSidebar.sidebar-collapsed .btn-live-transcribe,
+        #mainSidebar.sidebar-collapsed .btn-stream-transcribe {
+            padding: 10px !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
+        #mainSidebar.sidebar-collapsed .btn-live-transcribe svg,
+        #mainSidebar.sidebar-collapsed .btn-stream-transcribe svg {
+            display: block !important;
+            width: 16px !important;
+            height: 16px !important;
+            flex-shrink: 0 !important;
+        }
+        #mainSidebar.sidebar-collapsed .btn-live-transcribe .pulse-dot,
+        #mainSidebar.sidebar-collapsed .btn-stream-transcribe .pulse-dot {
+            display: inline-block !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Real-Time Streaming Chat Flowing Animations */
+        @keyframes streamPulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        .stream-msg-card {
+            animation: fadeInMsg 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeInMsg {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .speaker-pill:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        /* Speaker Naming Modal - Active Page Lock & Backdrop */
+        body.modal-open {
+            overflow: hidden !important;
+        }
+        body.modal-open .main-content,
+        body.modal-open .sidebar {
+            pointer-events: none !important;
+            user-select: none !important;
+            filter: blur(3px);
+            transition: filter 0.2s ease;
+        }
+        .modal-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(3, 7, 18, 0.85) !important;
+            backdrop-filter: blur(14px) !important;
+            -webkit-backdrop-filter: blur(14px) !important;
+            display: none;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 9999999 !important;
+            animation: modalBackdropFadeIn 0.2s ease-out;
+        }
+        @keyframes modalBackdropFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-card {
+            background: #0d1117 !important;
+            border: 1px solid rgba(16, 185, 129, 0.35) !important;
+            border-radius: 16px !important;
+            width: 90% !important;
+            max-width: 480px !important;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.9), 0 0 35px rgba(16, 185, 129, 0.16) !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            animation: modalPopupZoomIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            pointer-events: auto !important;
+        }
+        @keyframes modalPopupZoomIn {
+            from { opacity: 0; transform: scale(0.92) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+        }
+        .modal-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .modal-icon-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34D399;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+        }
+        .modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #F9FAFB;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+        .modal-subtitle {
+            font-size: 11.5px;
+            color: #9CA3AF;
+            margin: 3px 0 0 0;
+        }
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #9CA3AF;
+            cursor: pointer;
+            padding: 7px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .modal-close-btn:hover {
+            color: #F9FAFB;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .modal-body {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+        .speaker-rename-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.025);
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: border-color 0.15s ease;
+        }
+        .speaker-rename-row:focus-within {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.03);
+        }
+        .speaker-original-label {
+            min-width: 96px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #34D399;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 7px 10px;
+            border-radius: 7px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .speaker-original-label.spk-2 {
+            color: #38BDF8;
+            background: rgba(6, 182, 212, 0.12);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+        .speaker-original-label.spk-3 {
+            color: #C084FC;
+            background: rgba(168, 85, 247, 0.12);
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+        .speaker-name-input {
+            flex: 1;
+            background: #141923;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 9px 13px;
+            color: #F9FAFB;
+            font-size: 13.5px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.15s ease;
+        }
+        .speaker-name-input:focus {
+            border-color: #10B981;
+            background: #0d121b;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+        }
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 22px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.35);
+        }
+        .btn-modal-cancel {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #9CA3AF;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #F9FAFB;
+        }
+        .btn-modal-apply {
+            background: #10B981;
+            color: #030712;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 12.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.15s ease;
+        }
+        /* Dynamic Speaker Color Palette */
+        .speaker-color-0 {
+            background: rgba(16, 185, 129, 0.12) !important;
+            border: 1px solid rgba(16, 185, 129, 0.35) !important;
+            color: #34D399 !important;
+        }
+        .speaker-color-1 {
+            background: rgba(6, 182, 212, 0.12) !important;
+            border: 1px solid rgba(6, 182, 212, 0.35) !important;
+            color: #38BDF8 !important;
+        }
+        .speaker-color-2 {
+            background: rgba(168, 85, 247, 0.12) !important;
+            border: 1px solid rgba(168, 85, 247, 0.35) !important;
+            color: #C084FC !important;
+        }
+        .speaker-color-3 {
+            background: rgba(245, 158, 11, 0.12) !important;
+            border: 1px solid rgba(245, 158, 11, 0.35) !important;
+            color: #FBBF24 !important;
+        }
+        .speaker-color-4 {
+            background: rgba(244, 63, 94, 0.12) !important;
+            border: 1px solid rgba(244, 63, 94, 0.35) !important;
+            color: #FB7185 !important;
+        }
+        .speaker-color-5 {
+            background: rgba(99, 102, 241, 0.12) !important;
+            border: 1px solid rgba(99, 102, 241, 0.35) !important;
+            color: #818CF8 !important;
+        }
+        .speaker-color-6 {
+            background: rgba(20, 184, 166, 0.12) !important;
+            border: 1px solid rgba(20, 184, 166, 0.35) !important;
+            color: #2DD4BF !important;
+        }
+
+        /* Desktop-only Pane Layout and Hover Interactions */
+        @media (min-width: 769px) {
+            .portion-actions-right {
+                display: flex !important;
+                align-items: center !important;
+                gap: 4px !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+                transform: translateY(-2px);
+                transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease !important;
+            }
+
+            .portion-card:hover .portion-actions-right,
+            .portion-card:focus-within .portion-actions-right {
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+                transform: translateY(0) !important;
+            }
+
+            .workspace-panes {
+                flex: 1 !important;
+                display: flex !important;
+                overflow: hidden !important;
+                height: calc(100vh - 65px) !important;
+                width: 100% !important;
+            }
+
+            .editor-pane {
+                flex: 1 !important;
+                min-width: 0 !important;
+                border-right: 1px solid var(--border-panel) !important;
+                display: flex !important;
+                flex-direction: column !important;
+                background: var(--bg-main) !important;
+                height: 100% !important;
+            }
+
+            .copilot-pane {
+                width: 350px !important;
+                min-width: 320px !important;
+                max-width: 380px !important;
+                flex-shrink: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                background: #0e131d !important;
+                height: 100% !important;
+                border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+                transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+            }
+
+            .copilot-pane.collapsed {
+                width: 0 !important;
+                min-width: 0 !important;
+                max-width: 0 !important;
+                opacity: 0 !important;
+                overflow: hidden !important;
+                border-left: none !important;
+                pointer-events: none !important;
+            }
+
+            .portions-container {
+                padding: 24px 36px !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .portion-card {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 18px 22px !important;
+                transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease !important;
+            }
+        }
+
+        /* Selection & Multi-Portion Merge Styles */
+        .portion-card.selected-for-merge {
+            border-color: rgba(16, 185, 129, 0.6) !important;
+            background: rgba(16, 185, 129, 0.05) !important;
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.18) !important;
+        }
+
+        .portion-select-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 6px 0 0;
+            transition: all 0.15s ease;
+            position: relative;
+            vertical-align: middle;
+        }
+
+        .portion-select-checkbox:checked {
+            background: #10B981;
+            border-color: #10B981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .portion-select-checkbox:checked::after {
+            content: '';
+            width: 4px;
+            height: 8px;
+            border: solid #030712;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg) translate(-0.5px, -0.5px);
+            display: block;
+        }
+
+        .btn-merge-selected {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border: 1px solid rgba(16, 185, 129, 0.4) !important;
+            color: #34D399 !important;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-merge-selected:hover {
+            background: rgba(16, 185, 129, 0.28) !important;
+            color: #6EE7B7 !important;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Left Navigation Sidebar (Shrinkable) -->
+    <div class="sidebar" id="mainSidebar">
+        <!-- Brand Logo Header -->
+        <div class="logo-container">
+            <a href="#" class="sidebar-brand-full" onclick="showDashboard()">
+                <div class="sidebar-brand-mini-icon">N</div>
+                <div>
+                    <span class="brand-novu">Novu</span><span class="brand-scribe">scribe</span>
+                </div>
+            </a>
+            <!-- Mini Brand Button (Click to Expand when collapsed) -->
+            <button id="sidebarExpandBtn" type="button" title="Expand Sidebar" class="sidebar-brand-mini" onclick="toggleSidebar()">
+                <div class="sidebar-brand-mini-icon">N</div>
+            </button>
+            <!-- Modern Sidebar Panel Collapse Button -->
+            <button id="sidebarToggleBtn" type="button" title="Collapse Sidebar" onclick="toggleSidebar()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                    <rect x="3" y="3" width="18" height="18" rx="3" stroke-width="1.75" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v18" stroke-width="1.75" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.5 9.5L12 12l2.5 2.5" stroke-width="1.5" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Primary Actions -->
+        <div class="sidebar-actions" style="display: flex; flex-direction: column; gap: 6px;">
+            <button class="btn-new-transcribe" onclick="showDashboard()" title="New Transcription">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>New Transcription</span>
+            </button>
+            <button class="btn-live-transcribe" onclick="openLiveMicTab()" title="Live Microphone Recording" style="width: 100%; padding: 9px 12px; background: var(--spk-1-bg); border: 1px solid var(--border-glow); color: var(--emerald-primary); border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
+                <span class="pulse-dot" style="background:var(--emerald-primary); box-shadow:0 0 8px var(--emerald-glow);"></span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2l2-7 4 14 4-18 4 14 2-7h2"/></svg>
+                <span class="btn-live-text">Live Recording</span>
+            </button>
+            <button class="btn-stream-transcribe" onclick="window.location.href='/stream/'" title="Open Dedicated Live Stream Studio (Faster Whisper Medium)" style="width: 100%; padding: 9px 12px; background: rgba(6, 182, 212, 0.14) !important; border: 1px solid rgba(6, 182, 212, 0.45) !important; color: #38BDF8 !important; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease; box-shadow: 0 0 14px rgba(6, 182, 212, 0.18) !important;">
+                <span class="pulse-dot" style="background:#06B6D4 !important; box-shadow:0 0 8px #06B6D4 !important;"></span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <path d="M8 9h8"></path>
+                    <path d="M8 13h5"></path>
+                </svg>
+                <span class="btn-live-text" style="color:#38BDF8 !important;">Real-Time Stream</span>
+            </button>
+        </div>
+
+        <!-- History Search -->
+        <div class="history-search-container">
+            <div class="history-search-input-wrapper">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="history-search-input" id="history-search" placeholder="Search transcriptions..." oninput="filterHistory(this.value)">
+            </div>
+        </div>
+
+        <!-- History List -->
+        <div class="history-container">
+            <div class="history-header">
+                <span class="history-title">Recent Transcriptions</span>
+                <span class="history-count-badge" id="history-count">0</span>
+            </div>
+            <div class="history-list" id="history-list">
+                {% for item in history %}
+                <div class="history-item" data-id="{{ item.id }}" data-name="{{ item.original_name|lower }}" onclick="loadTranscription('{{ item.id }}')" title="{{ item.original_name }}">
+                    {% if "live_recording" in item.original_name|lower %}
+                    <div class="history-item-mini-icon">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2l2-7 4 14 4-18 4 14 2-7h2"/></svg>
+                    </div>
+                    <div class="history-details">
+                        <div class="history-item-name">Waveform • {{ item.created_at|date:"H:i" }}</div>
+                        <div class="history-item-meta">
+                            <span class="badge-lang">Live Mic</span>
+                            <span>{{ item.created_at|date:"M d" }}</span>
+                        </div>
+                    </div>
+                    {% elif "stream" in item.original_name|lower %}
+                    <div class="history-item-mini-icon" style="color: #06B6D4;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    </div>
+                    <div class="history-details">
+                        <div class="history-item-name">Stream • {{ item.created_at|date:"H:i" }}</div>
+                        <div class="history-item-meta">
+                            <span class="badge-lang">Stream</span>
+                            <span>{{ item.created_at|date:"M d" }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="history-item-mini-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    </div>
+                    <div class="history-details">
+                        <div class="history-item-name">{{ item.original_name|capfirst }}</div>
+                        <div class="history-item-meta">
+                            <span class="badge-lang">{{ item.language }}</span>
+                            <span>{{ item.created_at|date:"M d, H:i" }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="history-item-actions">
+                        <button class="btn-history-action btn-rename-history" onclick="openRenameModal(event, '{{ item.id }}', '{{ item.original_name|escapejs }}')" title="Rename transcription">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </button>
+                        <button class="btn-history-action btn-delete-history" onclick="deleteTranscription(event, '{{ item.id }}')" title="Delete transcription">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="font-size:11.5px; font-family:'JetBrains Mono', monospace; color:var(--text-muted); text-align:center; margin-top:28px;">NO HISTORY RECORDED</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sidebar Footer User Account & Status -->
+        <div class="sidebar-footer" style="flex-direction: column; gap: 8px; align-items: stretch; padding: 12px 14px;">
+            <!-- Sidebar Theme Mode Switcher -->
+            <div class="sidebar-theme-toggle-row" onclick="toggleTheme()" style="display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 9px; cursor: pointer; transition: all 0.2s ease;" title="Switch Theme">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg id="theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none; color: var(--emerald-primary);"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--emerald-primary);"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <span id="theme-mode-label" style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Dark Theme</span>
+                </div>
+                <div class="sidebar-theme-pill" style="font-size: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--emerald-primary); background: var(--spk-1-bg); border: 1px solid var(--border-glow); padding: 3px 8px; border-radius: 6px;">SWITCH</div>
+            </div>
+
+            <div class="user-account-box" style="display: flex; flex-direction: column; gap: 8px; width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 10px;">
+                {% if user.is_authenticated %}
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%; overflow: hidden;" onclick="performLogout()" title="Logged in as {{ user.username }} (Click to Sign Out)">
+                    <div class="user-avatar-badge" style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-gradient); color: #030712; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="user-info-text" style="display: flex; flex-direction: column; overflow: hidden;">
+                        <span style="font-size: 12px; font-weight: 700; color: #F3F4F6; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{ user.username }}</span>
+                        <span style="font-size: 9.5px; font-family: 'JetBrains Mono', monospace; color: var(--emerald-primary);">AUTHENTICATED</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-auth-action" onclick="performLogout()" title="Sign Out" style="width: 100%; padding: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: #F87171; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Sign Out</span>
+                </button>
+                {% else %}
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;" onclick="openAuthModal('login')" title="Incognito Mode - Click to Sign In">
+                    <div class="user-avatar-badge" style="width: 28px; height: 28px; border-radius: 50%; background: var(--spk-1-bg); color: var(--emerald-primary); font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; border: 1px solid var(--border-glow);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 14a3 3 0 1 0-3-3 3 3 0 0 0 3 3z"></path></svg>
+                    </div>
+                    <div class="user-info-text" style="display: flex; flex-direction: column;">
+                        <span style="font-size: 12px; font-weight: 700; color: #F3F4F6;">Incognito Mode</span>
+                        <span style="font-size: 9.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">GUEST SESSION</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-auth-action" onclick="openAuthModal('login')" style="width: 100%; padding: 7px; background: var(--spk-1-bg); border: 1px solid var(--border-glow); color: var(--emerald-primary); border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                    <span>Sign In</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" onclick="closeMobileDrawer()"></div>
+
+    <!-- Fixed Top Navigation Bar (Mobile Only) -->
+    <div class="fixed-top-nav" id="fixed-top-nav">
+        <button class="mobile-menu-btn" id="mobile-menu-btn-top" onclick="openMobileDrawer()" title="Open Navigation Drawer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="fixed-top-nav-brand" onclick="showDashboard()" style="cursor: pointer;">
+            <div class="sidebar-brand-mini-icon">N</div>
+            <div>
+                <span class="brand-novu">Novu</span><span class="brand-scribe">scribe</span>
+            </div>
+        </div>
+        <div class="fixed-top-nav-actions">
+            <button type="button" class="btn-fixed-nav-new" onclick="showDashboard(); closeMobileDrawer();" title="New Transcription">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Spacer for Fixed Nav -->
+    <div class="fixed-top-nav-spacer" id="fixed-top-nav-spacer"></div>
+
+    <!-- Main Content Area -->
+    <div class="main-content" id="main-content">
+        
+        <!-- Screen 1: Dashboard (Upload & Setup) -->
+        <div class="dashboard-screen" id="dashboard-screen">
+            <div class="upload-card">
+                <div class="upload-header">
+                    <div class="hero-pill-badge">
+                        <span class="pulse-dot"></span>
+                        Speech-to-Text Intelligence
+                    </div>
+                    <h1>Transcribe speech to text.</h1>
+                    <p>Convert audio files, video files, or YouTube links into structured, editable dialogue portions powered by GPU Faster Whisper and Gemini.</p>
+                </div>
+                
+                <div class="tabs-header">
+                    <button class="tab-btn active" id="btn-tab-audio" onclick="switchTab(event, 'audio-tab')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                        Audio File
+                    </button>
+                    <button class="tab-btn" id="btn-tab-video" onclick="switchTab(event, 'video-tab')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                        Video File
+                    </button>
+                    <button class="tab-btn" id="btn-tab-youtube" onclick="switchTab(event, 'youtube-tab')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                        YouTube Link
+                    </button>
+                    <button class="tab-btn" id="btn-tab-live" onclick="switchTab(event, 'live-tab')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--emerald-primary);"><path d="M2 12h2l2-7 4 14 4-18 4 14 2-7h2"/></svg>
+                        <span style="color: var(--emerald-primary); font-weight: 700;">● Live Mic</span>
+                    </button>
+                </div>
+
+                <form id="transcription-form" onsubmit="submitTranscription(event)">
+                    <input type="hidden" name="source_type" id="source_type" value="audio_file">
+                    <input type="hidden" name="is_live_rec" id="is_live_rec" value="false">
+                    
+                    <!-- Audio Drop Zone -->
+                    <div id="audio-tab" class="tab-content active">
+                        <div class="drop-zone" id="audio-dropzone" onclick="document.getElementById('audio_file').click()">
+                            <div class="drop-zone-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                            </div>
+                            <span class="drop-zone-text">Drop audio file here or click to browse</span>
+                            <span class="drop-zone-hint">MP3, WAV, M4A, AAC, FLAC (MAX 500MB)</span>
+                            <input type="file" name="audio_file" id="audio_file" accept="audio/*" style="display:none" onchange="fileSelected(this, 'audio-dropzone')">
+                        </div>
+                    </div>
+
+                    <!-- Video Drop Zone -->
+                    <div id="video-tab" class="tab-content">
+                        <div class="drop-zone" id="video-dropzone" onclick="document.getElementById('video_file').click()">
+                            <div class="drop-zone-icon-box">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+                            </div>
+                            <span class="drop-zone-text">Drop video file here or click to browse</span>
+                            <span class="drop-zone-hint">MP4, MKV, AVI, MOV (MAX 500MB)</span>
+                            <input type="file" name="video_file" id="video_file" accept="video/*" style="display:none" onchange="fileSelected(this, 'video-dropzone')">
+                        </div>
+                    </div>
+
+                    <!-- Youtube Input -->
+                    <div id="youtube-tab" class="tab-content">
+                        <div class="youtube-input-group">
+                            <input type="url" name="youtube_url" id="youtube_url" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+                    </div>
+
+                    <!-- Live Mic Recording Tab Panel -->
+                    <div id="live-tab" class="tab-content">
+                        <div style="background: var(--bg-panel); border: 1px solid var(--border-glow); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;">
+                            <div style="display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--emerald-primary); font-weight:700;">
+                                <span class="pulse-dot" id="live-mic-pulse" style="background:var(--emerald-primary); box-shadow:0 0 10px var(--emerald-glow); display:none;"></span>
+                                <span id="live-mic-status-label">READY TO RECORD LIVE AUDIO</span>
+                                <span id="live-mic-timer" style="margin-left:8px; font-size:13px; color:var(--text-primary); background:var(--bg-input); border: 1px solid var(--border-input); padding:2px 8px; border-radius:6px; display:none;">00:00</span>
+                            </div>
+
+                            <canvas id="live-mic-canvas" width="360" height="50" style="width: 100%; max-width: 360px; height: 50px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-panel);"></canvas>
+
+                            <div style="display:flex; gap:10px; align-items:center; justify-content:center; width:100%;">
+                                <button type="button" id="btn-start-live-rec" onclick="startLiveRecording()" style="padding: 10px 20px; background: var(--brand-gradient); color: #030712; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                                    <span>Start Live Recording</span>
+                                </button>
+                                <button type="button" id="btn-stop-live-rec" onclick="stopLiveRecording()" style="padding: 10px 20px; background: var(--emerald-primary); color: #FFFFFF; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: none; align-items: center; gap: 8px; transition: all 0.2s ease;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+                                    <span>Stop & Transcribe</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div class="options-grid" style="margin-top: 18px;">
+                        <!-- Custom Language Selector Component -->
+                        <div class="form-group" style="position: relative;">
+                            <label for="language">Speech Language</label>
+                            <!-- Hidden native select for form submission -->
+                            <select name="language" id="language" style="display:none;">
+                                <option value="English" selected>English (Faster Whisper)</option>
+                                <option value="Lingala">Lingala (Faster Whisper / Large-v3)</option>
+                                <option value="Luganda">Luganda (Whisper Large-v3)</option>
+                                <option value="French">French (Faster Whisper)</option>
+                                <option value="Swahili">Swahili (Faster Whisper)</option>
+                            </select>
+                            
+                            <div class="custom-language-selector" id="custom-language-selector">
+                                <button type="button" class="custom-lang-trigger" id="custom-lang-trigger" onclick="toggleCustomLangDropdown(event)" aria-haspopup="listbox" aria-expanded="false">
+                                    <div class="custom-lang-trigger-left">
+                                        <div class="custom-lang-icon-badge">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                        </div>
+                                        <div class="custom-lang-current">
+                                            <span class="custom-lang-name" id="custom-lang-selected-name">English</span>
+                                            <span class="custom-lang-model-chip" id="custom-lang-selected-chip">Faster Whisper</span>
+                                        </div>
+                                    </div>
+                                    <svg class="custom-lang-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                
+                                <div class="custom-lang-dropdown" id="custom-lang-dropdown" role="listbox">
+                                    <div class="custom-lang-option selected" data-value="English" data-name="English" data-chip="Faster Whisper" onclick="selectCustomLanguage('English', 'English', 'Faster Whisper')">
+                                        <div class="custom-lang-opt-left">
+                                            <span class="custom-lang-opt-title">English</span>
+                                            <span class="custom-lang-opt-badge">Faster Whisper Medium / GPU</span>
+                                        </div>
+                                        <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <div class="custom-lang-option" data-value="Lingala" data-name="Lingala" data-chip="Faster Whisper / Large-v3" onclick="selectCustomLanguage('Lingala', 'Lingala', 'Faster Whisper / Large-v3')">
+                                        <div class="custom-lang-opt-left">
+                                            <span class="custom-lang-opt-title">Lingala</span>
+                                            <span class="custom-lang-opt-badge">Faster Whisper / Large-v3</span>
+                                        </div>
+                                        <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <div class="custom-lang-option" data-value="Luganda" data-name="Luganda" data-chip="Whisper Large-v3" onclick="selectCustomLanguage('Luganda', 'Luganda', 'Whisper Large-v3')">
+                                        <div class="custom-lang-opt-left">
+                                            <span class="custom-lang-opt-title">Luganda</span>
+                                            <span class="custom-lang-opt-badge">Whisper Large-v3 Fine-Tuned</span>
+                                        </div>
+                                        <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <div class="custom-lang-option" data-value="French" data-name="French" data-chip="Faster Whisper" onclick="selectCustomLanguage('French', 'French', 'Faster Whisper')">
+                                        <div class="custom-lang-opt-left">
+                                            <span class="custom-lang-opt-title">French</span>
+                                            <span class="custom-lang-opt-badge">Faster Whisper Medium / GPU</span>
+                                        </div>
+                                        <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                    <div class="custom-lang-option" data-value="Swahili" data-name="Swahili" data-chip="Faster Whisper" onclick="selectCustomLanguage('Swahili', 'Swahili', 'Faster Whisper')">
+                                        <div class="custom-lang-opt-left">
+                                            <span class="custom-lang-opt-title">Swahili</span>
+                                            <span class="custom-lang-opt-badge">Faster Whisper Medium / GPU</span>
+                                        </div>
+                                        <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Diarization Toggle Group -->
+                        <div class="diarization-group">
+                            <div class="toggle-switch">
+                                <div class="toggle-switch-text">
+                                    <h3>Identify Distinct Speakers</h3>
+                                    <p>Uses local GPU acoustic voiceprints (CAM++ & FSMN-VAD) to attribute distinct speakers</p>
+                                </div>
+                                <label>
+                                    <input type="checkbox" name="diarize" id="diarize" checked onchange="toggleDiarize(this)">
+                                    <div class="switch-checkbox"></div>
+                                </label>
+                            </div>
+                            
+                            <div class="speakers-count-control" id="speakers-count-control" style="display: flex;">
+                                <label for="num_speakers">EXPECTED SPEAKERS:</label>
+                                <input type="number" name="num_speakers" id="num_speakers" min="1" max="10" placeholder="Auto">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-transcribe-submit" id="btn-transcribe-submit" style="margin-top: 18px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        Start Transcription
+                    </button>
+                </form>
+
+                <!-- High-Tech Loading Spinner Overlay -->
+                <div class="loading-overlay" id="loading-overlay">
+                    <div class="spinner-tech"></div>
+                    <div class="timer-badge" id="loading-timer-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <span id="timer-display">00:00.0</span>
+                    </div>
+                    
+                    <!-- Progress Bar Below Timer -->
+                    <div class="progress-bar-container" id="loading-progress-container" style="width: 320px; max-width: 90%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden; margin: 14px 0 8px 0; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);">
+                        <div class="progress-bar-fill" id="loading-progress-fill" style="width: 5%; height: 100%; background: var(--brand-gradient-h); transition: width 0.35s ease; box-shadow: 0 0 10px var(--emerald-glow);"></div>
+                    </div>
+
+                    <!-- ETA & Percentage Row -->
+                    <div id="loading-eta-row" style="display: flex; justify-content: space-between; width: 320px; max-width: 90%; font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 12px;">
+                        <span id="loading-pct-text" style="color: var(--emerald-primary); font-weight: 700;">5%</span>
+                        <span id="loading-eta-text" style="color: var(--text-secondary); font-weight: 600;">Estimating ETA...</span>
+                    </div>
+
+                    <div class="loading-text" id="loading-text">Downloading Media...</div>
+                    <div class="loading-subtext" id="loading-subtext">Uploading and converting audio format...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Workspace (Portion Editor & Gemini Co-Pilot) -->
+        <div class="workspace-screen" id="workspace-screen">
+            <div class="workspace-header">
+                <div class="workspace-title-info">
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                            <h2 id="current-title" style="margin: 0; min-width: 0;">File_Name.mp3</h2>
+                            <button class="btn-liquid-white" id="btn-name-speakers" onclick="openSpeakerNamingModal()" title="Assign names to identified speakers" style="padding: 5px 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border-radius: 7px; flex-shrink: 0;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                <span>Name Speakers</span>
+                            </button>
+                        </div>
+                        <p id="current-meta" style="margin-top: 3px;">English • 2026-08-24</p>
+                    </div>
+                </div>
+
+                <!-- Top Navbar Audio Player -->
+                <div class="nav-audio-player-wrapper" id="nav-audio-player-wrapper">
+                    <!-- Extended Full-Width Scrollable Audio Player -->
+                    <audio id="workspace-audio-player" controls preload="metadata"></audio>
+                </div>
+
+                <div class="workspace-actions">
+                    <button class="btn-tech-secondary" onclick="showDashboard()" title="New Transcription" style="text-decoration:none; cursor:pointer;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>New</span>
+                    </button>
+                    <button class="btn-tech-secondary" id="btn-toggle-copilot" onclick="toggleCopilotPane()" title="Toggle AI Assistant Pane" style="display: none; border-color: var(--border-glow); background: var(--spk-1-bg);">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" style="color:var(--emerald-primary);"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                        <span style="color: var(--emerald-primary); font-weight: 600;">AI Assistant</span>
+                    </button>
+                    <div class="btn-download-menu" style="position:relative;">
+                        <button class="btn-tech-secondary" onclick="toggleDropdown('download-dropdown')">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Export
+                        </button>
+                        <div class="download-dropdown" id="download-dropdown">
+                            <a id="download-edited-txt-link" href="#" download>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                Formatted Text (.txt)
+                            </a>
+                            <a id="download-raw-txt-link" href="#" download>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                Raw Transcript (.txt)
+                            </a>
+                            <a id="download-audio-link" href="#" download>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                                Source Audio (.mp3)
+                            </a>
+                        </div>
+                    </div>
+                    <button class="btn-tech-secondary" onclick="showDashboard()">Close</button>
+                </div>
+            </div>
+
+            <div class="workspace-panes">
+                <!-- Editor Pane -->
+                <div class="editor-pane">
+                    <!-- Portions Toolbar -->
+                    <div class="portions-toolbar">
+                        <div class="toolbar-left">
+                            <div class="view-mode-tabs">
+                                <button class="view-mode-btn active" id="btn-view-auto" onclick="switchEditorView('auto')" title="Concise view: automatically combines consecutive portions from the same speaker">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                    Auto-Transcript
+                                </button>
+                                <button class="view-mode-btn" id="btn-view-portions" onclick="switchEditorView('portions')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                    Portions
+                                </button>
+                                <button class="view-mode-btn" id="btn-view-raw" onclick="switchEditorView('raw')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>
+                                    Raw Text
+                                </button>
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn-merge-selected" id="btn-merge-selected" onclick="mergeSelectedPortions()" style="display:none;" title="Merge checked portions into one">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                                <span>Merge Selected</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Auto-Transcript View Container (Concise Speaker Merged Portions - Default Active) -->
+                    <div class="portions-container" id="auto-transcript-container">
+                        <!-- Concise auto-transcript cards dynamically injected here -->
+                    </div>
+
+                    <!-- Portions View Container -->
+                    <div class="portions-container" id="portions-container" style="display:none;">
+                        <!-- Portion cards dynamically injected here -->
+                    </div>
+
+                    <!-- Raw Text View Container -->
+                    <div class="raw-text-container" id="raw-text-container" style="display:none;">
+                        <textarea class="raw-textarea" id="raw-textarea" oninput="onRawTextChange()" placeholder="Raw transcription text..."></textarea>
+                    </div>
+                </div>
+
+                <!-- AI Co-Pilot Pane (Hidden when Gemini credits unavailable) -->
+                <div class="copilot-pane" id="copilot-pane" style="display: none !important;">
+                    <div class="copilot-header">
+                        <div class="copilot-header-icon-badge">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" style="color:var(--emerald-primary);"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                        </div>
+                        <div class="copilot-header-info">
+                            <div class="copilot-header-title">AI Assistant</div>
+                            <div class="copilot-header-subtext" style="font-size: 11px; color: var(--emerald-primary); font-weight: 500; font-family: 'Plus Jakarta Sans', sans-serif;">Powered by Gemini</div>
+                        </div>
+                    </div>
+
+                    <div class="copilot-messages" id="copilot-messages">
+                        <div class="chat-message ai">
+                            <div class="chat-msg-header">
+                                <div class="ai-avatar-mini">✨</div>
+                                <span class="ai-name">Gemini</span>
+                            </div>
+                            <div class="chat-msg-body">
+                                Welcome to <strong>NOVUscribe Copilot</strong>! I can generate executive summaries, extract action items, break down speaker dialogue, or answer any questions about this transcript.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="copilot-quick-prompts">
+                        <button class="quick-pill" onclick="sendQuickPrompt('Summarize the key points and executive summary of this transcription')">📊 Summarize</button>
+                        <button class="quick-pill" onclick="sendQuickPrompt('Extract all key takeaways, decisions, and action items from this transcript')">📝 Action Items</button>
+                        <button class="quick-pill" onclick="sendQuickPrompt('Provide a breakdown of what each speaker discussed in this conversation')">👥 Speaker Breakdown</button>
+                        <button class="quick-pill" onclick="sendQuickPrompt('What are the main topics and questions discussed in this audio?')">💡 Key Topics</button>
+                    </div>
+
+                    <div class="copilot-input-area">
+                        <div class="copilot-input-container">
+                            <textarea id="chat-input" placeholder="Ask Gemini about this transcript..." onkeydown="handleChatSubmit(event)"></textarea>
+                            <button class="btn-copilot-send" id="btn-chat-send" onclick="sendChatMessage()" title="Send prompt">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating AI context helper toolbar (Disabled) -->
+        <div class="floating-ai-menu" id="floating-ai-menu" style="display: none !important;">
+            <button class="floating-ai-btn" onclick="aiActionOnSelection('Identify speaker for')">Identify Speaker</button>
+            <button class="floating-ai-btn" onclick="aiActionOnSelection('Summarize')">Summarize</button>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        let currentTranscriptionId = null;
+        let currentPortions = [];
+        let currentEditorView = 'auto';
+        let selectedText = "";
+        let selectedNode = null;
+        let selectedRange = null;
+        let selectionTrackingReady = false;
+        let selectedPortionIndices = new Set();
+        let isAutoBannerDismissed = false;
+
+        function dismissAutoBanner() {
+            isAutoBannerDismissed = true;
+            const banner = document.getElementById('auto-transcript-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+        }
+
+        // Theme Toggle & Persistence Logic (Screening Agent Style)
+        function updateThemeIcons(theme) {
+            const isLight = (theme === 'light');
+            document.querySelectorAll('#theme-icon-sun, .theme-icon-sun-mob').forEach(el => {
+                el.style.display = isLight ? 'inline-block' : 'none';
+            });
+            document.querySelectorAll('#theme-icon-moon, .theme-icon-moon-mob').forEach(el => {
+                el.style.display = isLight ? 'none' : 'inline-block';
+            });
+            const label = document.getElementById('theme-mode-label');
+            if (label) {
+                label.innerText = isLight ? 'Light Theme' : 'Dark Theme';
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.documentElement.classList.contains('theme-light');
+            const newTheme = isLight ? 'dark' : 'light';
+            if (newTheme === 'light') {
+                document.documentElement.classList.add('theme-light');
+                document.documentElement.classList.remove('theme-dark');
+            } else {
+                document.documentElement.classList.add('theme-dark');
+                document.documentElement.classList.remove('theme-light');
+            }
+            localStorage.setItem('novuscribe_theme', newTheme);
+            updateThemeIcons(newTheme);
+        }
+
+        // Mobile Sidebar Drawer Controls
+        function openMobileDrawer() {
+            const sidebar = document.getElementById('mainSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) {
+                sidebar.classList.remove('sidebar-collapsed');
+                sidebar.classList.add('mobile-open');
+            }
+            if (backdrop) backdrop.classList.add('active');
+            document.body.classList.add('sidebar-open');
+        }
+
+        function closeMobileDrawer() {
+            const sidebar = document.getElementById('mainSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.remove('mobile-open');
+            if (backdrop) backdrop.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+        }
+
+        // Sidebar Collapse & Persistence Logic
+        function toggleSidebar() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('mainSidebar');
+                if (sidebar && sidebar.classList.contains('mobile-open')) {
+                    closeMobileDrawer();
+                } else {
+                    openMobileDrawer();
+                }
+                return;
+            }
+            const sidebar = document.getElementById('mainSidebar');
+            if (!sidebar) return;
+            sidebar.classList.toggle('sidebar-collapsed');
+            const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            localStorage.setItem('novuscribe_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+        }
+
+        // Restore saved sidebar state or auto-collapse on mobile screens
+        if (window.innerWidth > 768 && localStorage.getItem('novuscribe_sidebar_collapsed') === 'true') {
+            const sidebar = document.getElementById('mainSidebar');
+            if (sidebar) sidebar.classList.add('sidebar-collapsed');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateHistoryCount();
+            const currentTheme = localStorage.getItem('novuscribe_theme') || 'dark';
+            updateThemeIcons(currentTheme);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const loadId = urlParams.get('load');
+            const tabParam = urlParams.get('tab');
+            if (loadId) {
+                loadTranscription(loadId);
+            } else if (tabParam === 'live') {
+                openLiveMicTab();
+            }
+        });
+
+        function updateHistoryCount() {
+            const count = document.querySelectorAll('.history-item').length;
+            const badge = document.getElementById('history-count');
+            if (badge) badge.innerText = `${count}`;
+        }
+
+        function filterHistory(query) {
+            const q = query.toLowerCase().trim();
+            document.querySelectorAll('.history-item').forEach(item => {
+                const name = item.getAttribute('data-name') || "";
+                if (name.includes(q)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function switchTab(e, tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (e && e.currentTarget) {
+                e.currentTarget.classList.add('active');
+            } else {
+                const targetBtn = document.getElementById(`btn-tab-${tabId.replace('-tab', '')}`);
+                if (targetBtn) targetBtn.classList.add('active');
+            }
+            
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) targetContent.classList.add('active');
+            
+            const typeMap = {
+                'audio-tab': 'audio_file',
+                'video-tab': 'video_file',
+                'youtube-tab': 'youtube_url',
+                'live-tab': 'audio_file'
+            };
+            if (typeMap[tabId]) {
+                document.getElementById('source_type').value = typeMap[tabId];
+            }
+
+            // In Live Mic mode, hide redundant bottom submit button
+            const submitBtn = document.getElementById('btn-transcribe-submit');
+            if (submitBtn) {
+                submitBtn.style.display = (tabId === 'live-tab') ? 'none' : 'flex';
+            }
+        }
+
+        // Live Microphone Recording & Waveform Visualizer Logic (Inspired by Screening Agent)
+        let liveMediaRecorder = null;
+        let liveAudioChunks = [];
+        let liveAudioStream = null;
+        let liveAudioCtx = null;
+        let liveAnalyser = null;
+        let liveAnimFrameId = null;
+        let liveTimerInterval = null;
+        let liveSecondsElapsed = 0;
+
+        function openLiveMicTab() {
+            showDashboard();
+            switchTab(null, 'live-tab');
+        }
+
+        async function startLiveRecording() {
+            try {
+                const liveRecInput = document.getElementById('is_live_rec');
+                if (liveRecInput) liveRecInput.value = 'true';
+                liveAudioChunks = [];
+                liveAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                liveMediaRecorder = new MediaRecorder(liveAudioStream);
+                liveMediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) liveAudioChunks.push(e.data);
+                };
+
+                liveMediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(liveAudioChunks, { type: 'audio/wav' });
+                    const file = new File([audioBlob], `Live_Recording_${Date.now()}.wav`, { type: 'audio/wav' });
+                    
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    const audioInput = document.getElementById('audio_file');
+                    audioInput.files = dataTransfer.files;
+                    
+                    document.getElementById('source_type').value = 'audio_file';
+                    
+                    submitTranscription({ preventDefault: () => {} });
+                };
+
+                liveMediaRecorder.start(250);
+
+                // Setup Audio Visualizer
+                liveAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const source = liveAudioCtx.createMediaStreamSource(liveAudioStream);
+                liveAnalyser = liveAudioCtx.createAnalyser();
+                liveAnalyser.fftSize = 64;
+                source.connect(liveAnalyser);
+
+                drawLiveWaveform();
+
+                // UI Updates
+                document.getElementById('btn-start-live-rec').style.display = 'none';
+                document.getElementById('btn-stop-live-rec').style.display = 'inline-flex';
+                document.getElementById('live-mic-pulse').style.display = 'inline-block';
+                document.getElementById('live-mic-status-label').innerText = 'RECORDING LIVE AUDIO...';
+                document.getElementById('live-mic-status-label').style.color = '#10B981';
+                
+                const timerEl = document.getElementById('live-mic-timer');
+                timerEl.style.display = 'inline-block';
+                liveSecondsElapsed = 0;
+                timerEl.innerText = '00:00';
+                
+                clearInterval(liveTimerInterval);
+                liveTimerInterval = setInterval(() => {
+                    liveSecondsElapsed++;
+                    const m = String(Math.floor(liveSecondsElapsed / 60)).padStart(2, '0');
+                    const s = String(liveSecondsElapsed % 60).padStart(2, '0');
+                    timerEl.innerText = `${m}:${s}`;
+                }, 1000);
+
+            } catch (err) {
+                alert('Microphone access is required for live recording: ' + err.message);
+            }
+        }
+
+        function stopLiveRecording() {
+            if (liveMediaRecorder && liveMediaRecorder.state !== 'inactive') {
+                liveMediaRecorder.stop();
+            }
+            if (liveAudioStream) {
+                liveAudioStream.getTracks().forEach(track => track.stop());
+            }
+            if (liveAnimFrameId) cancelAnimationFrame(liveAnimFrameId);
+            clearInterval(liveTimerInterval);
+
+            // UI Reset
+            document.getElementById('btn-start-live-rec').style.display = 'inline-flex';
+            document.getElementById('btn-stop-live-rec').style.display = 'none';
+            document.getElementById('live-mic-pulse').style.display = 'none';
+            document.getElementById('live-mic-status-label').innerText = 'PROCESSING LIVE RECORDING...';
+            document.getElementById('live-mic-status-label').style.color = '#10B981';
+        }
+
+        function drawLiveWaveform() {
+            const canvas = document.getElementById('live-mic-canvas');
+            if (!canvas || !liveAnalyser) return;
+            const ctx = canvas.getContext('2d');
+            const bufferLength = liveAnalyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function render() {
+                liveAnimFrameId = requestAnimationFrame(render);
+                liveAnalyser.getByteFrequencyData(dataArray);
+
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * canvas.height;
+                    const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+                    gradient.addColorStop(0, '#10B981');
+                    gradient.addColorStop(1, '#34D399');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+                    x += barWidth;
+                }
+            }
+            render();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        function toggleDiarize(checkbox) {
+            const control = document.getElementById('speakers-count-control');
+            control.style.display = checkbox.checked ? 'flex' : 'none';
+        }
+
+        // Custom Language Selector Controller Functions
+        function toggleCustomLangDropdown(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('custom-lang-dropdown');
+            const trigger = document.getElementById('custom-lang-trigger');
+            if (!dropdown || !trigger) return;
+            const isShowing = dropdown.classList.contains('show');
+            if (isShowing) {
+                dropdown.classList.remove('show');
+                trigger.classList.remove('active');
+                trigger.setAttribute('aria-expanded', 'false');
+            } else {
+                dropdown.classList.add('show');
+                trigger.classList.add('active');
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        function selectCustomLanguage(val, name, chip) {
+            const nativeSelect = document.getElementById('language');
+            if (nativeSelect) {
+                nativeSelect.value = val;
+                nativeSelect.dispatchEvent(new Event('change'));
+            }
+            const nameEl = document.getElementById('custom-lang-selected-name');
+            const chipEl = document.getElementById('custom-lang-selected-chip');
+            if (nameEl) nameEl.innerText = name;
+            if (chipEl) chipEl.innerText = chip;
+            
+            document.querySelectorAll('.custom-lang-option').forEach(opt => {
+                if (opt.getAttribute('data-value') === val) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+
+            const dropdown = document.getElementById('custom-lang-dropdown');
+            const trigger = document.getElementById('custom-lang-trigger');
+            if (dropdown) dropdown.classList.remove('show');
+            if (trigger) {
+                trigger.classList.remove('active');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        // Global click-outside listener to close dropdown
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#custom-language-selector')) {
+                const dropdown = document.getElementById('custom-lang-dropdown');
+                const trigger = document.getElementById('custom-lang-trigger');
+                if (dropdown) dropdown.classList.remove('show');
+                if (trigger) {
+                    trigger.classList.remove('active');
+                    trigger.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+
+        function toggleDropdown(id) {
+            const drop = document.getElementById(id);
+            drop.style.display = drop.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function fileSelected(input, dropzoneId) {
+            const dropzone = document.getElementById(dropzoneId);
+            let selectedBadge = dropzone.querySelector('.file-selected-badge');
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+                if (!selectedBadge) {
+                    selectedBadge = document.createElement('div');
+                    selectedBadge.className = 'file-selected-badge';
+                    dropzone.appendChild(selectedBadge);
+                }
+                selectedBadge.innerHTML = `
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>${file.name} (${sizeMb} MB)</span>
+                `;
+            } else if (selectedBadge) {
+                selectedBadge.remove();
+            }
+        }
+
+        ['audio-dropzone', 'video-dropzone'].forEach(id => {
+            const dz = document.getElementById(id);
+            if (!dz) return;
+            dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            dz.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dz.classList.remove('dragover');
+                const fileInput = dz.querySelector('input[type="file"]');
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    fileSelected(fileInput, id);
+                }
+            });
+        });
+
+        function showDashboard() {
+            closeMobileDrawer();
+            const dash = document.getElementById('dashboard-screen');
+            const work = document.getElementById('workspace-screen');
+            if (dash) dash.style.setProperty('display', 'flex', 'important');
+            if (work) work.style.setProperty('display', 'none', 'important');
+            currentTranscriptionId = null;
+            document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showWorkspace() {
+            closeMobileDrawer();
+            const dash = document.getElementById('dashboard-screen');
+            const work = document.getElementById('workspace-screen');
+            if (dash) dash.style.setProperty('display', 'none', 'important');
+            if (work) work.style.setProperty('display', 'flex', 'important');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function formatCapitalizedTitle(name) {
+            if (!name || typeof name !== 'string') return '';
+            const trimmed = name.trim();
+            return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+        }
+
+        function loadHistory() {
+            fetch('/api/history/')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('history-list');
+                    list.innerHTML = "";
+                    if (data.history.length === 0) {
+                        list.innerHTML = `<div style="font-size:11.5px; font-family:'JetBrains Mono', monospace; color:var(--text-muted); text-align:center; margin-top:28px;">NO HISTORY RECORDED</div>`;
+                        updateHistoryCount();
+                        return;
+                    }
+                    data.history.forEach(item => {
+                        const activeClass = item.id === currentTranscriptionId ? 'active' : '';
+                        const el = document.createElement('div');
+                        el.className = `history-item ${activeClass}`;
+                        el.setAttribute('data-id', item.id);
+                        el.setAttribute('data-name', item.original_name.toLowerCase());
+                        el.title = item.original_name;
+                        el.onclick = () => loadTranscription(item.id);
+
+                        const isLive = item.original_name.toLowerCase().includes('live_recording');
+                        const isStream = item.original_name.toLowerCase().includes('stream');
+                        const baseTitle = isLive ? `Waveform • ${item.created_at}` : (isStream ? `Stream Chat • ${item.created_at}` : item.original_name);
+                        const displayName = formatCapitalizedTitle(baseTitle);
+                        const iconMarkup = isLive
+                            ? `<div class="history-item-mini-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2l2-7 4 14 4-18 4 14 2-7h2"/></svg></div>`
+                            : (isStream
+                                ? `<div class="history-item-mini-icon" style="color:#06B6D4;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>`
+                                : `<div class="history-item-mini-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>`);
+
+                        const badgeMarkup = isLive
+                            ? `<span class="badge-lang">Live Mic</span>`
+                            : (isStream
+                                ? `<span class="badge-lang">Stream</span>`
+                                : `<span class="badge-lang">${item.language}</span>`);
+
+                        el.innerHTML = `
+                            ${iconMarkup}
+                            <div class="history-details">
+                                <div class="history-item-name">${displayName}</div>
+                                <div class="history-item-meta">
+                                    ${badgeMarkup}
+                                    <span>${item.created_at}</span>
+                                </div>
+                            </div>
+                            <div class="history-item-actions">
+                                <button class="btn-history-action btn-rename-history" onclick="openRenameModal(event, '${item.id}', '${escapeHtml(item.original_name)}')" title="Rename transcription">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                </button>
+                                <button class="btn-history-action btn-delete-history" onclick="deleteTranscription(event, '${item.id}')" title="Delete transcription">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </div>
+                        `;
+                        list.appendChild(el);
+                    });
+                    updateHistoryCount();
+                });
+        }
+
+        function submitTranscription(e) {
+            e.preventDefault();
+            const form = document.getElementById('transcription-form');
+            const formData = new FormData(form);
+            
+            // Generate unique job ID for real-time progress & ETA tracking
+            const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+            formData.append('job_id', jobId);
+
+            const overlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            const loadingSubtext = document.getElementById('loading-subtext');
+            const timerDisplay = document.getElementById('timer-display');
+            const progressFill = document.getElementById('loading-progress-fill');
+            const pctText = document.getElementById('loading-pct-text');
+            const etaText = document.getElementById('loading-eta-text');
+            
+            form.style.display = 'none';
+            overlay.style.display = 'flex';
+            
+            const source = formData.get('source_type');
+            if (progressFill) progressFill.style.width = '6%';
+            if (pctText) pctText.innerText = '6%';
+            if (etaText) etaText.innerText = 'Initializing...';
+
+            if (source === 'youtube_url') {
+                loadingText.innerText = "Downloading Media...";
+                loadingSubtext.innerText = "Phase 1: Downloading & extracting YouTube audio stream...";
+            } else if (source === 'video_file') {
+                loadingText.innerText = "Processing Video Audio...";
+                loadingSubtext.innerText = "Phase 1: Extracting audio track from video file...";
+            } else {
+                loadingText.innerText = "Downloading / Ingesting File...";
+                loadingSubtext.innerText = "Phase 1: Uploading and converting audio format...";
+            }
+
+            const startTime = Date.now();
+            timerDisplay.innerText = "00:00.0";
+            
+            // Wall-clock elapsed stopwatch timer
+            const timerInterval = setInterval(() => {
+                const elapsedMs = Date.now() - startTime;
+                const totalSec = elapsedMs / 1000;
+                const minutes = Math.floor(totalSec / 60);
+                const seconds = Math.floor(totalSec % 60);
+                const msFraction = Math.floor((elapsedMs % 1000) / 100);
+                
+                const minStr = String(minutes).padStart(2, '0');
+                const secStr = String(seconds).padStart(2, '0');
+                timerDisplay.innerText = `${minStr}:${secStr}.${msFraction}`;
+            }, 100);
+
+            // Real-time backend progress & ETA polling
+            const pollInterval = setInterval(() => {
+                fetch(`/api/progress/${jobId}/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data) return;
+                        
+                        if (data.progress_pct !== undefined && progressFill) {
+                            const curW = parseFloat(progressFill.style.width || 0);
+                            const targetW = Math.max(curW, data.progress_pct);
+                            progressFill.style.width = `${targetW}%`;
+                            if (pctText) pctText.innerText = `${Math.round(targetW)}%`;
+                        }
+
+                        if (etaText) {
+                            if (data.eta_str) {
+                                etaText.innerText = `ETA: ${data.eta_str}`;
+                            } else if (data.stage === 'diarizing') {
+                                etaText.innerText = 'Diarizing Speakers...';
+                            } else if (data.stage === 'finalizing' || (data.progress_pct && data.progress_pct >= 95)) {
+                                etaText.innerText = 'Finalizing...';
+                            } else {
+                                etaText.innerText = 'Calculating ETA...';
+                            }
+                        }
+
+                        if (data.status_text && loadingText) {
+                            loadingText.innerText = data.status_text;
+                        }
+                        if (data.subtext && loadingSubtext) {
+                            loadingSubtext.innerText = data.subtext;
+                        }
+                    })
+                    .catch(() => {});
+            }, 600);
+
+            fetch('/api/transcribe/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                clearInterval(timerInterval);
+                clearInterval(pollInterval);
+                form.style.display = 'block';
+                overlay.style.display = 'none';
+                
+                if (data.error) {
+                    alert("Transcription failed: " + data.error);
+                } else {
+                    currentTranscriptionId = data.id;
+                    loadHistory();
+                    loadTranscription(data.id, data.processing_time);
+                }
+            })
+            .catch(err => {
+                clearInterval(timerInterval);
+                clearInterval(pollInterval);
+                form.style.display = 'block';
+                overlay.style.display = 'none';
+                alert("An error occurred: " + err);
+            });
+        }
+
+        function loadTranscription(id, processingTime) {
+            currentTranscriptionId = id;
+            showWorkspace();
+            
+            document.querySelectorAll('.history-item').forEach(item => {
+                if (item.getAttribute('data-id') === id) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            fetch(`/api/transcription/${id}/`)
+                .then(res => res.json())
+                .then(data => {
+                    const isLiveRec = data.original_name.toLowerCase().includes('live_recording');
+                    const isStreamRec = data.original_name.toLowerCase().includes('stream');
+                    const baseTitle = isLiveRec ? `Live Audio Recording (${data.created_at})` : (isStreamRec ? `Stream Recording (${data.created_at})` : data.original_name);
+                    document.getElementById('current-title').innerText = formatCapitalizedTitle(baseTitle);
+                    const timeTag = processingTime ? ` • ⏱️ ${processingTime}s` : '';
+                    document.getElementById('current-meta').innerText = `${data.language} • ${data.created_at}${timeTag}`;
+                    
+                    document.getElementById('download-edited-txt-link').href = `/download/edited/${id}/`;
+                    document.getElementById('download-raw-txt-link').href = `/download/raw/${id}/`;
+                    document.getElementById('download-audio-link').href = `/download/audio/${id}/`;
+
+                    const audioPlayer = document.getElementById('workspace-audio-player');
+                    if (audioPlayer) {
+                        audioPlayer.src = `/api/stream_audio/${id}/`;
+                        audioPlayer.load();
+                        setupAudioSync(audioPlayer);
+                    }
+
+                    const formattedText = data.formatted || data.transcription || "";
+                    const cleanRaw = data.transcription ? stripAllSpeakerAndTimestampTags(data.transcription) : stripAllSpeakerAndTimestampTags(formattedText);
+                    document.getElementById('raw-textarea').value = cleanRaw;
+                    
+                    currentPortions = parseTranscriptionIntoPortions(formattedText);
+                    if (currentEditorView === 'portions') {
+                        renderPortions();
+                    } else if (currentEditorView === 'raw') {
+                        document.getElementById('raw-textarea').value = buildRawTranscriptText();
+                    } else {
+                        renderAutoTranscript();
+                    }
+                    
+                    setupSelectionTracking();
+                });
+        }
+
+        function stripAllSpeakerAndTimestampTags(text) {
+            if (!text) return "";
+            let cleaned = text.replace(/\[\d{1,4}:\d{2}(?::\d{2})?\]\s*(?:Speaker\s*\d+|Person\s*\d+|Transcript|Raw Transcript|[a-zA-Z0-9_-]+)?\s*:\s*/gi, '');
+            cleaned = cleaned.replace(/\[\d{1,4}:\d{2}(?::\d{2})?\]\s*/g, '');
+            cleaned = cleaned.replace(/^(?:Speaker\s*\d+|Person\s*\d+|Transcript|Raw Transcript)\s*:\s*/gim, '');
+            return cleaned.trim();
+        }
+
+        function stripPrefixMetadata(text) {
+            if (!text) return "";
+            let cleaned = text.trim();
+            while (true) {
+                const prev = cleaned;
+                cleaned = cleaned.replace(/^\[\d{1,4}:\d{2}(?::\d{2})?\]\s*/i, '');
+                cleaned = cleaned.replace(/^(?:Speaker\s*\d+|Person\s*\d+|Transcript|Raw Transcript|Guest|Host|[a-zA-Z0-9_-]+)\s*:\s*/i, '');
+                cleaned = cleaned.replace(/^\*\*(?:Speaker\s*\d+|Person\s*\d+|Transcript|Raw Transcript|Guest|Host|[a-zA-Z0-9_-]+)\*\*:\s*/i, '');
+                if (cleaned === prev) break;
+            }
+            return cleaned.trim();
+        }
+
+        function parseTranscriptionIntoPortions(text) {
+            const source = (text || '').replace(/\r\n/g, '\n').trim();
+            if (!source) return [];
+
+            const lines = source.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const portions = [];
+            
+            // Regex for [MM:SS] Speaker X: Text or [HH:MM:SS] Speaker X: Text
+            const speakerLineRegex = /^(?:\[?(\d{1,4}:\d{2}(?::\d{2})?)\]?\s+)?([^:\n]+?)\s*:\s*(.*)$/;
+            // Regex for [MM:SS] Text or [HH:MM:SS] Text
+            const timestampOnlyRegex = /^\[?(\d{1,4}:\d{2}(?::\d{2})?)\]?\s+(.*)$/;
+            let foundStructuredLines = false;
+            
+            for (let line of lines) {
+                let cleanLine = line.replace(/\*\*/g, '').trim();
+                
+                // 1. Try matching [MM:SS] Speaker X: Text
+                const spkMatch = cleanLine.match(speakerLineRegex);
+                if (spkMatch) {
+                    const time = spkMatch[1] || "00:00";
+                    let speaker = spkMatch[2].trim();
+                    let rawContent = spkMatch[3].trim();
+                    let content = stripPrefixMetadata(rawContent);
+
+                    const isLegitSpeaker = speaker.length > 0 && speaker.length < 32 && 
+                        speaker.toLowerCase() !== 'transcript' &&
+                        speaker.toLowerCase() !== 'raw transcript' &&
+                        (speaker.toLowerCase().includes('speaker') || 
+                         speaker.toLowerCase().includes('person') || 
+                         speaker.toLowerCase().includes('participant') || 
+                         speaker.toLowerCase().includes('host') || 
+                         speaker.toLowerCase().includes('guest') || 
+                         speaker.toLowerCase().includes('narrator') || 
+                         speaker.toLowerCase().match(/^[a-z0-9\s_-]+$/i));
+                         
+                    if (isLegitSpeaker) {
+                        foundStructuredLines = true;
+                        portions.push({ time, speaker, content });
+                        continue;
+                    } else if (speaker.toLowerCase() === 'transcript' || speaker.toLowerCase() === 'raw transcript') {
+                        foundStructuredLines = true;
+                        portions.push({ time, speaker: "Speaker 1", content });
+                        continue;
+                    }
+                }
+
+                // 2. Try matching [MM:SS] Raw Text Line
+                const tsMatch = cleanLine.match(timestampOnlyRegex);
+                if (tsMatch) {
+                    const time = tsMatch[1] || "00:00";
+                    let content = stripPrefixMetadata(tsMatch[2].trim());
+                    foundStructuredLines = true;
+                    portions.push({ time, speaker: "Speaker 1", content });
+                    continue;
+                }
+                
+                if (portions.length > 0 && foundStructuredLines) {
+                    const addText = stripPrefixMetadata(cleanLine);
+                    if (addText) {
+                        portions[portions.length - 1].content += "\n" + addText;
+                    }
+                }
+            }
+
+            if (!foundStructuredLines || portions.length === 0) {
+                return [{
+                    time: "00:00",
+                    speaker: "Speaker 1",
+                    content: stripPrefixMetadata(source),
+                    isRaw: true
+                }];
+            }
+
+            return portions;
+        }
+
+        function getSpeakerColorClass(speakerName) {
+            if (!speakerName) return 'speaker-color-0';
+            const clean = speakerName.trim();
+            if (!window._speakerColorCache) window._speakerColorCache = {};
+            if (clean in window._speakerColorCache) {
+                return `speaker-color-${window._speakerColorCache[clean]}`;
+            }
+            const used = Object.values(window._speakerColorCache);
+            let nextIndex = 0;
+            while (used.includes(nextIndex % 7) && nextIndex < 7) {
+                nextIndex++;
+            }
+            window._speakerColorCache[clean] = nextIndex % 7;
+            return `speaker-color-${nextIndex % 7}`;
+        }
+
+        function formatTextWithClickableTimestamps(text, cardIdx = null, isAutoView = false) {
+            if (!text) return "";
+            const escapeHtml = (str) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const safeText = escapeHtml(text);
+            return safeText.replace(/\[?(\d{1,2}:\d{2}(?::\d{2})?)\]?/g, (match, timeStr) => {
+                const idxArg = (cardIdx !== null && cardIdx !== undefined) ? cardIdx : 'null';
+                return `<span class="timestamp-clickable" onclick="playAudioAtTime('${timeStr}', ${idxArg}, ${isAutoView}); event.stopPropagation();" title="Click to play audio from ${timeStr} onward">▶ ${timeStr}</span>`;
+            });
+        }
+
+        function renderPortions() {
+            const container = document.getElementById('portions-container');
+            container.innerHTML = "";
+
+            if (currentPortions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 48px 20px; color: var(--text-muted);">
+                        <p style="font-weight:600; font-size:13.5px; margin-bottom:4px;">No portions available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            currentPortions.forEach((portion, idx) => {
+                const card = document.createElement('div');
+                const isSelected = selectedPortionIndices.has(idx);
+                card.className = `portion-card tech-panel ${isSelected ? 'selected-for-merge' : ''}`;
+                card.id = `portion-card-${idx}`;
+                card.dataset.index = idx;
+                card.dataset.time = portion.time;
+
+                const header = document.createElement('div');
+                header.className = 'portion-header';
+
+                const metaLeft = document.createElement('div');
+                metaLeft.className = 'portion-meta-left';
+
+                const selectCheckbox = document.createElement('input');
+                selectCheckbox.type = 'checkbox';
+                selectCheckbox.className = 'portion-select-checkbox';
+                selectCheckbox.checked = isSelected;
+                selectCheckbox.title = 'Select portion for merging';
+                selectCheckbox.onchange = (e) => togglePortionSelection(idx, e.target.checked);
+
+                const numBadge = document.createElement('span');
+                numBadge.className = 'portion-num-badge';
+                numBadge.textContent = `#${idx + 1}`;
+
+                const playBtn = document.createElement('button');
+                playBtn.className = 'portion-play-btn';
+                playBtn.title = 'Play audio from this timestamp';
+                playBtn.innerHTML = `
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>${portion.time}</span>
+                `;
+                playBtn.onclick = () => playAudioAtTime(portion.time, idx, false);
+
+                const speakerTag = document.createElement('span');
+                const spkColorClass = getSpeakerColorClass(portion.speaker);
+                speakerTag.className = `portion-speaker-tag ${spkColorClass}`;
+                speakerTag.contentEditable = 'true';
+                speakerTag.dataset.originalName = portion.speaker;
+                speakerTag.textContent = portion.speaker;
+                speakerTag.title = 'Click to rename speaker';
+                speakerTag.addEventListener('blur', () => onSpeakerTagBlur(idx, speakerTag));
+
+                metaLeft.appendChild(selectCheckbox);
+                metaLeft.appendChild(numBadge);
+                metaLeft.appendChild(playBtn);
+                metaLeft.appendChild(speakerTag);
+
+                const actionsRight = document.createElement('div');
+                actionsRight.className = 'portion-actions-right';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn-portion-icon';
+                copyBtn.title = 'Copy portion text';
+                copyBtn.innerHTML = `
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                `;
+                copyBtn.onclick = () => copyPortionText(idx, copyBtn);
+
+                const splitBtn = document.createElement('button');
+                splitBtn.className = 'btn-portion-icon';
+                splitBtn.title = 'Split portion into two';
+                splitBtn.innerHTML = `
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+                    Split
+                `;
+                splitBtn.onclick = () => splitPortion(idx);
+
+                const mergeWithBtn = document.createElement('button');
+                mergeWithBtn.className = 'btn-portion-icon';
+                mergeWithBtn.title = 'Merge with any other portion';
+                mergeWithBtn.innerHTML = `
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    Merge With...
+                `;
+                mergeWithBtn.onclick = () => openMergeWithModal(idx);
+
+                if (idx < currentPortions.length - 1) {
+                    const mergeBtn = document.createElement('button');
+                    mergeBtn.className = 'btn-portion-icon';
+                    mergeBtn.title = 'Merge with portion directly below';
+                    mergeBtn.innerHTML = `
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"></path></svg>
+                        Merge Next
+                    `;
+                    mergeBtn.onclick = () => mergePortion(idx);
+                    actionsRight.appendChild(mergeBtn);
+                }
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-portion-icon btn-delete-portion';
+                deleteBtn.title = 'Delete portion';
+                deleteBtn.innerHTML = `
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                `;
+                deleteBtn.onclick = () => deletePortion(idx);
+
+                actionsRight.appendChild(copyBtn);
+                actionsRight.appendChild(splitBtn);
+                actionsRight.appendChild(mergeWithBtn);
+                actionsRight.appendChild(deleteBtn);
+
+                header.appendChild(metaLeft);
+                header.appendChild(actionsRight);
+
+                const content = document.createElement('div');
+                content.className = 'portion-content';
+                content.contentEditable = 'true';
+                content.textContent = portion.content;
+                content.id = `portion-content-${idx}`;
+                content.addEventListener('input', () => onPortionTextInput(idx, content));
+                content.addEventListener('blur', saveAllPortions);
+
+                card.appendChild(header);
+                card.appendChild(content);
+                container.appendChild(card);
+            });
+        }
+
+        let lastActivePlayingIdx = -1;
+        let lastActivePlayingView = null;
+
+        function parseTimestampToSeconds(timeStr) {
+            if (!timeStr) return 0;
+            const parts = timeStr.replace(/[\[\]]/g, '').split(':').map(Number);
+            if (parts.length === 3) {
+                return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            } else if (parts.length === 2) {
+                return parts[0] * 60 + parts[1];
+            } else if (parts.length === 1) {
+                return parts[0];
+            }
+            return 0;
+        }
+
+        function highlightAndScrollActiveCard(activeIdx, isAutoView = (currentEditorView === 'auto'), forceScroll = false) {
+            const prefix = isAutoView ? 'auto-card-' : 'portion-card-';
+            const activeCardId = `${prefix}${activeIdx}`;
+
+            document.querySelectorAll('.portion-card').forEach(card => {
+                if (card.id === activeCardId) {
+                    if (!card.classList.contains('active-playing')) {
+                        card.classList.add('active-playing');
+                    }
+                } else {
+                    card.classList.remove('active-playing');
+                }
+            });
+
+            if (activeIdx >= 0) {
+                const targetCard = document.getElementById(activeCardId);
+                const currentViewName = isAutoView ? 'auto' : 'portions';
+                if (targetCard && (forceScroll || lastActivePlayingIdx !== activeIdx || lastActivePlayingView !== currentViewName)) {
+                    lastActivePlayingIdx = activeIdx;
+                    lastActivePlayingView = currentViewName;
+                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        function changeAudioTime(deltaSeconds) {
+            const player = document.getElementById('workspace-audio-player');
+            if (!player || !player.src) return;
+            player.currentTime = Math.max(0, player.currentTime + deltaSeconds);
+        }
+
+        function setPlaybackSpeed(speedStr) {
+            const player = document.getElementById('workspace-audio-player');
+            if (!player) return;
+            player.playbackRate = parseFloat(speedStr) || 1.0;
+        }
+
+        function playAudioAtTime(timeStr, portionIdx = null, isAutoView = (currentEditorView === 'auto')) {
+            const player = document.getElementById('workspace-audio-player');
+            if (!player || !player.src) return;
+
+            const seconds = parseTimestampToSeconds(timeStr);
+
+            const performSeekAndPlay = () => {
+                try {
+                    player.currentTime = seconds;
+                    const playPromise = player.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(err => console.log('Audio play error:', err));
+                    }
+                } catch (e) {
+                    console.error('Error setting audio currentTime:', e);
+                }
+            };
+
+            if (player.readyState >= 1) { // HAVE_METADATA or higher
+                performSeekAndPlay();
+            } else {
+                const onMetadataLoaded = () => {
+                    player.removeEventListener('loadedmetadata', onMetadataLoaded);
+                    performSeekAndPlay();
+                };
+                player.addEventListener('loadedmetadata', onMetadataLoaded);
+                player.load();
+            }
+
+            if (portionIdx === null || portionIdx === undefined) {
+                const list = isAutoView ? buildAutoTranscriptPortions() : currentPortions;
+                let foundIdx = -1;
+                for (let i = 0; i < list.length; i++) {
+                    const s = parseTimestampToSeconds(list[i].time);
+                    if (seconds >= s) {
+                        foundIdx = i;
+                    } else {
+                        break;
+                    }
+                }
+                portionIdx = foundIdx;
+            }
+
+            if (portionIdx >= 0) {
+                highlightAndScrollActiveCard(portionIdx, isAutoView, true);
+            }
+        }
+
+        function setupAudioSync(player) {
+            if (!player) return;
+
+            player.ontimeupdate = () => {
+                const cur = player.currentTime;
+                
+                if (currentEditorView === 'auto') {
+                    const autoPortions = buildAutoTranscriptPortions();
+                    if (autoPortions.length === 0) return;
+
+                    let activeIdx = -1;
+                    for (let i = 0; i < autoPortions.length; i++) {
+                        const sec = parseTimestampToSeconds(autoPortions[i].time);
+                        if (cur >= sec) {
+                            activeIdx = i;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (activeIdx >= 0) {
+                        highlightAndScrollActiveCard(activeIdx, true);
+                    }
+                } else if (currentEditorView === 'portions') {
+                    if (currentPortions.length === 0) return;
+
+                    let activeIdx = -1;
+                    for (let i = 0; i < currentPortions.length; i++) {
+                        const sec = parseTimestampToSeconds(currentPortions[i].time);
+                        if (cur >= sec) {
+                            activeIdx = i;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (activeIdx >= 0) {
+                        highlightAndScrollActiveCard(activeIdx, false);
+                    }
+                }
+            };
+        }
+
+        function copyPortionText(idx, btn) {
+            const p = currentPortions[idx];
+            if (!p) return;
+            navigator.clipboard.writeText(p.content);
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            setTimeout(() => { btn.innerHTML = origHtml; }, 1200);
+        }
+
+        function onPortionTextInput(idx, el) {
+            if (currentPortions[idx]) {
+                currentPortions[idx].content = el.innerText;
+                setSaveStatus(false);
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(saveAllPortions, 800);
+            }
+        }
+
+        function onSpeakerTagBlur(idx, el) {
+            const oldName = el.dataset.originalName || "";
+            const newName = el.innerText.trim();
+            if (!newName) {
+                el.innerText = oldName;
+                return;
+            }
+            if (newName === oldName) return;
+
+            if (window._speakerColorCache && (oldName in window._speakerColorCache)) {
+                window._speakerColorCache[newName] = window._speakerColorCache[oldName];
+            }
+
+            if (confirm(`Do you want to rename all instances of "${oldName}" to "${newName}" across all portions?`)) {
+                currentPortions.forEach(p => {
+                    if (p.speaker === oldName) p.speaker = newName;
+                });
+                renderPortions();
+                renderAutoTranscript();
+            } else {
+                currentPortions[idx].speaker = newName;
+                el.dataset.originalName = newName;
+                renderPortions();
+                renderAutoTranscript();
+            }
+            saveAllPortions();
+        }
+
+        function onAutoSpeakerTagBlur(oldName, el) {
+            const newName = el.innerText.trim();
+            if (!newName || newName === oldName) {
+                el.innerText = oldName;
+                return;
+            }
+            if (window._speakerColorCache && (oldName in window._speakerColorCache)) {
+                window._speakerColorCache[newName] = window._speakerColorCache[oldName];
+            }
+            currentPortions.forEach(p => {
+                if ((p.speaker || '').toLowerCase() === oldName.toLowerCase()) {
+                    p.speaker = newName;
+                }
+            });
+            renderPortions();
+            renderAutoTranscript();
+            saveAllPortions();
+        }
+
+        function splitPortion(idx) {
+            const portion = currentPortions[idx];
+            if (!portion) return;
+
+            const text = portion.content;
+            let splitIndex = Math.floor(text.length / 2);
+
+            const punctMatch = text.slice(Math.max(0, splitIndex - 40), splitIndex + 40).search(/[.!?]\s+/);
+            if (punctMatch !== -1) {
+                splitIndex = Math.max(0, splitIndex - 40) + punctMatch + 1;
+            }
+
+            const part1 = text.slice(0, splitIndex).trim();
+            const part2 = text.slice(splitIndex).trim();
+
+            portion.content = part1;
+
+            const parts = portion.time.replace(/[\[\]]/g, '').split(':').map(Number);
+            const origSec = parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0];
+            const newSec = origSec + 10;
+            const newTimeStr = `${String(Math.floor(newSec / 60)).padStart(2, '0')}:${String(newSec % 60).padStart(2, '0')}`;
+
+            currentPortions.splice(idx + 1, 0, {
+                time: newTimeStr,
+                speaker: portion.speaker === 'Speaker 1' ? 'Speaker 2' : 'Speaker 1',
+                content: part2 || ""
+            });
+
+            renderPortions();
+            saveAllPortions();
+        }
+
+        function togglePortionSelection(idx, isSelected) {
+            if (isSelected) {
+                selectedPortionIndices.add(idx);
+            } else {
+                selectedPortionIndices.delete(idx);
+            }
+            const card = document.getElementById(`portion-card-${idx}`);
+            if (card) {
+                if (isSelected) card.classList.add('selected-for-merge');
+                else card.classList.remove('selected-for-merge');
+            }
+            updateMergeSelectedButton();
+        }
+
+        function updateMergeSelectedButton() {
+            const btn = document.getElementById('btn-merge-selected');
+            if (!btn) return;
+            const count = selectedPortionIndices.size;
+            if (count >= 2) {
+                btn.style.display = 'inline-flex';
+                btn.querySelector('span').textContent = `Merge Selected (${count})`;
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        function mergeSelectedPortions() {
+            const indices = Array.from(selectedPortionIndices).sort((a, b) => a - b);
+            if (indices.length < 2) {
+                alert("Please select at least 2 portions using the checkboxes to merge.");
+                return;
+            }
+
+            const firstIdx = indices[0];
+            const firstPortion = currentPortions[firstIdx];
+
+            // Combine text of all selected portions into a single continuous paragraph
+            const mergedText = indices
+                .map(i => (currentPortions[i] ? currentPortions[i].content.trim() : ""))
+                .filter(Boolean)
+                .join(' ');
+
+            firstPortion.content = mergedText;
+
+            // Delete merged portions from back to front (preserving index validity)
+            for (let k = indices.length - 1; k >= 1; k--) {
+                currentPortions.splice(indices[k], 1);
+            }
+
+            selectedPortionIndices.clear();
+            renderPortions();
+            saveAllPortions();
+        }
+
+        function openMergeWithModal(idx) {
+            if (currentPortions.length < 2) {
+                alert("At least 2 portions are required to perform a merge.");
+                return;
+            }
+
+            const promptText = `Select portion number to merge with Portion #${idx + 1} [${currentPortions[idx].speaker}]:\n\n` +
+                currentPortions.map((p, i) => i === idx ? `* #${i + 1} [${p.time}] ${p.speaker} (Current)` : `  #${i + 1} [${p.time}] ${p.speaker}`).join('\n') +
+                `\n\nEnter portion number (1 - ${currentPortions.length}):`;
+
+            const input = prompt(promptText);
+            if (!input) return;
+            const targetNum = parseInt(input.trim().replace('#', ''), 10);
+            if (isNaN(targetNum) || targetNum < 1 || targetNum > currentPortions.length || targetNum === (idx + 1)) {
+                alert("Invalid portion number selected.");
+                return;
+            }
+
+            mergeTwoSpecificPortions(idx, targetNum - 1);
+        }
+
+        function mergeTwoSpecificPortions(idx1, idx2) {
+            if (idx1 === idx2) return;
+            const firstIdx = Math.min(idx1, idx2);
+            const secondIdx = Math.max(idx1, idx2);
+
+            const p1 = currentPortions[firstIdx];
+            const p2 = currentPortions[secondIdx];
+
+            if (!p1 || !p2) return;
+
+            p1.content = `${p1.content.trim()} ${p2.content.trim()}`;
+            currentPortions.splice(secondIdx, 1);
+
+            selectedPortionIndices.clear();
+            renderPortions();
+            saveAllPortions();
+        }
+
+        function mergePortion(idx) {
+            if (idx >= currentPortions.length - 1) return;
+            const p1 = currentPortions[idx];
+            const p2 = currentPortions[idx + 1];
+
+            p1.content = `${p1.content.trim()} ${p2.content.trim()}`;
+            currentPortions.splice(idx + 1, 1);
+
+            selectedPortionIndices.clear();
+            renderPortions();
+            saveAllPortions();
+        }
+
+        function addNewPortion(insertAt = null) {
+            const index = insertAt !== null ? insertAt : currentPortions.length;
+            const lastPortion = currentPortions[index - 1] || { time: "00:00", speaker: "Speaker 1" };
+            
+            const parts = lastPortion.time.replace(/[\[\]]/g, '').split(':').map(Number);
+            const sec = (parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0]) + 15;
+            const timeStr = `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+
+            const nextSpeaker = lastPortion.speaker === 'Speaker 1' ? 'Speaker 2' : 'Speaker 1';
+
+            currentPortions.splice(index, 0, {
+                time: timeStr,
+                speaker: nextSpeaker,
+                content: ""
+            });
+
+            renderPortions();
+            saveAllPortions();
+
+            setTimeout(() => {
+                const contentEl = document.getElementById(`portion-content-${index}`);
+                if (contentEl) contentEl.focus();
+            }, 100);
+        }
+
+        function deletePortion(idx) {
+            if (currentPortions.length <= 1) {
+                alert("Cannot delete the only portion.");
+                return;
+            }
+            if (confirm(`Delete portion #${idx + 1}?`)) {
+                currentPortions.splice(idx, 1);
+                renderPortions();
+                saveAllPortions();
+            }
+        }
+
+        function aiIdentifySpeakers() {
+            if (!currentTranscriptionId) {
+                alert("Please select a transcription first.");
+                return;
+            }
+
+            const aiBtn = document.getElementById('btn-ai-identify');
+            const origHtml = aiBtn.innerHTML;
+            aiBtn.innerHTML = `<span>Attributing Speakers (GPU)...</span>`;
+            aiBtn.disabled = true;
+
+            fetch(`/api/diarize/${currentTranscriptionId}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ portions: currentPortions })
+            })
+            .then(async res => {
+                const text = await res.text();
+                try {
+                    return JSON.parse(text);
+                } catch (jsonErr) {
+                    throw new Error(`Server error: ${text.slice(0, 150)}`);
+                }
+            })
+            .then(data => {
+                aiBtn.innerHTML = origHtml;
+                aiBtn.disabled = false;
+
+                if (data.error) {
+                    alert("Speaker Identification Error: " + data.error);
+                } else {
+                    if (data.portions && data.portions.length > 0) {
+                        currentPortions = data.portions;
+                    } else if (data.formatted) {
+                        currentPortions = parseTranscriptionIntoPortions(data.formatted);
+                    }
+                    renderPortions();
+                    saveAllPortions();
+                }
+            })
+            .catch(err => {
+                aiBtn.innerHTML = origHtml;
+                aiBtn.disabled = false;
+                alert("Speaker identification note: " + err.message);
+            });
+        }
+
+        function switchEditorView(view) {
+            currentEditorView = view;
+            const portionsBtn = document.getElementById('btn-view-portions');
+            const autoBtn = document.getElementById('btn-view-auto');
+            const rawBtn = document.getElementById('btn-view-raw');
+            const portionsContainer = document.getElementById('portions-container');
+            const autoContainer = document.getElementById('auto-transcript-container');
+            const rawContainer = document.getElementById('raw-text-container');
+            const rawTextarea = document.getElementById('raw-textarea');
+
+            if (view === 'portions') {
+                portionsBtn.classList.add('active');
+                if (autoBtn) autoBtn.classList.remove('active');
+                rawBtn.classList.remove('active');
+                portionsContainer.style.display = 'flex';
+                if (autoContainer) autoContainer.style.display = 'none';
+                rawContainer.style.display = 'none';
+
+                renderPortions();
+            } else if (view === 'auto') {
+                if (autoBtn) autoBtn.classList.add('active');
+                portionsBtn.classList.remove('active');
+                rawBtn.classList.remove('active');
+                portionsContainer.style.display = 'none';
+                if (autoContainer) autoContainer.style.display = 'flex';
+                rawContainer.style.display = 'none';
+
+                renderAutoTranscript();
+            } else {
+                rawBtn.classList.add('active');
+                portionsBtn.classList.remove('active');
+                if (autoBtn) autoBtn.classList.remove('active');
+                portionsContainer.style.display = 'none';
+                if (autoContainer) autoContainer.style.display = 'none';
+                rawContainer.style.display = 'flex';
+
+                rawTextarea.value = buildRawTranscriptText();
+            }
+
+            const player = document.getElementById('workspace-audio-player');
+            if (player && typeof player.ontimeupdate === 'function') {
+                player.ontimeupdate();
+            }
+        }
+
+        function buildAutoTranscriptPortions() {
+            if (!currentPortions || currentPortions.length === 0) return [];
+
+            const combined = [];
+            let currentBlock = null;
+
+            for (let portion of currentPortions) {
+                const spk = (portion.speaker || 'Speaker 1').trim();
+                const content = (portion.content || '').trim();
+                if (!content) continue;
+
+                if (!currentBlock) {
+                    currentBlock = {
+                        time: portion.time,
+                        speaker: spk,
+                        content: content
+                    };
+                } else if (currentBlock.speaker.toLowerCase() === spk.toLowerCase()) {
+                    // Combine consecutive portions from the SAME speaker into a single continuous paragraph
+                    currentBlock.content = `${currentBlock.content.trim()} ${content.trim()}`;
+                } else {
+                    combined.push(currentBlock);
+                    currentBlock = {
+                        time: portion.time,
+                        speaker: spk,
+                        content: content
+                    };
+                }
+            }
+
+            if (currentBlock) {
+                combined.push(currentBlock);
+            }
+
+            return combined;
+        }
+
+        function renderAutoTranscript() {
+            const container = document.getElementById('auto-transcript-container');
+            if (!container) return;
+            container.innerHTML = "";
+
+            const autoPortions = buildAutoTranscriptPortions();
+
+            if (autoPortions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 48px 20px; color: var(--text-muted);">
+                        <p style="font-weight:600; font-size:13.5px; margin-bottom:4px;">No auto-transcript available</p>
+                        <p style="font-size:12px;">Transcribe audio or select a file to view concise combined speaker turns.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (!isAutoBannerDismissed) {
+                const banner = document.createElement('div');
+                banner.id = 'auto-transcript-banner';
+                banner.style.cssText = 'width:100%; padding:10px 14px; margin-bottom:16px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:10px; color:#34D399; font-size:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; box-sizing:border-box;';
+                banner.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <span><strong>Auto-Transcript View:</strong> Consecutive portions from the same speaker are automatically merged into concise dialogue turns.</span>
+                    </div>
+                    <button type="button" onclick="dismissAutoBanner()" title="Dismiss banner" style="background:transparent; border:none; color:#34D399; cursor:pointer; padding:3px; display:flex; align-items:center; justify-content:center; opacity:0.75; transition:all 0.15s ease;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                `;
+                container.appendChild(banner);
+            }
+
+            autoPortions.forEach((portion, idx) => {
+                const card = document.createElement('div');
+                card.className = 'portion-card tech-panel';
+                card.id = `auto-card-${idx}`;
+
+                const header = document.createElement('div');
+                header.className = 'portion-header';
+
+                const metaLeft = document.createElement('div');
+                metaLeft.className = 'portion-meta-left';
+
+                const numBadge = document.createElement('span');
+                numBadge.className = 'portion-num-badge';
+                numBadge.textContent = `#${idx + 1}`;
+
+                const playBtn = document.createElement('button');
+                playBtn.className = 'portion-play-btn';
+                playBtn.title = 'Play audio from starting timestamp';
+                playBtn.innerHTML = `
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>${portion.time}</span>
+                `;
+                playBtn.onclick = () => playAudioAtTime(portion.time, idx, true);
+
+                const speakerTag = document.createElement('span');
+                const spkColorClass = getSpeakerColorClass(portion.speaker);
+                speakerTag.className = `portion-speaker-tag ${spkColorClass}`;
+                speakerTag.contentEditable = 'true';
+                speakerTag.dataset.originalName = portion.speaker;
+                speakerTag.textContent = portion.speaker;
+                speakerTag.title = 'Click to rename speaker';
+                speakerTag.addEventListener('blur', () => onAutoSpeakerTagBlur(portion.speaker, speakerTag));
+
+                metaLeft.appendChild(numBadge);
+                metaLeft.appendChild(playBtn);
+                metaLeft.appendChild(speakerTag);
+
+                const actionsRight = document.createElement('div');
+                actionsRight.className = 'portion-actions-right';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn-portion-icon';
+                copyBtn.title = 'Copy concise speaker block text';
+                copyBtn.innerHTML = `
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Copy</span>
+                `;
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(`[${portion.time}] ${portion.speaker}: ${portion.content}`);
+                    const span = copyBtn.querySelector('span');
+                    if (span) span.textContent = 'Copied!';
+                    setTimeout(() => { if (span) span.textContent = 'Copy'; }, 1200);
+                };
+
+                actionsRight.appendChild(copyBtn);
+
+                header.appendChild(metaLeft);
+                header.appendChild(actionsRight);
+
+                const content = document.createElement('div');
+                content.className = 'portion-content';
+                content.style.whiteSpace = 'pre-wrap';
+                content.innerHTML = formatTextWithClickableTimestamps(portion.content, idx, true);
+
+                card.appendChild(header);
+                card.appendChild(content);
+                container.appendChild(card);
+            });
+        }
+
+        function onRawTextChange() {
+            setSaveStatus(false);
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                const text = document.getElementById('raw-textarea').value;
+                const cleanRaw = stripAllSpeakerAndTimestampTags(text);
+                saveRawOnlyContent(cleanRaw);
+            }, 800);
+        }
+
+        function buildFullTranscriptText() {
+            if (currentPortions.length === 0) return "";
+            return currentPortions.map(p => {
+                const time = p.time.startsWith('[') ? p.time : `[${p.time}]`;
+                const cleanContent = stripAllSpeakerAndTimestampTags(p.content || '').trim();
+                if (p.isRaw || p.speaker === 'Transcript' || p.speaker === 'Raw Transcript' || !p.speaker) {
+                    return `${time} ${cleanContent}`;
+                }
+                return `${time} ${p.speaker}: ${cleanContent}`;
+            }).join('\n\n');
+        }
+
+        function buildRawTranscriptText() {
+            if (currentPortions.length === 0) return "";
+            return currentPortions
+                .map(p => stripAllSpeakerAndTimestampTags(p.content || '').trim())
+                .filter(c => c.length > 0)
+                .join('\n\n');
+        }
+
+        function saveAllPortions() {
+            const fullText = buildFullTranscriptText();
+            const rawText = buildRawTranscriptText();
+            document.getElementById('raw-textarea').value = rawText;
+            saveTranscriptionContent(fullText, rawText);
+        }
+
+        function saveRawOnlyContent(rawText) {
+            if (!currentTranscriptionId) return;
+            setSaveStatus(false);
+            fetch(`/api/update/${currentTranscriptionId}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transcription: rawText })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setSaveStatus(true);
+                }
+            })
+            .catch(() => setSaveStatus(false));
+        }
+
+        function saveTranscriptionContent(formattedText, rawText = null) {
+            if (!currentTranscriptionId) return;
+            setSaveStatus(false);
+            const payload = { formatted: formattedText };
+            if (rawText !== null) {
+                payload.transcription = rawText;
+            }
+            fetch(`/api/update/${currentTranscriptionId}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setSaveStatus(true);
+                }
+            })
+            .catch(() => setSaveStatus(false));
+        }
+
+        function setSaveStatus(isSaved) {
+            const badge = document.getElementById('save-status');
+            if (!badge) return;
+            if (isSaved) {
+                badge.className = 'save-status-badge saved';
+                badge.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>SAVED</span>`;
+            } else {
+                badge.className = 'save-status-badge';
+                badge.innerHTML = `<span>SAVING...</span>`;
+            }
+        }
+
+        async function deleteTranscription(e, id) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (!confirm("Are you sure you want to delete this transcription?")) return;
+
+            const normalizedId = String(id).toLowerCase().trim();
+            const items = document.querySelectorAll(`.history-item[data-id="${id}"], .history-item[data-id="${normalizedId}"]`);
+            items.forEach(el => { el.style.opacity = '0.4'; el.style.pointerEvents = 'none'; });
+
+            try {
+                const res = await fetch(`/api/delete/${normalizedId}/`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    items.forEach(el => el.remove());
+                    updateHistoryCount();
+                    const currentNormalized = String(currentTranscriptionId || '').toLowerCase().trim();
+                    if (currentNormalized === normalizedId) {
+                        currentTranscriptionId = null;
+                        showDashboard();
+                    }
+                } else {
+                    items.forEach(el => { el.style.opacity = '1'; el.style.pointerEvents = ''; });
+                    alert('Delete failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                items.forEach(el => { el.style.opacity = '1'; el.style.pointerEvents = ''; });
+                alert('Network error while deleting transcription.');
+            }
+        }
+
+        function setupSelectionTracking() {
+            if (selectionTrackingReady) return;
+            selectionTrackingReady = true;
+
+            const container = document.getElementById('portions-container');
+            const floatingMenu = document.getElementById('floating-ai-menu');
+
+            document.addEventListener('selectionchange', () => {
+                const selection = window.getSelection();
+                const text = selection.toString().trim();
+                
+                if (text.length > 0 && container.contains(selection.anchorNode)) {
+                    selectedText = text;
+                    selectedNode = selection.anchorNode;
+                    selectedRange = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+                    
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    
+                    floatingMenu.style.display = 'flex';
+                    floatingMenu.style.left = `${rect.left + window.scrollX}px`;
+                    floatingMenu.style.top = `${rect.top + window.scrollY - 45}px`;
+                } else {
+                    setTimeout(() => {
+                        if (!floatingMenu.contains(document.activeElement)) {
+                            floatingMenu.style.display = 'none';
+                        }
+                    }, 200);
+                }
+            });
+        }
+
+        function aiActionOnSelection(promptPrefix) {
+            document.getElementById('floating-ai-menu').style.display = 'none';
+            document.getElementById('chat-input').value = `${promptPrefix}: "${selectedText}"`;
+            sendChatMessage();
+        }
+
+        function handleChatSubmit(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function sendQuickPrompt(prompt) {
+            document.getElementById('chat-input').value = prompt;
+            sendChatMessage();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+            if (!currentTranscriptionId) {
+                alert("Please select a transcription from the history first.");
+                return;
+            }
+
+            input.value = "";
+            appendMessage('user', prompt);
+
+            const loadingBubble = appendMessage('ai', `Processing...`, true);
+
+            fetch('/api/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: currentTranscriptionId,
+                    prompt: prompt,
+                    selected_text: selectedText
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                loadingBubble.remove();
+                if (data.error) {
+                    appendMessage('ai', "Error: " + data.error);
+                } else {
+                    appendMessage('ai', data.reply);
+                }
+            })
+            .catch(err => {
+                loadingBubble.remove();
+                appendMessage('ai', "Failed to reach AI helper: " + err);
+            });
+        }
+
+        function appendMessage(sender, text, allowHtml = false) {
+            const container = document.getElementById('copilot-messages');
+            const msg = document.createElement('div');
+            msg.className = `chat-message ${sender}`;
+            if (allowHtml) {
+                msg.innerHTML = text;
+            } else {
+                msg.textContent = text;
+            }
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+            return msg;
+        }
+
+        // Speaker Naming Modal Logic
+        function openSpeakerNamingModal() {
+            if (!currentPortions || currentPortions.length === 0) {
+                const rawVal = document.getElementById('raw-textarea') ? document.getElementById('raw-textarea').value : "";
+                if (rawVal && rawVal.trim()) {
+                    currentPortions = parseTranscriptionIntoPortions(rawVal);
+                }
+            }
+
+            if (!currentPortions || currentPortions.length === 0) {
+                alert("Please select or transcribe an audio first.");
+                return;
+            }
+
+            let uniqueSpeakers = [...new Set(currentPortions.map(p => p.speaker).filter(Boolean))];
+            if (uniqueSpeakers.length === 0) {
+                uniqueSpeakers = ["Speaker 1", "Speaker 2"];
+            }
+
+            const container = document.getElementById('speaker-naming-list');
+            container.innerHTML = "";
+
+            uniqueSpeakers.forEach((spk, idx) => {
+                const row = document.createElement('div');
+                row.className = 'speaker-rename-row';
+                
+                const label = document.createElement('div');
+                const spkColorClass = getSpeakerColorClass(spk);
+                label.className = `speaker-original-label ${spkColorClass}`;
+                label.textContent = spk;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'speaker-name-input';
+                input.dataset.original = spk;
+                input.value = spk;
+                input.placeholder = `Enter name for ${spk}...`;
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        applySpeakerNames();
+                    }
+                });
+
+                row.appendChild(label);
+                row.appendChild(input);
+                container.appendChild(row);
+            });
+
+            document.body.classList.add('modal-open');
+            const modal = document.getElementById('speaker-naming-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                const firstInput = container.querySelector('input');
+                if (firstInput) {
+                    firstInput.focus();
+                    firstInput.select();
+                }
+            }, 60);
+        }
+
+        function closeSpeakerNamingModal() {
+            document.body.classList.remove('modal-open');
+            const modal = document.getElementById('speaker-naming-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function handleModalOverlayClick(e) {
+            if (e.target.id === 'speaker-naming-modal') {
+                closeSpeakerNamingModal();
+            }
+        }
+
+        function applySpeakerNames() {
+            const inputs = document.querySelectorAll('#speaker-naming-list .speaker-name-input');
+            const renameMap = {};
+            let hasChanges = false;
+
+            inputs.forEach(input => {
+                const orig = input.dataset.original;
+                const newName = input.value.trim();
+                if (newName && newName !== orig) {
+                    renameMap[orig.toLowerCase()] = newName;
+                    hasChanges = true;
+                    if (window._speakerColorCache && (orig in window._speakerColorCache)) {
+                        window._speakerColorCache[newName] = window._speakerColorCache[orig];
+                    }
+                }
+            });
+
+            if (hasChanges) {
+                currentPortions.forEach(p => {
+                    const key = (p.speaker || '').toLowerCase();
+                    if (renameMap[key]) {
+                        p.speaker = renameMap[key];
+                    }
+                });
+
+                renderPortions();
+                renderAutoTranscript();
+                saveAllPortions();
+            }
+
+            closeSpeakerNamingModal();
+        }
+
+        // Chatbot Co-pilot Logic
+        function handleChatSubmit(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function sendQuickPrompt(promptText) {
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.value = promptText;
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            if (!currentTranscriptionId) {
+                alert("Please select or transcribe an audio first.");
+                return;
+            }
+
+            appendMessage('user', prompt);
+            input.value = "";
+            input.style.height = "auto";
+
+            const loadingBubble = appendMessage('ai', `
+                <div class="chat-loading-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            `, true);
+
+            fetch('/api/chat/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: currentTranscriptionId,
+                    prompt: prompt,
+                    selected_text: selectedText
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                loadingBubble.remove();
+                if (data.error) {
+                    appendMessage('ai', "⚠️ " + data.error);
+                } else {
+                    const formattedReply = formatMarkdown(data.reply || '');
+                    appendMessage('ai', formattedReply, true);
+                }
+            })
+            .catch(err => {
+                loadingBubble.remove();
+                appendMessage('ai', "⚠️ Failed to reach Gemini helper: " + err);
+            });
+        }
+
+        function formatMarkdown(text) {
+            if (!text) return "";
+            let html = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            // Bold **text**
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Italic *text*
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            // Bullet list items
+            html = html.replace(/^\s*[\-\*]\s+(.*)$/gim, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/gis, '<ul>$1</ul>');
+            // Double newlines and line breaks
+            html = html.replace(/\n\n/g, '<div style="height:6px;"></div>');
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
+
+        function appendMessage(sender, content, allowHtml = false) {
+            const container = document.getElementById('copilot-messages');
+            const msg = document.createElement('div');
+            msg.className = `chat-message ${sender}`;
+
+            if (sender === 'ai') {
+                const header = document.createElement('div');
+                header.className = 'chat-msg-header';
+                header.innerHTML = `
+                    <div class="ai-avatar-mini">✨</div>
+                    <span class="ai-name">Gemini</span>
+                `;
+                const body = document.createElement('div');
+                body.className = 'chat-msg-body';
+                if (allowHtml) {
+                    body.innerHTML = content;
+                } else {
+                    body.textContent = content;
+                }
+                msg.appendChild(header);
+                msg.appendChild(body);
+            } else {
+                if (allowHtml) {
+                    msg.innerHTML = content;
+                } else {
+                    msg.textContent = content;
+                }
+            }
+
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+            return msg;
+        }
+
+        function aiActionOnSelection(action) {
+            const prompt = `${action}: "${selectedText}"`;
+            document.getElementById('floating-ai-menu').style.display = 'none';
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.value = prompt;
+                sendChatMessage();
+            }
+        }
+
+        function toggleCopilotPane() {
+            const pane = document.getElementById('copilot-pane');
+            const btn = document.getElementById('btn-toggle-copilot');
+            if (pane) {
+                pane.classList.toggle('collapsed');
+                if (btn) btn.classList.toggle('active');
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSpeakerNamingModal();
+            }
+        });
+
+        // User Authentication Functions
+        function openAuthModal(mode) {
+            const modal = document.getElementById('auth-modal');
+            const title = document.getElementById('auth-modal-title');
+            const sub = document.getElementById('auth-modal-subtitle');
+            const submitBtn = document.getElementById('auth-submit-btn-text');
+            const toggleText = document.getElementById('auth-toggle-link');
+            const emailGroup = document.getElementById('auth-email-group');
+            const errorBox = document.getElementById('auth-error-box');
+
+            errorBox.style.display = 'none';
+            modal.setAttribute('data-mode', mode);
+
+            if (mode === 'register') {
+                title.innerText = 'Create Account';
+                sub.innerText = 'Register to save and sync your transcriptions across devices.';
+                submitBtn.innerText = 'Create Account';
+                emailGroup.style.display = 'flex';
+                toggleText.innerHTML = `Already have an account? <a href="#" onclick="openAuthModal('login'); return false;" style="color:var(--emerald-primary); font-weight:700;">Sign In</a>`;
+            } else {
+                title.innerText = 'Sign In';
+                sub.innerText = 'Log in to access your personal transcription workspace.';
+                submitBtn.innerText = 'Sign In';
+                emailGroup.style.display = 'none';
+                toggleText.innerHTML = `Don't have an account? <a href="#" onclick="openAuthModal('register'); return false;" style="color:var(--emerald-primary); font-weight:700;">Create Account</a>`;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').style.display = 'none';
+        }
+
+        async function submitAuthForm(e) {
+            e.preventDefault();
+            const modal = document.getElementById('auth-modal');
+            const mode = modal.getAttribute('data-mode') || 'login';
+            const username = document.getElementById('auth-username').value.trim();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const errorBox = document.getElementById('auth-error-box');
+
+            errorBox.style.display = 'none';
+
+            if (!username || !password) {
+                errorBox.innerText = 'Username and password are required.';
+                errorBox.style.display = 'block';
+                return;
+            }
+
+            const endpoint = mode === 'register' ? '/api/register/' : '/api/login/';
+            const payload = mode === 'register' ? { username, email, password } : { username, password };
+
+            try {
+                const resp = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    closeAuthModal();
+                    location.reload();
+                } else {
+                    errorBox.innerText = data.error || 'Authentication failed.';
+                    errorBox.style.display = 'block';
+                }
+            } catch (err) {
+                errorBox.innerText = 'Server error during authentication.';
+                errorBox.style.display = 'block';
+            }
+        }
+
+        async function performLogout() {
+            try {
+                await fetch('/api/logout/', { method: 'POST' });
+                location.reload();
+            } catch (err) {
+                location.reload();
+            }
+        }
+
+        // Rename Audio Pop-up Modal Logic
+        function openRenameModal(e, tid, currentName) {
+            if (e) e.stopPropagation();
+            const modal = document.getElementById('renameModalOverlay');
+            const input = document.getElementById('renameInputTitle');
+            const tidInput = document.getElementById('renameTargetTid');
+            if (modal && input && tidInput) {
+                tidInput.value = tid;
+                input.value = currentName || '';
+                modal.style.display = 'flex';
+                setTimeout(() => { input.focus(); input.select(); }, 80);
+            }
+        }
+
+        function closeRenameModal() {
+            const modal = document.getElementById('renameModalOverlay');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitRenameModal() {
+            const tid = document.getElementById('renameTargetTid').value;
+            const newName = document.getElementById('renameInputTitle').value.trim();
+            if (!newName) return;
+            
+            try {
+                const res = await fetch(`/api/rename/${tid}/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_name: newName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Update in sidebar history item
+                    const item = document.querySelector(`.history-item[data-id="${tid}"]`);
+                    const capitalizedName = formatCapitalizedTitle(newName);
+                    if (item) {
+                        const nameEl = item.querySelector('.history-item-name');
+                        if (nameEl) nameEl.innerText = capitalizedName;
+                        item.setAttribute('data-name', capitalizedName.toLowerCase());
+                        item.title = capitalizedName;
+                        // Update the onclick escapejs parameter
+                        const renameBtn = item.querySelector('.btn-rename-history');
+                        if (renameBtn) {
+                            renameBtn.onclick = (e) => openRenameModal(e, tid, capitalizedName);
+                        }
+                    }
+                    // If currently active transcription is this one, update the workspace header title
+                    const currentTitleEl = document.getElementById('current-title');
+                    if (currentTitleEl && currentTranscriptionId == tid) {
+                        currentTitleEl.innerText = capitalizedName;
+                    }
+                    closeRenameModal();
+                } else {
+                    alert(data.error || 'Failed to rename transcription');
+                }
+            } catch (err) {
+                alert('Network error while renaming');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.btn-download-menu')) {
+                document.getElementById('download-dropdown').style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- Speaker Naming Modal -->
+    <div class="modal-overlay" id="speaker-naming-modal" style="display:none;" onclick="handleModalOverlayClick(event)">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon-badge">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="modal-title">Name Speakers</h3>
+                        <p class="modal-subtitle">Assign real names to each speaker across all portions.</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeSpeakerNamingModal()" title="Close">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="speaker-naming-list">
+                <!-- Dynamically generated speaker inputs -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal-cancel" onclick="closeSpeakerNamingModal()">Cancel</button>
+                <button class="btn-modal-apply" onclick="applySpeakerNames()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Save Names</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Authentication Modal (Sign In / Register) -->
+    <div class="modal-overlay" id="auth-modal" style="display:none;" data-mode="login">
+        <div class="modal-card" style="max-width: 400px; width: 92%;">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-icon-badge" style="background: var(--spk-1-bg); border-color: var(--border-glow); color: var(--emerald-primary);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div>
+                        <h3 class="modal-title" id="auth-modal-title">Sign In</h3>
+                        <p class="modal-subtitle" id="auth-modal-subtitle">Log in to access your personal transcription workspace.</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeAuthModal()" title="Close">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <form onsubmit="submitAuthForm(event)">
+                <div class="modal-body" style="padding: 20px; gap: 14px;">
+                    <div id="auth-error-box" style="display:none; padding: 10px 12px; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35); color: #F87171; border-radius: 8px; font-size: 12px; font-weight: 500;"></div>
+
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); text-transform: uppercase;">Username</label>
+                        <input type="text" id="auth-username" required style="background: #141923; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 9px 12px; color: #FFFFFF; font-size: 13.5px; outline: none;">
+                    </div>
+
+                    <div id="auth-email-group" style="display: none; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); text-transform: uppercase;">Email (Optional)</label>
+                        <input type="email" id="auth-email" style="background: #141923; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 9px 12px; color: #FFFFFF; font-size: 13.5px; outline: none;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); text-transform: uppercase;">Password</label>
+                        <input type="password" id="auth-password" required style="background: #141923; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 9px 12px; color: #FFFFFF; font-size: 13.5px; outline: none;">
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                    <button type="submit" class="btn-modal-apply" style="justify-content: center; width: 100%; padding: 11px;">
+                        <span id="auth-submit-btn-text">Sign In</span>
+                    </button>
+
+                    <div id="auth-toggle-link" style="text-align: center; font-size: 12px; color: var(--text-muted);">
+                        Don't have an account? <a href="#" onclick="openAuthModal('register'); return false;" style="color:var(--emerald-primary); font-weight:700;">Create Account</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Rename Audio Pop-up Modal -->
+    <div class="modal-overlay" id="renameModalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3, 7, 18, 0.7); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
+        <div class="modal-card" style="width:400px; max-width:92%; background:var(--bg-panel-solid); border:1px solid var(--border-panel); border-radius:14px; padding:24px; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:30px; height:30px; border-radius:8px; background:var(--spk-1-bg); color:var(--emerald-primary); display:flex; align-items:center; justify-content:center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    </div>
+                    <h3 style="font-size:16px; font-weight:700; color:var(--text-primary); margin:0;">Rename Audio</h3>
+                </div>
+                <button type="button" onclick="closeRenameModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; line-height:1;">&times;</button>
+            </div>
+            
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">Enter a new title for this transcription recording:</p>
+            
+            <input type="text" id="renameInputTitle" style="width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--border-input); border-radius:8px; color:var(--text-primary); font-size:13.5px; outline:none; margin-bottom:20px; box-sizing:border-box;" placeholder="Audio Title..." onkeydown="if(event.key==='Enter') submitRenameModal()">
+            <input type="hidden" id="renameTargetTid">
+            
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" onclick="closeRenameModal()" class="btn-tech-secondary" style="padding:8px 16px;">Cancel</button>
+                <button type="button" onclick="submitRenameModal()" class="btn-tech-emerald" style="padding:8px 18px; font-weight:700;">Save Title</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Drawer & Responsive Control Scripts -->
+    <script>
+        // Mobile Drawer Functions
+        function openMobileDrawer() {
+            const sidebar = document.getElementById('mainSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            
+            if (sidebar) {
+                sidebar.classList.remove('sidebar-collapsed');
+                sidebar.classList.add('mobile-open');
+            }
+            if (backdrop) backdrop.classList.add('active');
+            document.body.classList.add('sidebar-open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileDrawer() {
+            const sidebar = document.getElementById('mainSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            
+            if (sidebar) sidebar.classList.remove('mobile-open');
+            if (backdrop) backdrop.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+            document.body.style.overflow = '';
+        }
+
+        // Initialize mobile menu buttons visibility
+        function initializeMobileMenuButtons() {
+            const isMobile = window.innerWidth <= 768;
+            const fixedTopNav = document.getElementById('fixed-top-nav');
+            const fixedTopNavSpacer = document.getElementById('fixed-top-nav-spacer');
+            const mainContent = document.getElementById('main-content');
+            
+            if (isMobile) {
+                fixedTopNav.classList.add('mobile-visible');
+                fixedTopNavSpacer.style.display = 'block';
+                mainContent.classList.add('has-fixed-nav');
+            } else {
+                fixedTopNav.classList.remove('mobile-visible');
+                fixedTopNavSpacer.style.display = 'none';
+                mainContent.classList.remove('has-fixed-nav');
+            }
+        }
+
+        // Close drawer when navigation items are clicked
+        function setupMobileDrawerAutoClose() {
+            const historyItems = document.querySelectorAll('.history-item');
+            const navButtons = document.querySelectorAll('.sidebar-actions button');
+            
+            historyItems.forEach(item => {
+                item.addEventListener('click', closeMobileDrawer);
+            });
+            
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        setTimeout(closeMobileDrawer, 100);
+                    }
+                });
+            });
+        }
+
+        // Handle window resize to show/hide mobile menu button
+        window.addEventListener('resize', () => {
+            initializeMobileMenuButtons();
+            
+            // On desktop, ensure drawer is expanded
+            if (window.innerWidth > 768) {
+                const sidebar = document.getElementById('mainSidebar');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (sidebar) sidebar.classList.remove('sidebar-collapsed');
+                if (backdrop) backdrop.classList.remove('active');
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeMobileMenuButtons();
+            setupMobileDrawerAutoClose();
+            
+            // On mobile, automatically collapse sidebar on load
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('mainSidebar');
+                if (sidebar && !sidebar.classList.contains('sidebar-collapsed')) {
+                    sidebar.classList.add('sidebar-collapsed');
+                }
+            }
+        });
+
+        // Handle keyboard escape key to close drawer
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (backdrop && backdrop.classList.contains('active')) {
+                    closeMobileDrawer();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

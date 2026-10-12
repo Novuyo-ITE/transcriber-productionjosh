@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Audio and Video uploads/cache
+audio/*.mp3
+audio/*.wav
+audio/*.m4a
+!audio/sample_en.mp3
+!audio/sample_lg.mp3
+audio/streaming_temp/
+video/*
+.cache/
+data/ngrok_url.txt
+
+# Standalone Worker Repo
+runpod_deployment/
+
+# Environment and Secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp

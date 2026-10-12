@@ -1,0 +1,20 @@
+# Requirements for running models locally on your GPU (Windows/Linux)
+# (For Railway deployment, use root requirements.txt which delegates models to RunPod)
+
+Django>=5.0,<6.1
+moviepy
+pytube
+torch
+torchaudio
+transformers
+pydub
+ffmpeg-python
+langchain-google-genai
+langchain-core
+python-dotenv
+faster-whisper
+funasr
+soundfile
+scikit-learn
+requests
+yt-dlp

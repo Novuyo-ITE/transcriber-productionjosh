@@ -1,0 +1,541 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVUscribe — AI Speech-to-Text, Speaker Identification & Dialogue Intelligence</title>
+    <meta name="description" content="Convert audio files, video files, YouTube links, and live microphone speech into structured, speaker-labeled dialogue with AI summaries and multi-format exports.">
+    <meta name="keywords" content="speech to text, audio transcription, Luganda transcription, speaker identification, live recording, AI meeting notes, audio to text">
+    
+    <script>
+        // Immediate Theme Initialization
+        (function() {
+            const savedTheme = localStorage.getItem('novuscribe_theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.documentElement.classList.add('theme-light');
+                document.documentElement.classList.remove('theme-dark');
+            } else {
+                document.documentElement.classList.add('theme-dark');
+                document.documentElement.classList.remove('theme-light');
+            }
+        })();
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Landing Page CSS -->
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}?v=7.0">
+</head>
+<body>
+
+    <!-- Navigation Header (Minimal: Brand + Sign In) -->
+    <header class="landing-nav">
+        <div class="container nav-container">
+            <a href="/" class="brand-logo">
+                <div class="brand-logo-icon">N</div>
+                <div class="brand-logo-text">
+                    <span class="brand-novu">Novu</span><span class="brand-scribe">scribe</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+                <span class="nav-user-label" style="font-size: 13px; font-family: var(--font-mono); color: var(--emerald-primary); margin-right: 4px;">{{ user.username }}</span>
+                <a href="{% url 'transcriber:app' %}" class="btn-nav-primary">
+                    <span>Open Workspace</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+                {% else %}
+                <button type="button" class="btn-nav-signin" onclick="openAuthModal('login')">Sign In</button>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-pill">
+                    <span class="pulse-dot-hero"></span>
+                    <span>AI-POWERED SPEECH-TO-TEXT & SPEAKER IDENTIFICATION</span>
+                </div>
+
+                <h1 class="hero-title">
+                    Convert <span id="hero-rotating-word" class="hero-rotating-word">Audio, Video & Live Speech</span> into Structured Dialogue.
+                </h1>
+
+                <p class="hero-subtitle">
+                    Transform recordings, meeting videos, podcasts, and live conversations into clear, speaker-labeled text. Features native Luganda accuracy, real-time live mic capture, and a built-in AI Assistant for one-click summaries.
+                </p>
+
+                <div class="hero-cta-group">
+                    <a href="{% url 'transcriber:app' %}" class="btn-hero-primary">
+                        <span>Start Transcribing Free</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="#demo" class="btn-hero-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span>Explore Demo</span>
+                    </a>
+                </div>
+
+                <div class="hero-trust-badges">
+                    <div class="hero-trust-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--emerald-primary);"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Native African Dialects</span>
+                    </div>
+                    <div class="hero-trust-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--emerald-primary);"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Live Mic Streaming</span>
+                    </div>
+                    <div class="hero-trust-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--emerald-primary);"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Multi-Speaker Labels</span>
+                    </div>
+                    <div class="hero-trust-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--emerald-primary);"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>1-Click AI Summaries</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Product Demo Preview -->
+        <section id="demo" class="container demo-card-container">
+            <div class="demo-card-glow"></div>
+            <div class="demo-card">
+                <div class="demo-card-header">
+                    <div class="demo-window-dots">
+                        <div class="demo-window-dot" style="background:#EF4444;"></div>
+                        <div class="demo-window-dot" style="background:#F59E0B;"></div>
+                        <div class="demo-window-dot" style="background:var(--emerald-primary);"></div>
+                    </div>
+                    <div class="demo-window-title">NOVUscribe Workspace // Live Dialogue Session</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:11px; font-family:var(--font-mono); color:var(--emerald-primary);">● READY</span>
+                    </div>
+                </div>
+
+                <div class="demo-card-body">
+                    <!-- Dialogue Transcript Preview -->
+                    <div class="demo-transcript-pane">
+                        <div class="demo-turn">
+                            <div class="demo-speaker-badge badge-spk1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>Speaker 1 (Interviewer)</span>
+                                <span class="demo-time-tag">00:00 - 00:14</span>
+                            </div>
+                            <p class="demo-turn-text">
+                                Oli otya! Welcome to today's meeting. Let's review the customer feedback from our Kampala and Entebbe outreach campaigns.
+                            </p>
+                        </div>
+
+                        <div class="demo-turn">
+                            <div class="demo-speaker-badge badge-spk2">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                <span>Speaker 2 (Project Lead)</span>
+                                <span class="demo-time-tag">00:15 - 00:38</span>
+                            </div>
+                            <p class="demo-turn-text">
+                                <mark>Gyendi bulungi!</mark> The response has been very positive, especially regarding our localized customer support and new mobile money integrations.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- AI Copilot Preview -->
+                    <div class="demo-copilot-pane">
+                        <div class="demo-copilot-header">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            <span>AI Assistant // Intelligent Meeting Copilot</span>
+                        </div>
+
+                        <div class="demo-ai-message">
+                            <strong>Meeting Summary:</strong> The team reviewed regional outreach campaigns across Kampala and Entebbe, noting strong customer satisfaction and positive adoption of mobile service updates.
+                        </div>
+
+                        <div class="demo-copilot-pills">
+                            <div class="demo-pill">Summarize Meeting</div>
+                            <div class="demo-pill">Extract Action Items</div>
+                            <div class="demo-pill">Identify Speakers</div>
+                            <div class="demo-pill">Translate Dialogue</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Core Capabilities Bento Grid (Actual Features) -->
+        <section id="features" class="container" style="padding-bottom: 40px;">
+            <div class="section-title-wrap">
+                <div class="section-tag">POWERFUL CAPABILITIES</div>
+                <h2 class="section-title">Everything You Need to Understand Speech</h2>
+                <p class="section-subtitle">A complete speech intelligence platform designed for multi-speaker meetings, interviews, native dialects, and instant summaries.</p>
+            </div>
+
+            <div class="bento-grid">
+                <!-- Feature 1: Native Luganda Support (Span 2) -->
+                <div class="bento-card span-2">
+                    <div class="bento-icon-box">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    </div>
+                    <h3 class="bento-card-title">Native Luganda, Lingala & African Dialects</h3>
+                    <p class="bento-card-desc">
+                        Accurately transcribe local speech, greetings, and colloquial phrases with high precision. Seamlessly switch between Luganda, Lingala, English, French, Swahili, and 90+ global languages.
+                    </p>
+                    <div class="bento-card-stat">LOCALIZED REGIONAL ACCURACY</div>
+                </div>
+
+                <!-- Feature 2: Real-Time Live Recording -->
+                <div class="bento-card">
+                    <div class="bento-icon-box">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12h2l2-7 4 14 4-18 4 14 2-7h2"/></svg>
+                    </div>
+                    <h3 class="bento-card-title">Live Microphone Capture</h3>
+                    <p class="bento-card-desc">
+                        Record voice notes, conversations, and live lectures directly through your browser with real-time waveform visualization and instant text generation.
+                    </p>
+                    <div class="bento-card-stat">REAL-TIME VOICE RECORDING</div>
+                </div>
+
+                <!-- Feature 3: Speaker Identification -->
+                <div class="bento-card">
+                    <div class="bento-icon-box">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <h3 class="bento-card-title">Automatic Speaker Labels</h3>
+                    <p class="bento-card-desc">
+                        Automatically distinguish between multiple voices in meetings, interviews, and group discussions. Easily rename speakers across the entire conversation in one click.
+                    </p>
+                    <div class="bento-card-stat">SPEAKER-BY-SPEAKER BREAKDOWN</div>
+                </div>
+
+                <!-- Feature 4: AI Meeting Assistant (Span 2) -->
+                <div class="bento-card span-2">
+                    <div class="bento-icon-box">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <h3 class="bento-card-title">Integrated AI Assistant & Summaries</h3>
+                    <p class="bento-card-desc">
+                        Chat directly with your transcript. Generate executive meeting summaries, extract action items, identify key decisions, translate portions into other languages, and fix speech grammar.
+                    </p>
+                    <div class="bento-card-stat">ONE-CLICK SUMMARIES & ACTION ITEMS</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works (3 Steps) -->
+        <section id="how-it-works" class="container" style="padding-bottom: 40px;">
+            <div class="section-title-wrap">
+                <div class="section-tag">SIMPLE 3-STEP WORKFLOW</div>
+                <h2 class="section-title">How NOVUscribe Works</h2>
+                <p class="section-subtitle">Turn any audio or video into structured, actionable text in three simple steps.</p>
+            </div>
+
+            <div class="how-it-works-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <h3 class="step-title">Upload, Link or Record</h3>
+                    <p class="step-desc">
+                        Upload audio and video files (MP3, WAV, M4A, MP4, MKV), paste any YouTube link, or record live using your microphone.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <h3 class="step-title">Automatic Transcription & Diarization</h3>
+                    <p class="step-desc">
+                        Speech is automatically converted into text, aligned with exact millisecond timestamps, and separated into distinct speaker turns.
+                    </p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <h3 class="step-title">Listen, Summarize & Export</h3>
+                    <p class="step-desc">
+                        Click any timestamp to listen to that exact sentence, ask the AI assistant for instant summaries, and export formatted dialogue notes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="container" style="padding-bottom: 40px;">
+            <div class="section-title-wrap">
+                <div class="section-tag">FREQUENTLY ASKED QUESTIONS</div>
+                <h2 class="section-title">Everything You Need to Know</h2>
+            </div>
+
+            <div class="faq-container">
+                <div class="faq-item active" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Which languages are supported?</span>
+                        <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="faq-answer">
+                        NOVUscribe provides dedicated high-accuracy support for Luganda and Lingala, alongside native support for English, French, Swahili, and 90+ global languages.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>How does automatic speaker identification work?</span>
+                        <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="faq-answer">
+                        The system analyzes vocal acoustic patterns to automatically separate different speakers in conversations and label them (e.g., Speaker 1, Speaker 2), making multi-person meetings easy to read.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>What media formats and links can I transcribe?</span>
+                        <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="faq-answer">
+                        You can upload audio files (MP3, WAV, M4A, FLAC), video recordings (MP4, MKV, AVI), paste direct YouTube links, or record live through your microphone.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Can I use the app as a guest without signing in?</span>
+                        <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! NOVUscribe supports private Guest / Incognito mode out of the box. Creating an account allows you to save and access your past transcription history anytime.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom CTA Banner -->
+        <section class="container">
+            <div class="cta-banner">
+                <h2 class="cta-title">Ready to Turn Speech into Structured Notes?</h2>
+                <p class="cta-subtitle">Jump straight into the NOVUscribe workspace and transcribe your audio files, videos, YouTube links, and live recordings.</p>
+                <a href="{% url 'transcriber:app' %}" class="btn-hero-primary" style="display:inline-flex;">
+                    <span>Launch NOVUscribe Workspace</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span class="brand-novu" style="font-weight:800; font-family:var(--font-heading);">Novu</span><span class="brand-scribe" style="color:var(--text-muted);">scribe</span>
+                <span>• AI Speech & Dialogue Intelligence Platform</span>
+            </div>
+            <div>
+                <span>© 2026 NOVUscribe. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- User Authentication Modal (Sign In / Register) -->
+    <div class="modal-overlay" id="auth-modal" style="display:none; position:fixed; inset:0; background:rgba(3,7,18,0.85); backdrop-filter:blur(14px); z-index:999999; align-items:center; justify-content:center;">
+        <div style="background:#0d1117; border:1px solid rgba(16,185,129,0.35); border-radius:16px; width:92%; max-width:400px; padding:24px; box-shadow:0 30px 60px rgba(0,0,0,0.9);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+                <h3 id="auth-modal-title" style="font-family:var(--font-heading); font-size:18px; font-weight:700; color:#FFFFFF;">Sign In</h3>
+                <button onclick="closeAuthModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:16px;">✕</button>
+            </div>
+
+            <form onsubmit="submitAuthForm(event)">
+                <div id="auth-error-box" style="display:none; padding:10px 12px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); color:#F87171; border-radius:8px; font-size:12px; font-weight:500; margin-bottom:12px;"></div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;">
+                    <label style="font-size:11.5px; font-family:var(--font-mono); color:var(--text-secondary); text-transform:uppercase;">Username</label>
+                    <input type="text" id="auth-username" required style="background:#141923; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:9px 12px; color:#FFFFFF; font-size:13.5px; outline:none;">
+                </div>
+
+                <div id="auth-email-group" style="display:none; flex-direction:column; gap:6px; margin-bottom:12px;">
+                    <label style="font-size:11.5px; font-family:var(--font-mono); color:var(--text-secondary); text-transform:uppercase;">Email (Optional)</label>
+                    <input type="email" id="auth-email" style="background:#141923; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:9px 12px; color:#FFFFFF; font-size:13.5px; outline:none;">
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:18px;">
+                    <label style="font-size:11.5px; font-family:var(--font-mono); color:var(--text-secondary); text-transform:uppercase;">Password</label>
+                    <input type="password" id="auth-password" required style="background:#141923; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:9px 12px; color:#FFFFFF; font-size:13.5px; outline:none;">
+                </div>
+
+                <button type="submit" style="width:100%; padding:11px; background:var(--brand-gradient); color:#030712; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-size:13px; margin-bottom:12px;">
+                    <span id="auth-submit-btn-text">Sign In</span>
+                </button>
+
+                <div id="auth-toggle-link" style="text-align:center; font-size:12px; color:var(--text-muted);">
+                    Don't have an account? <a href="#" onclick="openAuthModal('register'); return false;" style="color:var(--emerald-primary); font-weight:700;">Create Account</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Interactions -->
+    <script>
+        function toggleFaq(el) {
+            const isActive = el.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('active'));
+            if (!isActive) el.classList.add('active');
+        }
+
+        function openAuthModal(mode) {
+            const modal = document.getElementById('auth-modal');
+            const title = document.getElementById('auth-modal-title');
+            const submitBtn = document.getElementById('auth-submit-btn-text');
+            const toggleText = document.getElementById('auth-toggle-link');
+            const emailGroup = document.getElementById('auth-email-group');
+            const errorBox = document.getElementById('auth-error-box');
+
+            errorBox.style.display = 'none';
+            modal.setAttribute('data-mode', mode);
+
+            if (mode === 'register') {
+                title.innerText = 'Create Account';
+                submitBtn.innerText = 'Create Account';
+                emailGroup.style.display = 'flex';
+                toggleText.innerHTML = `Already have an account? <a href="#" onclick="openAuthModal('login'); return false;" style="color:var(--emerald-primary); font-weight:700;">Sign In</a>`;
+            } else {
+                title.innerText = 'Sign In';
+                submitBtn.innerText = 'Sign In';
+                emailGroup.style.display = 'none';
+                toggleText.innerHTML = `Don't have an account? <a href="#" onclick="openAuthModal('register'); return false;" style="color:var(--emerald-primary); font-weight:700;">Create Account</a>`;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').style.display = 'none';
+        }
+
+        async function submitAuthForm(e) {
+            e.preventDefault();
+            const modal = document.getElementById('auth-modal');
+            const mode = modal.getAttribute('data-mode') || 'login';
+            const username = document.getElementById('auth-username').value.trim();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const errorBox = document.getElementById('auth-error-box');
+
+            errorBox.style.display = 'none';
+            if (!username || !password) {
+                errorBox.innerText = 'Username and password are required.';
+                errorBox.style.display = 'block';
+                return;
+            }
+
+            const endpoint = mode === 'register' ? '/api/register/' : '/api/login/';
+            const payload = mode === 'register' ? { username, email, password } : { username, password };
+
+            try {
+                const resp = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    window.location.href = '/app/';
+                } else {
+                    errorBox.innerText = data.error || 'Authentication failed.';
+                    errorBox.style.display = 'block';
+                }
+            } catch (err) {
+                errorBox.innerText = 'Server error during authentication.';
+                errorBox.style.display = 'block';
+            }
+        }
+
+        // Theme Toggle & Persistence Logic
+        function updateThemeIcons(theme) {
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+            if (sunIcon && moonIcon) {
+                if (theme === 'light') {
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                } else {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                }
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.documentElement.classList.contains('theme-light');
+            const newTheme = isLight ? 'dark' : 'light';
+            if (newTheme === 'light') {
+                document.documentElement.classList.add('theme-light');
+                document.documentElement.classList.remove('theme-dark');
+            } else {
+                document.documentElement.classList.add('theme-dark');
+                document.documentElement.classList.remove('theme-light');
+            }
+            localStorage.setItem('novuscribe_theme', newTheme);
+            updateThemeIcons(newTheme);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = localStorage.getItem('novuscribe_theme') || 'dark';
+            updateThemeIcons(currentTheme);
+        });
+
+        // 1.5-Second Word Rotator Animation
+        const rotatingWords = [
+            "Audio, Video & Live Speech",
+            "Voice Notes & Meetings",
+            "Live Microphone Speech",
+            "YouTube & Media Links",
+            "Podcasts & Interviews"
+        ];
+        let currentWordIndex = 0;
+        const rotatingWordEl = document.getElementById('hero-rotating-word');
+
+        // Mobile Drawer Controls
+        function toggleLandingDrawer() {
+            const drawer = document.getElementById('landingDrawer');
+            const backdrop = document.getElementById('landingDrawerBackdrop');
+            if (!drawer) return;
+            const isOpen = drawer.classList.contains('open');
+            if (isOpen) {
+                closeLandingDrawer();
+            } else {
+                openLandingDrawer();
+            }
+        }
+
+        function openLandingDrawer() {
+            const drawer = document.getElementById('landingDrawer');
+            const backdrop = document.getElementById('landingDrawerBackdrop');
+            if (drawer) drawer.classList.add('open');
+            if (backdrop) backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLandingDrawer() {
+            const drawer = document.getElementById('landingDrawer');
+            const backdrop = document.getElementById('landingDrawerBackdrop');
+            if (drawer) drawer.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // Close drawer on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLandingDrawer();
+            }
+        });
+    </script>
+</body>
+</html>
