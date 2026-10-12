@@ -20,42 +20,45 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=22.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        /* Embedded Analytics & Customer Evaluation Screen (Admin Gideoni Only) - Ultra Scrollable & Fully Responsive */
+        /* Embedded Analytics & Customer Evaluation Screen (Admin Gideoni Only) - Fully Scrollable & No Fixed Height Constraints */
         .analytics-screen {
-            flex: 1 1 0% !important;
-            min-height: 0 !important;
-            height: 100% !important;
-            max-height: 100% !important;
+            flex: none !important;
+            height: auto !important;
+            min-height: 100% !important;
+            max-height: none !important;
             display: none;
             flex-direction: column;
             width: 100%;
-            overflow-y: auto !important;
+            overflow-y: visible !important;
             overflow-x: hidden !important;
-            padding: 24px 32px 220px !important;
+            padding: 24px 32px 140px !important;
             box-sizing: border-box;
             gap: 24px;
-            scroll-behavior: smooth !important;
-            -webkit-overflow-scrolling: touch !important;
-            overscroll-behavior-y: contain !important;
-            touch-action: pan-y !important;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(16, 185, 129, 0.5) rgba(3, 7, 18, 0.75);
             position: relative;
         }
 
-        .analytics-screen::-webkit-scrollbar {
-            width: 10px;
+        .main-content::-webkit-scrollbar {
+            width: 8px;
         }
-        .analytics-screen::-webkit-scrollbar-track {
+        .main-content::-webkit-scrollbar-track {
             background: rgba(3, 7, 18, 0.75);
         }
-        .analytics-screen::-webkit-scrollbar-thumb {
+        .main-content::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, #10B981 0%, #059669 100%);
-            border-radius: 6px;
+            border-radius: 4px;
             border: 2px solid rgba(3, 7, 18, 0.75);
         }
-        .analytics-screen::-webkit-scrollbar-thumb:hover {
+        .main-content::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+        }
+
+        /* Prevent Flex Children from shrinking or clipping in analytics screen */
+        .emb-top-bar,
+        .emb-kpi-grid,
+        .emb-charts-grid,
+        .emb-categories-grid,
+        .emb-users-card {
+            flex-shrink: 0 !important;
         }
 
         /* Responsive Layout Elements for Analytics */
@@ -159,7 +162,10 @@
             flex-direction: column;
             gap: 16px;
             min-width: 0;
-            overflow: hidden;
+            height: auto !important;
+            min-height: fit-content !important;
+            flex-shrink: 0 !important;
+            overflow: visible !important;
         }
 
         .emb-users-toolbar {
@@ -179,7 +185,9 @@
 
         .emb-users-table-wrap {
             width: 100%;
-            max-height: 480px;
+            height: auto;
+            min-height: 200px;
+            max-height: 520px;
             overflow-x: auto !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch !important;
@@ -189,6 +197,8 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(16, 185, 129, 0.5) rgba(3, 7, 18, 0.6);
             position: relative;
+            flex-shrink: 0 !important;
+            display: block !important;
         }
 
         .emb-users-table-wrap::-webkit-scrollbar {
@@ -1479,69 +1489,7 @@
                 </div>
             </div>
 
-            <!-- Categories 4-Grid (Responsive Grid) -->
-            <div id="embSectionCategories" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                <span style="font-size:17px; font-weight:800; color:#F9FAFB;">File Taxonomy & Categorization Analytics</span>
-                <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--cyan-light); background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); padding:2px 7px; border-radius:5px;">CATEGORIES</span>
-            </div>
-
-            <div class="emb-categories-grid">
-                <!-- Source Modes -->
-                <div class="emb-category-card">
-                    <div style="display:flex; align-items:center; justify-content:space-between;">
-                        <div>
-                            <h4 style="font-size:14.5px; font-weight:700; color:var(--emerald-light);">Ingestion & Source Modes</h4>
-                            <p style="font-size:11.5px; color:var(--text-secondary);">Uploads, Video extracts, YouTube, Live Mic, Streams.</p>
-                        </div>
-                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embSourceModesCount">Modes</span>
-                    </div>
-                    <div class="emb-cat-canvas-wrap">
-                        <canvas id="embSourceModesChart"></canvas>
-                    </div>
-                    <div id="embSourceModesList" style="display:flex; flex-direction:column; gap:8px;"></div>
-                </div>
-
-                <!-- Formats -->
-                <div class="emb-category-card">
-                    <div style="display:flex; align-items:center; justify-content:space-between;">
-                        <div>
-                            <h4 style="font-size:14.5px; font-weight:700; color:var(--cyan-light);">File Formats & Extensions</h4>
-                            <p style="font-size:11.5px; color:var(--text-secondary);">.mp3, .wav, .m4a, .mp4, .stream media breakdown.</p>
-                        </div>
-                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embFileFormatsCount">Formats</span>
-                    </div>
-                    <div class="emb-cat-canvas-wrap">
-                        <canvas id="embFileFormatsChart"></canvas>
-                    </div>
-                    <div id="embFileFormatsList" style="display:flex; flex-direction:column; gap:8px;"></div>
-                </div>
-
-                <!-- Tiers -->
-                <div class="emb-category-card">
-                    <div>
-                        <h4 style="font-size:14.5px; font-weight:700; color:var(--amber-light);">Audio Duration Length Tiers</h4>
-                        <p style="font-size:11.5px; color:var(--text-secondary);">Quick (&lt;2m), Short (2-10m), Medium (10-30m), Extended (30m+).</p>
-                    </div>
-                    <div class="emb-cat-canvas-wrap">
-                        <canvas id="embLengthTiersChart"></canvas>
-                    </div>
-                    <div id="embLengthTiersList" style="display:flex; flex-direction:column; gap:8px;"></div>
-                </div>
-
-                <!-- Languages -->
-                <div class="emb-category-card">
-                    <div>
-                        <h4 style="font-size:14.5px; font-weight:700; color:var(--purple-light);">Language Taxonomy</h4>
-                        <p style="font-size:11.5px; color:var(--text-secondary);">Luganda, English, Swahili, French workloads.</p>
-                    </div>
-                    <div class="emb-cat-canvas-wrap">
-                        <canvas id="embLanguagesChart"></canvas>
-                    </div>
-                    <div id="embLanguagesList" style="display:flex; flex-direction:column; gap:8px;"></div>
-                </div>
-            </div>
-
-            <!-- User Management & Adoption Section (Responsive Card) -->
+            <!-- User Management & Adoption Section (Directly after Charts) -->
             <div id="embSectionUsers" class="emb-users-card">
                 <div class="emb-users-toolbar">
                     <div>
@@ -1583,6 +1531,79 @@
                 </div>
             </div>
 
+            <!-- More Analytics: File Taxonomy & Categorization Toggle Button -->
+            <div style="display:flex; justify-content:center; margin: 8px 0;">
+                <button type="button" id="btnToggleTaxonomy" onclick="toggleTaxonomySection()" style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(6, 182, 212, 0.35); color: #F3F4F6; border-radius: 12px; padding: 11px 24px; font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.35);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-light)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>More Analytics: File Taxonomy & Categorization</span>
+                    <svg id="arrowTaxonomy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-light)" stroke-width="2.5" style="transition: transform 0.25s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+            </div>
+
+            <!-- Collapsible File Taxonomy & Categorization Analytics -->
+            <div id="embTaxonomyWrap" style="display:none; flex-direction:column; gap:20px; transition: all 0.3s ease;">
+                <div id="embSectionCategories" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <span style="font-size:17px; font-weight:800; color:#F9FAFB;">File Taxonomy & Categorization Analytics</span>
+                    <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--cyan-light); background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); padding:2px 7px; border-radius:5px;">CATEGORIES</span>
+                </div>
+
+                <div class="emb-categories-grid">
+                    <!-- Source Modes -->
+                    <div class="emb-category-card">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <h4 style="font-size:14.5px; font-weight:700; color:var(--emerald-light);">Ingestion & Source Modes</h4>
+                                <p style="font-size:11.5px; color:var(--text-secondary);">Uploads, Video extracts, YouTube, Live Mic, Streams.</p>
+                            </div>
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embSourceModesCount">Modes</span>
+                        </div>
+                        <div class="emb-cat-canvas-wrap">
+                            <canvas id="embSourceModesChart"></canvas>
+                        </div>
+                        <div id="embSourceModesList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    </div>
+
+                    <!-- Formats -->
+                    <div class="emb-category-card">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <h4 style="font-size:14.5px; font-weight:700; color:var(--cyan-light);">File Formats & Extensions</h4>
+                                <p style="font-size:11.5px; color:var(--text-secondary);">.mp3, .wav, .m4a, .mp4, .stream media breakdown.</p>
+                            </div>
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embFileFormatsCount">Formats</span>
+                        </div>
+                        <div class="emb-cat-canvas-wrap">
+                            <canvas id="embFileFormatsChart"></canvas>
+                        </div>
+                        <div id="embFileFormatsList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    </div>
+
+                    <!-- Tiers -->
+                    <div class="emb-category-card">
+                        <div>
+                            <h4 style="font-size:14.5px; font-weight:700; color:var(--amber-light);">Audio Duration Length Tiers</h4>
+                            <p style="font-size:11.5px; color:var(--text-secondary);">Quick (&lt;2m), Short (2-10m), Medium (10-30m), Extended (30m+).</p>
+                        </div>
+                        <div class="emb-cat-canvas-wrap">
+                            <canvas id="embLengthTiersChart"></canvas>
+                        </div>
+                        <div id="embLengthTiersList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    </div>
+
+                    <!-- Languages -->
+                    <div class="emb-category-card">
+                        <div>
+                            <h4 style="font-size:14.5px; font-weight:700; color:var(--purple-light);">Language Taxonomy</h4>
+                            <p style="font-size:11.5px; color:var(--text-secondary);">Luganda, English, Swahili, French workloads.</p>
+                        </div>
+                        <div class="emb-cat-canvas-wrap">
+                            <canvas id="embLanguagesChart"></canvas>
+                        </div>
+                        <div id="embLanguagesList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Embedded Modals for Admin Gideoni -->
@@ -1603,7 +1624,13 @@
                     </div>
                     <div style="display:flex; flex-direction:column; gap:4px;">
                         <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Password *</label>
-                        <input type="password" id="embNewPassword" required minlength="6" style="background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:9px 12px; color:#F9FAFB; font-size:13px; outline:none;">
+                        <div style="position: relative; width: 100%; display: flex; align-items: center;">
+                            <input type="password" id="embNewPassword" required minlength="6" style="width:100%; background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:9px 40px 9px 12px; color:#F9FAFB; font-size:13px; outline:none;">
+                            <button type="button" onclick="togglePasswordVisibility('embNewPassword', this)" title="Show password" aria-label="Toggle password visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: #9CA3AF; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: color 0.15s;">
+                                <svg class="eye-open-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                <svg class="eye-closed-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            </button>
+                        </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <input type="checkbox" id="embNewIsStaff" style="accent-color:var(--emerald-primary);">
@@ -2076,11 +2103,9 @@
                 anal.scrollTop = 0;
             }
             if (mainContent) {
-                if (window.innerWidth <= 768) {
-                    mainContent.style.setProperty('overflow', 'visible', 'important');
-                } else {
-                    mainContent.style.setProperty('overflow', 'hidden', 'important');
-                }
+                mainContent.style.setProperty('overflow-y', 'auto', 'important');
+                mainContent.style.setProperty('overflow-x', 'hidden', 'important');
+                mainContent.scrollTop = 0;
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
             currentTranscriptionId = null;
@@ -2117,6 +2142,23 @@
             amberLight: '#FBBF24',
             rose: '#F43F5E'
         };
+
+        function toggleTaxonomySection() {
+            const wrap = document.getElementById('embTaxonomyWrap');
+            const arrow = document.getElementById('arrowTaxonomy');
+            if (!wrap) return;
+            const isHidden = wrap.style.display === 'none';
+            wrap.style.display = isHidden ? 'flex' : 'none';
+            if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            if (isHidden) {
+                setTimeout(() => {
+                    if (typeof embSourceModesChartInst !== 'undefined' && embSourceModesChartInst) embSourceModesChartInst.resize();
+                    if (typeof embFileFormatsChartInst !== 'undefined' && embFileFormatsChartInst) embFileFormatsChartInst.resize();
+                    if (typeof embLengthTiersChartInst !== 'undefined' && embLengthTiersChartInst) embLengthTiersChartInst.resize();
+                    if (typeof embLanguagesChartInst !== 'undefined' && embLanguagesChartInst) embLanguagesChartInst.resize();
+                }, 50);
+            }
+        }
 
         function initEmbeddedAnalytics() {
             const selRange = document.getElementById('embRangeSelect');
@@ -4363,6 +4405,20 @@
         });
 
         // User Authentication Functions
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const isPass = input.type === 'password';
+            input.type = isPass ? 'text' : 'password';
+            const eyeOpen = btn.querySelector('.eye-open-icon');
+            const eyeClosed = btn.querySelector('.eye-closed-icon');
+            if (eyeOpen && eyeClosed) {
+                eyeOpen.style.display = isPass ? 'none' : 'block';
+                eyeClosed.style.display = isPass ? 'block' : 'none';
+            }
+            btn.title = isPass ? 'Hide password' : 'Show password';
+        }
+
         function openAuthModal(mode) {
             const modal = document.getElementById('auth-modal');
             const title = document.getElementById('auth-modal-title');
@@ -4577,7 +4633,13 @@
 
                     <div style="display: flex; flex-direction: column; gap: 6px;">
                         <label style="font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); text-transform: uppercase;">Password</label>
-                        <input type="password" id="auth-password" required style="background: #141923; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 9px 12px; color: #FFFFFF; font-size: 13.5px; outline: none;">
+                        <div style="position: relative; width: 100%; display: flex; align-items: center;">
+                            <input type="password" id="auth-password" required style="width: 100%; background: #141923; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 9px 40px 9px 12px; color: #FFFFFF; font-size: 13.5px; outline: none; transition: border-color 0.2s;">
+                            <button type="button" onclick="togglePasswordVisibility('auth-password', this)" title="Show password" aria-label="Toggle password visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: #9CA3AF; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: color 0.15s;">
+                                <svg class="eye-open-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                <svg class="eye-closed-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
