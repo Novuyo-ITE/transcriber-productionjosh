@@ -1284,8 +1284,15 @@
                 </div>
 
                 <div class="emb-top-controls">
-                    <!-- Dropdown Menus: Range (All Time, Last 30 Days, Last 7 Days) and Metric (Minutes, Jobs) -->
+                    <!-- Dropdown Menus: User Filter (Granularity), Range, and Metric -->
                     <div class="analytics-filter-group" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <div class="analytics-dropdown-wrap" style="position:relative; display:inline-flex; align-items:center;">
+                            <select id="embUserSelect" class="analytics-select" onchange="changeEmbeddedUserFilter(this.value)" aria-label="Select User Granularity" style="background:#0D121F; color:#F3F4F6; border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:7px 28px 7px 11px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; outline:none; transition:border-color 0.2s, box-shadow 0.2s; max-width:230px; text-overflow:ellipsis;">
+                                <option value="all">🌐 All Users (Global)</option>
+                            </select>
+                            <svg style="position:absolute; right:9px; pointer-events:none; color:var(--emerald-light);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+
                         <div class="analytics-dropdown-wrap" style="position:relative; display:inline-flex; align-items:center;">
                             <select id="embRangeSelect" class="analytics-select" onchange="changeEmbeddedRange(this.value)" aria-label="Select Date Range" style="background:#0D121F; color:#F3F4F6; border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:7px 28px 7px 11px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; outline:none; transition:border-color 0.2s, box-shadow 0.2s;">
                                 <option value="all">All Time</option>
@@ -1307,6 +1314,32 @@
                     <button type="button" class="btn-refresh" id="btnRefreshEmbedded" onclick="refreshEmbeddedAnalytics()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); border-radius:9px; padding:8px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                         <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Per-User Granularity Active Banner -->
+            <div id="embActiveUserBanner" style="display:none; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08)); border:1px solid rgba(16,185,129,0.35); border-radius:12px; padding:12px 16px; margin-bottom:14px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div id="embActiveUserAvatar" style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, var(--emerald-primary), var(--cyan-primary)); color:#030712; font-weight:800; font-family:'JetBrains Mono',monospace; font-size:16px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px rgba(16,185,129,0.35);">
+                        U
+                    </div>
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span id="embActiveUserName" style="font-size:15px; font-weight:700; color:#F9FAFB;">User Name</span>
+                            <span id="embActiveUserRoleBadge" style="font-size:10px; font-family:'JetBrains Mono',monospace; font-weight:700; padding:2px 7px; border-radius:5px; background:rgba(16,185,129,0.2); color:var(--emerald-light); border:1px solid rgba(16,185,129,0.4);">USER</span>
+                            <span style="font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--text-secondary);" id="embActiveUserEmail">email@domain.com</span>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--emerald-light); margin-top:2px; display:flex; align-items:center; gap:6px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Filtered Granularity: Showing metrics for this user only</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" onclick="clearEmbeddedUserFilter()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#F9FAFB; border-radius:8px; padding:6px 12px; font-size:11.5px; font-family:'JetBrains Mono',monospace; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <span>Reset to Global (All Users)</span>
                     </button>
                 </div>
             </div>
@@ -1357,7 +1390,7 @@
 
                 <div class="emb-kpi-card" style="border-left:3px solid var(--purple-primary);">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
-                        <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Users & Contributors</span>
+                        <span id="embKpiCard4Title" style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Users & Contributors</span>
                         <div style="width:32px; height:32px; border-radius:8px; background:rgba(168,85,247,0.12); color:var(--purple-light); display:flex; align-items:center; justify-content:center;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
                         </div>
@@ -1365,7 +1398,7 @@
                     <div class="kpi-num" style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalUsers">--</div>
                     <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
                         <span id="embKpiActiveContributors">-- Active</span>
-                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--purple-light); background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">ADOPTION</span>
+                        <span id="embKpiCard4Badge" style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--purple-light); background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">ADOPTION</span>
                     </div>
                 </div>
             </div>
@@ -1397,10 +1430,10 @@
                 <div class="emb-chart-card">
                     <div>
                         <h3 style="font-size:15.5px; font-weight:700; color:#F9FAFB; display:flex; align-items:center; gap:8px;">
-                            <span style="color:var(--purple-light);">User Growth & Adoption</span>
-                            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; background:rgba(255,255,255,0.05); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.08);">USERS</span>
+                            <span id="embUserChartTitle" style="color:var(--purple-light);">User Growth & Adoption</span>
+                            <span id="embUserChartBadge" style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; background:rgba(255,255,255,0.05); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.08);">USERS</span>
                         </h3>
-                        <p style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Cumulative accounts and daily activity volume.</p>
+                        <p id="embUserChartDesc" style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Cumulative accounts and daily activity volume.</p>
                     </div>
                     <div class="emb-chart-canvas-wrap">
                         <canvas id="embUserEvolutionChart"></canvas>
@@ -2024,6 +2057,7 @@
         // =========================================================
         let embCurrentRange = 'all';
         let embTimelineMetric = 'minutes';
+        let embSelectedUserId = 'all';
         let embStatsData = null;
         let embUsersList = [];
 
@@ -2053,6 +2087,8 @@
             if (selTop) selTop.value = embTimelineMetric;
             const selChart = document.getElementById('embChartMetricSelect');
             if (selChart) selChart.value = embTimelineMetric;
+            const selUser = document.getElementById('embUserSelect');
+            if (selUser) selUser.value = embSelectedUserId;
             loadEmbeddedStats(embCurrentRange);
             loadEmbeddedUsers();
         }
@@ -2062,6 +2098,32 @@
             const selRange = document.getElementById('embRangeSelect');
             if (selRange) selRange.value = range;
             loadEmbeddedStats(range);
+        }
+
+        function changeEmbeddedUserFilter(userId) {
+            embSelectedUserId = userId || 'all';
+            const selUser = document.getElementById('embUserSelect');
+            if (selUser) selUser.value = embSelectedUserId;
+            loadEmbeddedStats(embCurrentRange);
+            renderEmbeddedUsersTable(embUsersList);
+        }
+
+        function clearEmbeddedUserFilter() {
+            changeEmbeddedUserFilter('all');
+        }
+
+        function selectEmbeddedUserRow(userId) {
+            embSelectedUserId = String(userId);
+            const selUser = document.getElementById('embUserSelect');
+            if (selUser) selUser.value = embSelectedUserId;
+            loadEmbeddedStats(embCurrentRange);
+            renderEmbeddedUsersTable(embUsersList);
+
+            // Smoothly scroll to the KPI and active user header
+            const targetSection = document.getElementById('embActiveUserBanner') || document.getElementById('embSectionKpis');
+            if (targetSection) {
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         function toggleEmbeddedTimelineMetric(metric) {
@@ -2088,7 +2150,8 @@
 
         async function loadEmbeddedStats(range) {
             try {
-                const res = await fetch(`/api/dashboard/stats/?range=${range}`);
+                const userParam = (embSelectedUserId && embSelectedUserId !== 'all') ? `&user_id=${encodeURIComponent(embSelectedUserId)}` : '';
+                const res = await fetch(`/api/dashboard/stats/?range=${range}${userParam}`);
                 const data = await res.json();
                 if (data.success) {
                     embStatsData = data;
@@ -2110,13 +2173,61 @@
             const elAvgDur = document.getElementById('embKpiAvgDuration');
             const elTotalUsers = document.getElementById('embKpiTotalUsers');
             const elActContrib = document.getElementById('embKpiActiveContributors');
+            const elCard4Title = document.getElementById('embKpiCard4Title');
+            const elCard4Badge = document.getElementById('embKpiCard4Badge');
+            const banner = document.getElementById('embActiveUserBanner');
 
             if (elTotalAudio) elTotalAudio.textContent = kpi.total_formatted || '0s';
             if (elTotalMin) elTotalMin.textContent = `${kpi.total_minutes || 0} Total Minutes`;
             if (elTotalJobs) elTotalJobs.textContent = `${kpi.total_jobs || 0} Jobs`;
             if (elAvgDur) elAvgDur.textContent = kpi.avg_duration_formatted || '0s';
-            if (elTotalUsers) elTotalUsers.textContent = `${kpi.total_users || 0} Registered`;
-            if (elActContrib) elActContrib.textContent = `${kpi.active_users || 0} Active (${kpi.guest_jobs || 0} Guests)`;
+
+            if (kpi.is_user_filtered && kpi.target_user) {
+                const u = kpi.target_user;
+                if (banner) {
+                    banner.style.display = 'flex';
+                    const avatar = document.getElementById('embActiveUserAvatar');
+                    const nameEl = document.getElementById('embActiveUserName');
+                    const roleEl = document.getElementById('embActiveUserRoleBadge');
+                    const emailEl = document.getElementById('embActiveUserEmail');
+                    if (avatar) avatar.textContent = (u.username || 'U').charAt(0).toUpperCase();
+                    if (nameEl) nameEl.textContent = u.username;
+                    if (emailEl) emailEl.textContent = u.email || '—';
+                    if (roleEl) {
+                        if (u.is_guest) {
+                            roleEl.textContent = 'ARCHIVE';
+                            roleEl.style.background = 'rgba(255,255,255,0.1)';
+                            roleEl.style.color = '#9CA3AF';
+                        } else if (u.is_staff || u.is_superuser) {
+                            roleEl.textContent = 'ADMIN / STAFF';
+                            roleEl.style.background = 'rgba(168,85,247,0.2)';
+                            roleEl.style.color = '#C084FC';
+                        } else {
+                            roleEl.textContent = 'ACTIVE USER';
+                            roleEl.style.background = 'rgba(16,185,129,0.2)';
+                            roleEl.style.color = '#34D399';
+                        }
+                    }
+                }
+                if (elCard4Title) elCard4Title.textContent = 'User Account Status';
+                if (elTotalUsers) elTotalUsers.textContent = u.is_active ? 'Active' : 'Suspended';
+                if (elActContrib) elActContrib.textContent = `Joined: ${u.date_joined || '—'}`;
+                if (elCard4Badge) {
+                    elCard4Badge.textContent = 'PER-USER';
+                    elCard4Badge.style.color = 'var(--emerald-light)';
+                    elCard4Badge.style.background = 'rgba(16,185,129,0.15)';
+                }
+            } else {
+                if (banner) banner.style.display = 'none';
+                if (elCard4Title) elCard4Title.textContent = 'Users & Contributors';
+                if (elTotalUsers) elTotalUsers.textContent = `${kpi.total_users || 0} Registered`;
+                if (elActContrib) elActContrib.textContent = `${kpi.active_users || 0} Active (${kpi.guest_jobs || 0} Guests)`;
+                if (elCard4Badge) {
+                    elCard4Badge.textContent = 'ADOPTION';
+                    elCard4Badge.style.color = 'var(--purple-light)';
+                    elCard4Badge.style.background = 'rgba(168,85,247,0.15)';
+                }
+            }
         }
 
         function renderEmbeddedAudioTimeline(timeline) {
@@ -2183,6 +2294,25 @@
             const ctx = canvas.getContext('2d');
             if (embUserEvolutionChart) embUserEvolutionChart.destroy();
 
+            const isFiltered = embStatsData && embStatsData.is_user_filtered;
+            const targetName = (isFiltered && embStatsData.target_user) ? embStatsData.target_user.username : '';
+
+            const titleEl = document.getElementById('embUserChartTitle');
+            const badgeEl = document.getElementById('embUserChartBadge');
+            const descEl = document.getElementById('embUserChartDesc');
+            if (isFiltered) {
+                if (titleEl) titleEl.textContent = `${targetName}'s Ingestion Activity`;
+                if (badgeEl) badgeEl.textContent = 'PER-USER';
+                if (descEl) descEl.textContent = `Daily activity volume and cumulative completed jobs for ${targetName}.`;
+            } else {
+                if (titleEl) titleEl.textContent = 'User Growth & Adoption';
+                if (badgeEl) badgeEl.textContent = 'USERS';
+                if (descEl) descEl.textContent = 'Cumulative accounts and daily activity volume.';
+            }
+
+            const lineLabel = isFiltered ? 'Cumulative Jobs' : 'Cumulative Users';
+            const barLabel = isFiltered ? 'Daily Jobs Ingested' : 'Daily Activity';
+
             embUserEvolutionChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -2190,7 +2320,7 @@
                     datasets: [
                         {
                             type: 'line',
-                            label: 'Cumulative Users',
+                            label: lineLabel,
                             data: evolution.map(e => e.cumulative_users),
                             borderColor: EMB_PALETTE.purple,
                             backgroundColor: 'rgba(168, 85, 247, 0.15)',
@@ -2203,7 +2333,7 @@
                         },
                         {
                             type: 'bar',
-                            label: 'Daily Activity',
+                            label: barLabel,
                             data: evolution.map(e => e.active_jobs),
                             backgroundColor: 'rgba(6, 182, 212, 0.65)',
                             borderRadius: 4,
@@ -2350,11 +2480,27 @@
                 const data = await res.json();
                 if (data.success) {
                     embUsersList = data.users || [];
+                    populateEmbeddedUserSelect();
                     renderEmbeddedUsersTable(embUsersList);
                 }
             } catch (err) {
                 console.error("Error loading embedded users:", err);
             }
+        }
+
+        function populateEmbeddedUserSelect() {
+            const sel = document.getElementById('embUserSelect');
+            if (!sel) return;
+            const currentVal = embSelectedUserId || 'all';
+            sel.innerHTML = '<option value="all">🌐 All Users (Global)</option>';
+            embUsersList.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                const countTxt = u.transcriptions_count > 0 ? `(${u.transcriptions_count} jobs, ${u.total_formatted})` : '(0 jobs)';
+                opt.textContent = `${u.username} ${countTxt}`;
+                sel.appendChild(opt);
+            });
+            sel.value = currentVal;
         }
 
         function filterEmbeddedUsers(q) {
@@ -2381,6 +2527,22 @@
             users.forEach(u => {
                 const tr = document.createElement('tr');
                 const isGuest = u.is_guest;
+                const isSelected = String(u.id) === String(embSelectedUserId);
+
+                tr.style.cursor = 'pointer';
+                tr.style.transition = 'all 0.18s ease';
+                if (isSelected) {
+                    tr.style.background = 'rgba(16, 185, 129, 0.12)';
+                    tr.style.boxShadow = 'inset 3px 0 0 var(--emerald-primary)';
+                } else {
+                    tr.onmouseenter = () => tr.style.background = 'rgba(255, 255, 255, 0.03)';
+                    tr.onmouseleave = () => tr.style.background = 'transparent';
+                }
+                tr.onclick = (e) => {
+                    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+                    selectEmbeddedUserRow(u.id);
+                };
+
                 const roleBadge = isGuest
                     ? '<span style="font-size:10px; font-family:\'JetBrains Mono\',monospace; color:var(--text-secondary); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">Guest</span>'
                     : (u.is_staff || u.is_superuser
@@ -2389,20 +2551,24 @@
 
                 const statusBtn = isGuest
                     ? '<span style="font-size:11px; color:var(--text-muted);">Session</span>'
-                    : `<button type="button" onclick="toggleEmbeddedUserStatus(${u.id})" style="background:${u.is_active ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'}; color:${u.is_active ? 'var(--emerald-light)' : '#FB7185'}; border:1px solid ${u.is_active ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}; border-radius:5px; font-size:10.5px; font-family:'JetBrains Mono',monospace; font-weight:700; padding:2px 7px; cursor:pointer;">
+                    : `<button type="button" onclick="event.stopPropagation(); toggleEmbeddedUserStatus(${u.id})" style="background:${u.is_active ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'}; color:${u.is_active ? 'var(--emerald-light)' : '#FB7185'}; border:1px solid ${u.is_active ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}; border-radius:5px; font-size:10.5px; font-family:'JetBrains Mono',monospace; font-weight:700; padding:2px 7px; cursor:pointer;">
                          ${u.is_active ? 'Active' : 'Suspended'}
                        </button>`;
 
                 const actions = `
-                    <div style="display:flex; justify-content:flex-end; gap:6px;">
-                        <button type="button" onclick="openEmbeddedPortfolioModal('${u.id}', '${escapeHtml(u.username)}')" title="View Portfolio" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:var(--cyan-light); border-radius:6px; padding:4px 8px; cursor:pointer;">
+                    <div style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
+                        <button type="button" onclick="event.stopPropagation(); selectEmbeddedUserRow('${u.id}')" title="Filter Analytics to this User" style="background:${isSelected ? 'var(--emerald-primary)' : 'rgba(16,185,129,0.12)'}; border:1px solid ${isSelected ? 'var(--emerald-primary)' : 'rgba(16,185,129,0.3)'}; color:${isSelected ? '#030712' : 'var(--emerald-light)'}; border-radius:6px; padding:4px 9px; font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>${isSelected ? 'Active' : 'Metrics'}</span>
+                        </button>
+                        <button type="button" onclick="event.stopPropagation(); openEmbeddedPortfolioModal('${u.id}', '${escapeHtml(u.username)}')" title="View Portfolio" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:var(--cyan-light); border-radius:6px; padding:4px 8px; cursor:pointer;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                         ${!isGuest ? `
-                        <button type="button" onclick="toggleEmbeddedUserRole(${u.id})" title="Toggle Role" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:var(--purple-light); border-radius:6px; padding:4px 8px; cursor:pointer;">
+                        <button type="button" onclick="event.stopPropagation(); toggleEmbeddedUserRole(${u.id})" title="Toggle Role" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:var(--purple-light); border-radius:6px; padding:4px 8px; cursor:pointer;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         </button>
-                        <button type="button" onclick="deleteEmbeddedUser(${u.id}, '${escapeHtml(u.username)}')" title="Delete User" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:#FB7185; border-radius:6px; padding:4px 8px; cursor:pointer;">
+                        <button type="button" onclick="event.stopPropagation(); deleteEmbeddedUser(${u.id}, '${escapeHtml(u.username)}')" title="Delete User" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:#FB7185; border-radius:6px; padding:4px 8px; cursor:pointer;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                         ` : ''}

@@ -1167,8 +1167,15 @@
             </div>
 
             <div class="dash-controls">
-                <!-- Dropdown Menus: Range (All Time, Last 30 Days, Last 7 Days) and Metric (Minutes, Jobs) -->
+                <!-- Dropdown Menus: User Filter (Granularity), Range, and Metric -->
                 <div class="dash-filter-group" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <div class="analytics-dropdown-wrap" style="position:relative; display:inline-flex; align-items:center;">
+                        <select id="dashUserSelect" class="dash-select" onchange="changeUserFilter(this.value)" aria-label="Select User Granularity" style="background:#0D121F; color:#F3F4F6; border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:7px 28px 7px 11px; font-size:12px; font-family:var(--font-mono); font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; outline:none; transition:border-color 0.2s, box-shadow 0.2s; max-width:240px; text-overflow:ellipsis;">
+                            <option value="all">🌐 All Users (Global)</option>
+                        </select>
+                        <svg style="position:absolute; right:9px; pointer-events:none; color:var(--emerald-light);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+
                     <div class="analytics-dropdown-wrap" style="position:relative; display:inline-flex; align-items:center;">
                         <select id="dashRangeSelect" class="dash-select" onchange="changeRange(this.value)" aria-label="Select Date Range" style="background:#0D121F; color:#F3F4F6; border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:7px 28px 7px 11px; font-size:12px; font-family:var(--font-mono); font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; outline:none; transition:border-color 0.2s, box-shadow 0.2s;">
                             <option value="all">All Time</option>
@@ -1193,6 +1200,32 @@
                 </button>
             </div>
         </section>
+
+        <!-- Per-User Granularity Active Banner -->
+        <div id="dashActiveUserBanner" style="display:none; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08)); border:1px solid rgba(16,185,129,0.35); border-radius:12px; padding:12px 16px; margin-bottom:14px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div id="dashActiveUserAvatar" style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, var(--emerald-primary), var(--cyan-primary)); color:#030712; font-weight:800; font-family:var(--font-mono); font-size:16px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px rgba(16,185,129,0.35);">
+                    U
+                </div>
+                <div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span id="dashActiveUserName" style="font-size:15px; font-weight:700; color:#F9FAFB;">User Name</span>
+                        <span id="dashActiveUserRoleBadge" style="font-size:10px; font-family:var(--font-mono); font-weight:700; padding:2px 7px; border-radius:5px; background:rgba(16,185,129,0.2); color:var(--emerald-light); border:1px solid rgba(16,185,129,0.4);">USER</span>
+                        <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-secondary);" id="dashActiveUserEmail">email@domain.com</span>
+                    </div>
+                    <div style="font-size:11.5px; color:var(--emerald-light); margin-top:2px; display:flex; align-items:center; gap:6px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>Filtered Granularity: Showing metrics for this user only</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" onclick="clearUserFilter()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#F9FAFB; border-radius:8px; padding:6px 12px; font-size:11.5px; font-family:var(--font-mono); font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <span>Reset to Global (All Users)</span>
+                </button>
+            </div>
+        </div>
 
         <!-- KPI Metrics Grid (Audio Volume, Total Jobs, Avg Length, Users) -->
         <section class="kpi-grid" id="dashSectionKpis">
@@ -1244,7 +1277,7 @@
             <!-- KPI 4: Users & Evolution -->
             <div class="kpi-card kpi-purple">
                 <div class="kpi-top">
-                    <span class="kpi-label">Users & Contributors</span>
+                    <span id="kpiCard4Title" class="kpi-label">Users & Contributors</span>
                     <div class="kpi-icon-wrap">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
@@ -1252,7 +1285,7 @@
                 <div class="kpi-value" id="kpiTotalUsers">--</div>
                 <div class="kpi-meta">
                     <span id="kpiActiveContributors">-- Active</span>
-                    <span class="kpi-pill">ADOPTION</span>
+                    <span id="kpiCard4Badge" class="kpi-pill">ADOPTION</span>
                 </div>
             </div>
         </section>
@@ -1287,10 +1320,10 @@
                 <div class="panel-header">
                     <div class="panel-title-wrap">
                         <h2 class="panel-title">
-                            <span style="color:var(--purple-light);">User Growth & Evolution</span>
-                            <span class="panel-tag">USER ADOPTION</span>
+                            <span id="userChartTitle" style="color:var(--purple-light);">User Growth & Evolution</span>
+                            <span id="userChartBadge" class="panel-tag">USER ADOPTION</span>
                         </h2>
-                        <p class="panel-desc">Cumulative registered user accounts and daily active transcribers over time.</p>
+                        <p id="userChartDesc" class="panel-desc">Cumulative registered user accounts and daily active transcribers over time.</p>
                     </div>
                 </div>
                 <div class="chart-container-lg">
@@ -1506,6 +1539,7 @@
     <script>
         let currentRange = 'all';
         let currentTimelineMetric = 'minutes'; // 'minutes' or 'jobs'
+        let selectedUserId = 'all';
         let dashboardStatsData = null;
         let allUsersList = [];
 
@@ -1550,6 +1584,32 @@
             loadDashboardStats(range);
         }
 
+        // User Filter Switcher
+        function changeUserFilter(userId) {
+            selectedUserId = userId || 'all';
+            const selUser = document.getElementById('dashUserSelect');
+            if (selUser) selUser.value = selectedUserId;
+            loadDashboardStats(currentRange);
+            renderUsersTable(allUsersList);
+        }
+
+        function clearUserFilter() {
+            changeUserFilter('all');
+        }
+
+        function selectUserRow(userId) {
+            selectedUserId = String(userId);
+            const selUser = document.getElementById('dashUserSelect');
+            if (selUser) selUser.value = selectedUserId;
+            loadDashboardStats(currentRange);
+            renderUsersTable(allUsersList);
+
+            const targetSection = document.getElementById('dashActiveUserBanner') || document.getElementById('dashSectionKpis');
+            if (targetSection) {
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         // Toggle Minutes vs Jobs on Timeline
         function toggleTimelineMetric(metric) {
             currentTimelineMetric = metric;
@@ -1578,7 +1638,8 @@
         // Fetch Stats API
         async function loadDashboardStats(range) {
             try {
-                const res = await fetch(`/api/dashboard/stats/?range=${range}`);
+                const userParam = (selectedUserId && selectedUserId !== 'all') ? `&user_id=${encodeURIComponent(selectedUserId)}` : '';
+                const res = await fetch(`/api/dashboard/stats/?range=${range}${userParam}`);
                 const data = await res.json();
                 if (data.success) {
                     dashboardStatsData = data;
@@ -1601,8 +1662,59 @@
             document.getElementById('kpiTotalMinutes').textContent = `${kpi.total_minutes || 0} Total Audio Minutes`;
             document.getElementById('kpiTotalJobs').textContent = `${kpi.total_jobs || 0} Jobs`;
             document.getElementById('kpiAvgDuration').textContent = kpi.avg_duration_formatted || '0s';
-            document.getElementById('kpiTotalUsers').textContent = `${kpi.total_users || 0} Registered`;
-            document.getElementById('kpiActiveContributors').textContent = `${kpi.active_users || 0} Active Contributors (${kpi.guest_jobs || 0} Guest Jobs)`;
+
+            const elCard4Title = document.getElementById('kpiCard4Title');
+            const elTotalUsers = document.getElementById('kpiTotalUsers');
+            const elActContrib = document.getElementById('kpiActiveContributors');
+            const elCard4Badge = document.getElementById('kpiCard4Badge');
+            const banner = document.getElementById('dashActiveUserBanner');
+
+            if (kpi.is_user_filtered && kpi.target_user) {
+                const u = kpi.target_user;
+                if (banner) {
+                    banner.style.display = 'flex';
+                    const avatar = document.getElementById('dashActiveUserAvatar');
+                    const nameEl = document.getElementById('dashActiveUserName');
+                    const roleEl = document.getElementById('dashActiveUserRoleBadge');
+                    const emailEl = document.getElementById('dashActiveUserEmail');
+                    if (avatar) avatar.textContent = (u.username || 'U').charAt(0).toUpperCase();
+                    if (nameEl) nameEl.textContent = u.username;
+                    if (emailEl) emailEl.textContent = u.email || '—';
+                    if (roleEl) {
+                        if (u.is_guest) {
+                            roleEl.textContent = 'ARCHIVE';
+                            roleEl.style.background = 'rgba(255,255,255,0.1)';
+                            roleEl.style.color = '#9CA3AF';
+                        } else if (u.is_staff || u.is_superuser) {
+                            roleEl.textContent = 'ADMIN / STAFF';
+                            roleEl.style.background = 'rgba(168,85,247,0.2)';
+                            roleEl.style.color = '#C084FC';
+                        } else {
+                            roleEl.textContent = 'ACTIVE USER';
+                            roleEl.style.background = 'rgba(16,185,129,0.2)';
+                            roleEl.style.color = '#34D399';
+                        }
+                    }
+                }
+                if (elCard4Title) elCard4Title.textContent = 'User Account Status';
+                if (elTotalUsers) elTotalUsers.textContent = u.is_active ? 'Active' : 'Suspended';
+                if (elActContrib) elActContrib.textContent = `Joined: ${u.date_joined || '—'}`;
+                if (elCard4Badge) {
+                    elCard4Badge.textContent = 'PER-USER';
+                    elCard4Badge.style.color = 'var(--emerald-light)';
+                    elCard4Badge.style.background = 'rgba(16,185,129,0.15)';
+                }
+            } else {
+                if (banner) banner.style.display = 'none';
+                if (elCard4Title) elCard4Title.textContent = 'Users & Contributors';
+                if (elTotalUsers) elTotalUsers.textContent = `${kpi.total_users || 0} Registered`;
+                if (elActContrib) elActContrib.textContent = `${kpi.active_users || 0} Active Contributors (${kpi.guest_jobs || 0} Guest Jobs)`;
+                if (elCard4Badge) {
+                    elCard4Badge.textContent = 'ADOPTION';
+                    elCard4Badge.style.color = 'var(--purple-light)';
+                    elCard4Badge.style.background = 'rgba(168,85,247,0.15)';
+                }
+            }
         }
 
         // 1. Audio Timeline Chart (Minutes or Jobs)
@@ -1713,6 +1825,25 @@
             const ctx = document.getElementById('userEvolutionChart').getContext('2d');
             if (userEvolutionChart) userEvolutionChart.destroy();
 
+            const isFiltered = dashboardStatsData && dashboardStatsData.is_user_filtered;
+            const targetName = (isFiltered && dashboardStatsData.target_user) ? dashboardStatsData.target_user.username : '';
+
+            const titleEl = document.getElementById('userChartTitle');
+            const badgeEl = document.getElementById('userChartBadge');
+            const descEl = document.getElementById('userChartDesc');
+            if (isFiltered) {
+                if (titleEl) titleEl.textContent = `${targetName}'s Ingestion Activity`;
+                if (badgeEl) badgeEl.textContent = 'PER-USER';
+                if (descEl) descEl.textContent = `Daily activity volume and cumulative completed jobs for ${targetName}.`;
+            } else {
+                if (titleEl) titleEl.textContent = 'User Growth & Evolution';
+                if (badgeEl) badgeEl.textContent = 'USER ADOPTION';
+                if (descEl) descEl.textContent = 'Cumulative registered user accounts and daily active transcribers over time.';
+            }
+
+            const lineLabel = isFiltered ? 'Cumulative Jobs' : 'Cumulative Users';
+            const barLabel = isFiltered ? 'Daily Jobs Ingested' : 'Daily Transcribing Activity';
+
             const labels = evolution.map(e => e.label);
             const cumulativeUsers = evolution.map(e => e.cumulative_users);
             const activeJobs = evolution.map(e => e.active_jobs);
@@ -1724,7 +1855,7 @@
                     datasets: [
                         {
                             type: 'line',
-                            label: 'Cumulative Users',
+                            label: lineLabel,
                             data: cumulativeUsers,
                             borderColor: PALETTE.purple,
                             backgroundColor: 'rgba(168, 85, 247, 0.15)',
@@ -1737,7 +1868,7 @@
                         },
                         {
                             type: 'bar',
-                            label: 'Daily Transcribing Activity',
+                            label: barLabel,
                             data: activeJobs,
                             backgroundColor: 'rgba(6, 182, 212, 0.65)',
                             borderRadius: 5,
@@ -2022,11 +2153,27 @@
                 const data = await res.json();
                 if (data.success) {
                     allUsersList = data.users || [];
+                    populateUserSelect();
                     renderUsersTable(allUsersList);
                 }
             } catch (err) {
                 console.error("Error loading users:", err);
             }
+        }
+
+        function populateUserSelect() {
+            const sel = document.getElementById('dashUserSelect');
+            if (!sel) return;
+            const currentVal = selectedUserId || 'all';
+            sel.innerHTML = '<option value="all">🌐 All Users (Global)</option>';
+            allUsersList.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                const countTxt = u.transcriptions_count > 0 ? `(${u.transcriptions_count} jobs, ${u.total_formatted})` : '(0 jobs)';
+                opt.textContent = `${u.username} ${countTxt}`;
+                sel.appendChild(opt);
+            });
+            sel.value = currentVal;
         }
 
         function filterUsers(query) {
@@ -2059,8 +2206,23 @@
             users.forEach(user => {
                 const tr = document.createElement('tr');
                 const isGuest = user.is_guest;
+                const isSelected = String(user.id) === String(selectedUserId);
                 const avatarClass = isGuest ? 'avatar-guest' : (user.is_staff ? 'avatar-staff' : 'avatar-reg');
                 const initial = isGuest ? '?' : (user.username ? user.username.charAt(0).toUpperCase() : 'U');
+
+                tr.style.cursor = 'pointer';
+                tr.style.transition = 'all 0.18s ease';
+                if (isSelected) {
+                    tr.style.background = 'rgba(16, 185, 129, 0.12)';
+                    tr.style.boxShadow = 'inset 3px 0 0 var(--emerald-primary)';
+                } else {
+                    tr.onmouseenter = () => tr.style.background = 'rgba(255, 255, 255, 0.03)';
+                    tr.onmouseleave = () => tr.style.background = 'transparent';
+                }
+                tr.onclick = (e) => {
+                    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+                    selectUserRow(user.id);
+                };
 
                 let roleBadge = '<span class="badge-role role-user">User</span>';
                 if (isGuest) {
@@ -2073,21 +2235,25 @@
 
                 const statusBtn = isGuest
                     ? '<span style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted);">Session</span>'
-                    : `<button type="button" class="status-toggle-btn ${user.is_active ? 'status-active' : 'status-suspended'}" onclick="toggleUserStatus(${user.id})" title="Click to toggle active/suspended">
+                    : `<button type="button" class="status-toggle-btn ${user.is_active ? 'status-active' : 'status-suspended'}" onclick="event.stopPropagation(); toggleUserStatus(${user.id})" title="Click to toggle active/suspended">
                          <span style="width:6px; height:6px; border-radius:50%; background:${user.is_active ? 'var(--emerald-light)' : '#FB7185'};"></span>
                          <span>${user.is_active ? 'Active' : 'Suspended'}</span>
                        </button>`;
 
                 const actionButtons = `
-                    <div class="action-icon-group" style="justify-content: flex-end;">
-                        <button type="button" class="btn-table-action btn-view" onclick="openPortfolioModal('${user.id}', '${escapeHtml(user.username)}')" title="View Transcribed Audio Portfolio">
+                    <div class="action-icon-group" style="justify-content: flex-end; align-items: center; gap: 6px;">
+                        <button type="button" onclick="event.stopPropagation(); selectUserRow('${user.id}')" title="Filter Analytics to this User" style="background:${isSelected ? 'var(--emerald-primary)' : 'rgba(16,185,129,0.12)'}; border:1px solid ${isSelected ? 'var(--emerald-primary)' : 'rgba(16,185,129,0.3)'}; color:${isSelected ? '#030712' : 'var(--emerald-light)'}; border-radius:6px; padding:4px 9px; font-size:11px; font-family:var(--font-mono); font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>${isSelected ? 'Active' : 'Metrics'}</span>
+                        </button>
+                        <button type="button" class="btn-table-action btn-view" onclick="event.stopPropagation(); openPortfolioModal('${user.id}', '${escapeHtml(user.username)}')" title="View Transcribed Audio Portfolio">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                         ${!isGuest ? `
-                        <button type="button" class="btn-table-action" onclick="toggleUserRole(${user.id})" title="Toggle Staff / Admin Role">
+                        <button type="button" class="btn-table-action" onclick="event.stopPropagation(); toggleUserRole(${user.id})" title="Toggle Staff / Admin Role">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         </button>
-                        <button type="button" class="btn-table-action btn-del" onclick="deleteUserAccount(${user.id}, '${escapeHtml(user.username)}')" title="Delete User Account">
+                        <button type="button" class="btn-table-action btn-del" onclick="event.stopPropagation(); deleteUserAccount(${user.id}, '${escapeHtml(user.username)}')" title="Delete User Account">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                         ` : ''}

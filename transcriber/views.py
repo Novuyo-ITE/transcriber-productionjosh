@@ -1723,6 +1723,7 @@ def dashboard_stats_api_view(request):
     from django.utils import timezone
 
     time_range = request.GET.get('range', 'all').lower()
+    user_id_param = request.GET.get('user_id', '').strip()
     now = timezone.now()
 
     qs = Transcription.objects.all().order_by('created_at')
@@ -1732,6 +1733,38 @@ def dashboard_stats_api_view(request):
     elif time_range == '30d':
         cutoff = now - timedelta(days=30)
         qs = qs.filter(created_at__gte=cutoff)
+
+    target_user_info = None
+    if user_id_param and user_id_param.lower() != 'all':
+        if user_id_param.lower() == 'guest':
+            qs = qs.filter(user__isnull=True)
+            target_user_info = {
+                'id': 'guest',
+                'username': 'Archived Legacy Sessions (Pre-Registration)',
+                'email': 'archived-records@system.local',
+                'is_guest': True,
+                'is_active': True,
+                'is_staff': False,
+                'date_joined': 'Pre-registration archive'
+            }
+        else:
+            try:
+                if user_id_param.isdigit():
+                    target_user = User.objects.get(id=int(user_id_param))
+                else:
+                    target_user = User.objects.get(username__iexact=user_id_param)
+                qs = qs.filter(user=target_user)
+                target_user_info = {
+                    'id': str(target_user.id),
+                    'username': target_user.username,
+                    'email': target_user.email,
+                    'is_staff': target_user.is_staff,
+                    'is_superuser': target_user.is_superuser,
+                    'is_active': target_user.is_active,
+                    'date_joined': target_user.date_joined.strftime('%Y-%m-%d %H:%M')
+                }
+            except (User.DoesNotExist, ValueError):
+                target_user_info = None
 
     all_transcriptions = list(qs)
     all_users = list(User.objects.all().order_by('date_joined'))
@@ -1803,9 +1836,10 @@ def dashboard_stats_api_view(request):
 
     # User timeline & growth
     user_reg_by_date = defaultdict(int)
-    for u in all_users:
-        u_d = u.date_joined.strftime('%Y-%m-%d')
-        user_reg_by_date[u_d] += 1
+    if not target_user_info:
+        for u in all_users:
+            u_d = u.date_joined.strftime('%Y-%m-%d')
+            user_reg_by_date[u_d] += 1
 
     # Build chronological timeline
     all_dates = sorted(set(list(timeline.keys()) + list(user_reg_by_date.keys())))
@@ -1813,6 +1847,7 @@ def dashboard_stats_api_view(request):
     user_evolution_records = []
     cum_hours = 0.0
     cum_users = 0
+    cum_user_jobs = 0
 
     for d in all_dates:
         t_data = timeline.get(d, {'count': 0, 'seconds': 0.0})
@@ -1835,15 +1870,25 @@ def dashboard_stats_api_view(request):
             'cumulative_hours': cum_hours
         })
 
-        new_u = user_reg_by_date.get(d, 0)
-        cum_users += new_u
-        user_evolution_records.append({
-            'date': d,
-            'label': label,
-            'new_users': new_u,
-            'cumulative_users': cum_users,
-            'active_jobs': t_data['count']
-        })
+        if target_user_info:
+            cum_user_jobs += t_data['count']
+            user_evolution_records.append({
+                'date': d,
+                'label': label,
+                'new_users': t_data['count'],
+                'cumulative_users': cum_user_jobs,
+                'active_jobs': t_data['count']
+            })
+        else:
+            new_u = user_reg_by_date.get(d, 0)
+            cum_users += new_u
+            user_evolution_records.append({
+                'date': d,
+                'label': label,
+                'new_users': new_u,
+                'cumulative_users': cum_users,
+                'active_jobs': t_data['count']
+            })
 
     # Prepare categories lists sorted by count
     def _to_sorted_list(d_dict):
@@ -1894,7 +1939,11 @@ def dashboard_stats_api_view(request):
 
     response_data = {
         'success': True,
+        'is_user_filtered': bool(target_user_info),
+        'target_user': target_user_info,
         'kpi': {
+            'is_user_filtered': bool(target_user_info),
+            'target_user': target_user_info,
             'total_jobs': total_jobs,
             'total_seconds': round(total_seconds, 1),
             'total_minutes': round(total_seconds / 60.0, 1),
