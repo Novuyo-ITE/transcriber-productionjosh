@@ -859,7 +859,8 @@
                 </svg>
                 <span class="btn-live-text" style="color:#38BDF8 !important;">Real-Time Stream</span>
             </button>
-            <a href="/dashboard/" class="btn-analytics-dash" title="Analytics & User Management Dashboard" style="width: 100%; padding: 9px 12px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #C084FC; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
+            {% if user.is_authenticated and user.username|lower == 'gideoni' %}
+            <a href="/dashboard/" class="btn-analytics-dash" title="Analytics & User Management Dashboard (Admin Gideoni)" style="width: 100%; padding: 9px 12px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #C084FC; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="20" x2="18" y2="10"></line>
                     <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -867,6 +868,7 @@
                 </svg>
                 <span class="btn-live-text" style="color: #C084FC;">Analytics & Users</span>
             </a>
+            {% endif %}
         </div>
 
         <!-- History Search -->

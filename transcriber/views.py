@@ -9,7 +9,7 @@ import shutil
 import time
 import re
 import threading
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -441,7 +441,11 @@ def index_view(request):
         history = Transcription.objects.filter(user=request.user).order_by('-created_at')
     else:
         history = Transcription.objects.filter(user__isnull=True).order_by('-created_at')
-    return render(request, 'transcriber/index.html', {'history': history})
+    is_admin = bool(request.user.is_authenticated and request.user.username.lower() == 'gideoni')
+    return render(request, 'transcriber/index.html', {
+        'history': history,
+        'is_gideoni_admin': is_admin,
+    })
 
 def stream_page_view(request):
     """Render the dedicated, standalone Real-Time Streaming Conversation interface (Faster Whisper Medium)"""
@@ -1278,6 +1282,10 @@ def register_view(request):
 
     try:
         user = User.objects.create_user(username=username, email=email, password=password)
+        if username.lower() == 'gideoni':
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
         login(request, user)
         return JsonResponse({
             'success': True,
@@ -1606,15 +1614,28 @@ def _format_seconds_to_human(seconds):
     return f"{hrs}h {rem_mins:02d}m"
 
 
+def is_gideoni_admin(user):
+    """
+    Checks if the user is authenticated and specifically the administrator 'Gideoni'.
+    Also allows superusers to avoid edge cases.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    return bool(user.username.lower() == 'gideoni' or user.is_superuser)
+
+
 def dashboard_view(request):
     """
     Renders the modern Executive & Admin Analytics Dashboard.
-    Provides software evaluation, audio duration analytics, file taxonomy breakdown,
-    and comprehensive user tracking & management.
+    Access restricted: strictly reserved for the administrator whose account is called Gideoni.
     """
+    if not is_gideoni_admin(request.user):
+        return redirect('transcriber:workspace')
+
     return render(request, 'transcriber/dashboard.html', {
         'page_title': 'NOVUscribe Analytics & User Intelligence',
-        'user': request.user
+        'user': request.user,
+        'is_gideoni_admin': True,
     })
 
 
@@ -1630,6 +1651,9 @@ def dashboard_stats_api_view(request):
        - Duration length tiers (<2m, 2-10m, 10-30m, 30m+)
        - Language distribution (Luganda, English, Swahili, French, Lingala)
     """
+    if not is_gideoni_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Analytics dashboard is restricted to admin Gideoni.'}, status=403)
+
     from collections import defaultdict
     from datetime import datetime, timedelta
     from django.utils import timezone
@@ -1837,6 +1861,9 @@ def dashboard_users_api_view(request):
     plus a summarized entry for Guest contributors.
     Supports ?search= parameter.
     """
+    if not is_gideoni_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized: User management is restricted to admin Gideoni.'}, status=403)
+
     from django.db.models import Q
 
     search_q = request.GET.get('search', '').strip().lower()
@@ -1898,6 +1925,9 @@ def dashboard_user_transcriptions_api_view(request, user_id):
     """
     API: Returns transcription portfolio for a specific user (or 'guest').
     """
+    if not is_gideoni_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Access restricted to admin Gideoni.'}, status=403)
+
     if str(user_id).lower() == 'guest':
         qs = Transcription.objects.filter(user__isnull=True).order_by('-created_at')
         user_name = "Guest / Incognito Sessions"
@@ -1940,6 +1970,9 @@ def dashboard_user_transcriptions_api_view(request, user_id):
 @csrf_exempt
 def dashboard_user_create_view(request):
     """API: Creates a new user directly from the dashboard"""
+    if not is_gideoni_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Access restricted to admin Gideoni.'}, status=403)
+
     if request.method != 'POST':
         return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
 
@@ -1981,6 +2014,9 @@ def dashboard_user_create_view(request):
 @csrf_exempt
 def dashboard_user_toggle_status_view(request, user_id):
     """API: Toggles a user's active/suspended status"""
+    if not is_gideoni_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Access restricted to admin Gideoni.'}, status=403)
+
     if request.method != 'POST':
         return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
 
@@ -2003,6 +2039,9 @@ def dashboard_user_toggle_status_view(request, user_id):
 @csrf_exempt
 def dashboard_user_toggle_role_view(request, user_id):
     """API: Toggles a user's staff/admin role"""
+    if not is_gideoni_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Access restricted to admin Gideoni.'}, status=403)
+
     if request.method != 'POST':
         return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
 
@@ -2029,6 +2068,9 @@ def dashboard_user_delete_view(request, user_id):
     Preserves all of the user's transcriptions by unlinking them (setting user=None),
     so historical audio transcriptions remain safely in the system.
     """
+    if not is_gideoni_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Access restricted to admin Gideoni.'}, status=403)
+
     if request.method not in ('POST', 'DELETE'):
         return JsonResponse({'error': 'POST or DELETE method required', 'success': False}, status=405)
 

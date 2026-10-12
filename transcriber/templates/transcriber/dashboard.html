@@ -50,15 +50,45 @@
             padding: 0;
         }
 
+        html {
+            height: auto !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            scroll-behavior: smooth !important;
+        }
+
         body {
-            background-color: var(--bg-main);
-            color: var(--text-primary);
-            font-family: var(--font-sans);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            background-color: var(--bg-main) !important;
+            color: var(--text-primary) !important;
+            font-family: var(--font-sans) !important;
+            height: auto !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            scroll-behavior: smooth !important;
             -webkit-font-smoothing: antialiased;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.5) rgba(3, 7, 18, 0.85);
+        }
+
+        /* Custom Scrollbars for Standalone Dashboard */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(3, 7, 18, 0.85);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            border-radius: 6px;
+            border: 2px solid rgba(3, 7, 18, 0.85);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
         }
 
         /* Top Navigation Bar */
@@ -161,16 +191,67 @@
             box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
         }
 
-        /* Dashboard Container */
+        /* Dashboard Container - Ultra Scrollable */
         .dash-main {
             flex: 1;
             max-width: 1540px;
             width: 100%;
             margin: 0 auto;
-            padding: 28px 28px 60px;
+            padding: 28px 28px 220px !important;
             display: flex;
             flex-direction: column;
             gap: 28px;
+            position: relative;
+        }
+
+        /* Floating Quick-Scroll Navigation Pill HUD */
+        .dash-scroll-hud {
+            position: fixed;
+            bottom: 24px;
+            right: 28px;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(13, 18, 31, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 18px rgba(16, 185, 129, 0.18);
+            padding: 5px 8px;
+            border-radius: 30px;
+            transition: all 0.25s ease;
+        }
+
+        .dash-hud-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            border-radius: 20px;
+            padding: 5px 11px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .dash-hud-btn:hover {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: rgba(16, 185, 129, 0.45);
+            color: #6EE7B7;
+            transform: translateY(-1px);
+        }
+
+        .dash-hud-btn.dash-hud-btn-top {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: var(--emerald-light);
+            font-weight: 700;
         }
 
         /* Top Action Bar: Range Filters & Refresh */
@@ -1148,7 +1229,7 @@
         </section>
 
         <!-- KPI Metrics Grid (Audio Volume, Total Jobs, Avg Length, Users) -->
-        <section class="kpi-grid">
+        <section class="kpi-grid" id="dashSectionKpis">
             <!-- KPI 1: Audio Volume (Time) -->
             <div class="kpi-card kpi-emerald">
                 <div class="kpi-top">
@@ -1211,7 +1292,7 @@
         </section>
 
         <!-- Charts Row: Audio Volume Timeline + User Evolution -->
-        <section class="dash-row-grid">
+        <section class="dash-row-grid" id="dashSectionCharts">
             <!-- Left Chart: Audio Processing Volume Over Time -->
             <div class="dash-panel">
                 <div class="panel-header">
@@ -1257,7 +1338,7 @@
             </div>
         </div>
 
-        <section class="category-grid">
+        <section class="category-grid" id="dashSectionCategories">
             <!-- Category Panel 1: Ingestion & Source Modes -->
             <div class="dash-panel">
                 <div class="panel-header">
@@ -1336,7 +1417,7 @@
         </section>
 
         <!-- User Management & Portfolio Section -->
-        <section class="dash-panel">
+        <section class="dash-panel" id="dashSectionUsers">
             <div class="user-mgmt-header">
                 <div class="panel-title-wrap">
                     <h2 class="panel-title" style="font-size:18px;">
@@ -1384,6 +1465,30 @@
                 </table>
             </div>
         </section>
+
+        <!-- Floating Quick-Scroll Navigation Pill HUD -->
+        <div class="dash-scroll-hud" id="dashScrollHud">
+            <button type="button" class="dash-hud-btn dash-hud-btn-top" onclick="scrollDashTo('top')" title="Smooth Scroll to Top">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                <span>Top</span>
+            </button>
+            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionKpis')" title="Jump to KPI Metrics">
+                <span>KPIs</span>
+            </button>
+            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionCharts')" title="Jump to Volume & Growth Timeline">
+                <span>Timeline</span>
+            </button>
+            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionCategories')" title="Jump to File Categories Breakdown">
+                <span>Taxonomy</span>
+            </button>
+            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionUsers')" title="Jump to User Management Table">
+                <span>Users</span>
+            </button>
+            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('bottom')" title="Smooth Scroll to Bottom">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                <span>Bottom</span>
+            </button>
+        </div>
 
     </main>
 
@@ -2264,6 +2369,19 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
+        }
+
+        function scrollDashTo(target) {
+            if (target === 'top') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (target === 'bottom') {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            } else {
+                const el = document.getElementById(target);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         }
     </script>
 </body>

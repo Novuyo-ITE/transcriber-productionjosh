@@ -18,7 +18,105 @@
         })();
     </script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=22.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
+        /* Embedded Analytics & Customer Evaluation Screen (Admin Gideoni Only) - Ultra Scrollable */
+        .analytics-screen {
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding: 24px 32px 220px !important;
+            box-sizing: border-box;
+            gap: 26px;
+            scroll-behavior: smooth !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-y: contain !important;
+            touch-action: pan-y !important;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.5) rgba(3, 7, 18, 0.75);
+            position: relative;
+        }
+
+        .analytics-screen::-webkit-scrollbar {
+            width: 10px;
+        }
+        .analytics-screen::-webkit-scrollbar-track {
+            background: rgba(3, 7, 18, 0.75);
+        }
+        .analytics-screen::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            border-radius: 6px;
+            border: 2px solid rgba(3, 7, 18, 0.75);
+        }
+        .analytics-screen::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+        }
+
+        /* Floating Quick-Scroll Navigation Pill HUD */
+        .emb-scroll-hud {
+            position: fixed;
+            bottom: 24px;
+            right: 28px;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(13, 18, 31, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 18px rgba(16, 185, 129, 0.18);
+            padding: 5px 8px;
+            border-radius: 30px;
+            transition: all 0.25s ease;
+        }
+
+        .emb-hud-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            border-radius: 20px;
+            padding: 5px 11px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .emb-hud-btn:hover {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: rgba(16, 185, 129, 0.45);
+            color: #6EE7B7;
+            transform: translateY(-1px);
+        }
+
+        .emb-hud-btn.emb-hud-btn-top {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: var(--emerald-light);
+            font-weight: 700;
+        }
+
+        #mainSidebar.sidebar-collapsed .btn-analytics-dash {
+            padding: 10px !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
+        #mainSidebar.sidebar-collapsed .btn-analytics-dash span {
+            display: none !important;
+        }
+
         /* Shrunk / Collapsed Sidebar Live & Stream Recording Button Optimization */
         #mainSidebar.sidebar-collapsed .btn-live-text {
             display: none !important;
@@ -483,14 +581,16 @@
                 </svg>
                 <span class="btn-live-text" style="color:#38BDF8 !important;">Real-Time Stream</span>
             </button>
-            <a href="/dashboard/" class="btn-analytics-dash" title="Analytics & User Management Dashboard" style="width: 100%; padding: 9px 12px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #C084FC; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
+            {% if is_gideoni_admin or user.is_authenticated and user.username|lower == 'gideoni' %}
+            <button type="button" class="btn-analytics-dash" id="btnSidebarAnalytics" onclick="showAnalyticsScreen()" title="Analytics & User Management Dashboard (Admin Gideoni)" style="width: 100%; padding: 9px 12px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #C084FC; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="20" x2="18" y2="10"></line>
                     <line x1="12" y1="20" x2="12" y2="4"></line>
                     <line x1="6" y1="20" x2="6" y2="14"></line>
                 </svg>
                 <span class="btn-live-text" style="color: #C084FC;">Analytics & Users</span>
-            </a>
+            </button>
+            {% endif %}
         </div>
 
         <!-- History Search -->
@@ -984,6 +1084,309 @@
             </div>
         </div>
 
+        {% if is_gideoni_admin or user.is_authenticated and user.username|lower == 'gideoni' %}
+        <!-- Screen 3: Embedded Customer & Software Analytics Dashboard (Admin Gideoni Only) -->
+        <div class="analytics-screen" id="analytics-screen">
+            <!-- Analytics Top Action Bar -->
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; background:linear-gradient(180deg, rgba(17,24,39,0.7) 0%, rgba(13,18,31,0.9) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 24px;">
+                <div>
+                    <h2 style="font-size:20px; font-weight:800; color:#F9FAFB; display:flex; align-items:center; gap:10px;">
+                        <span>Customer & Software Analytics</span>
+                        <span style="font-size:11px; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--emerald-primary); background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); padding:3px 9px; border-radius:6px;">ADMIN: GIDEONI</span>
+                    </h2>
+                    <p style="font-size:12.5px; color:var(--text-secondary); margin-top:4px;">Workspace telemetry: audio hours transcribed, file taxonomy breakdown, and user management.</p>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <div style="display:flex; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:9px; padding:3px; gap:2px;">
+                        <button type="button" class="range-btn active" data-range="all" onclick="changeEmbeddedRange('all')">All Time</button>
+                        <button type="button" class="range-btn" data-range="30d" onclick="changeEmbeddedRange('30d')">Last 30 Days</button>
+                        <button type="button" class="range-btn" data-range="7d" onclick="changeEmbeddedRange('7d')">Last 7 Days</button>
+                    </div>
+
+                    <button type="button" class="btn-refresh" id="btnRefreshEmbedded" onclick="refreshEmbeddedAnalytics()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); border-radius:9px; padding:8px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        <span>Refresh</span>
+                    </button>
+
+                    <a href="/dashboard/" target="_blank" style="padding:8px 14px; border-radius:9px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(168,85,247,0.14); border:1px solid rgba(168,85,247,0.4); color:#C084FC; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        <span>Standalone Window</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4 Glowing KPI Cards -->
+            <div id="embSectionKpis" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--emerald-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Audio Volume Transcribed</span>
+                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(16,185,129,0.12); color:var(--emerald-light); display:flex; align-items:center; justify-content:center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                        </div>
+                    </div>
+                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalAudio">--</div>
+                    <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
+                        <span id="embKpiTotalMinutes">-- Audio Minutes</span>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--emerald-light); background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">VOLUME</span>
+                    </div>
+                </div>
+
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--cyan-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Jobs Processed</span>
+                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(6,182,212,0.12); color:var(--cyan-light); display:flex; align-items:center; justify-content:center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                        </div>
+                    </div>
+                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalJobs">--</div>
+                    <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
+                        <span>100% RunPod GPU</span>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--cyan-light); background:rgba(6,182,212,0.15); padding:2px 6px; border-radius:4px;">THROUGHPUT</span>
+                    </div>
+                </div>
+
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--amber-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Average Audio Length</span>
+                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(245,158,11,0.12); color:var(--amber-light); display:flex; align-items:center; justify-content:center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                    </div>
+                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiAvgDuration">--</div>
+                    <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
+                        <span>Per Ingestion</span>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--amber-light); background:rgba(245,158,11,0.15); padding:2px 6px; border-radius:4px;">EFFICIENCY</span>
+                    </div>
+                </div>
+
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--purple-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Users & Contributors</span>
+                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(168,85,247,0.12); color:var(--purple-light); display:flex; align-items:center; justify-content:center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                        </div>
+                    </div>
+                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalUsers">--</div>
+                    <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
+                        <span id="embKpiActiveContributors">-- Active</span>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--purple-light); background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">ADOPTION</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row: Audio Volume Evolution + User Evolution -->
+            <div id="embSectionCharts" style="display:grid; grid-template-columns:1.5fr 1fr; gap:20px;">
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h3 style="font-size:15.5px; font-weight:700; color:#F9FAFB; display:flex; align-items:center; gap:8px;">
+                                <span style="color:var(--emerald-light);">Audio Volume Evolution</span>
+                                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; background:rgba(255,255,255,0.05); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.08);">TIME PROCESSED</span>
+                            </h3>
+                            <p style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Daily transcribed audio volume (minutes) & cumulative hours curve.</p>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <button type="button" class="range-btn active" id="btnEmbMetricMinutes" onclick="toggleEmbeddedTimelineMetric('minutes')">Minutes</button>
+                            <button type="button" class="range-btn" id="btnEmbMetricJobs" onclick="toggleEmbeddedTimelineMetric('jobs')">Jobs</button>
+                        </div>
+                    </div>
+                    <div style="position:relative; height:280px; width:100%;">
+                        <canvas id="embAudioTimelineChart"></canvas>
+                    </div>
+                </div>
+
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
+                    <div>
+                        <h3 style="font-size:15.5px; font-weight:700; color:#F9FAFB; display:flex; align-items:center; gap:8px;">
+                            <span style="color:var(--purple-light);">User Growth & Adoption</span>
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; background:rgba(255,255,255,0.05); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.08);">USERS</span>
+                        </h3>
+                        <p style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Cumulative accounts and daily activity volume.</p>
+                    </div>
+                    <div style="position:relative; height:280px; width:100%;">
+                        <canvas id="embUserEvolutionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories 4-Grid -->
+            <div id="embSectionCategories" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                <span style="font-size:17px; font-weight:800; color:#F9FAFB;">File Taxonomy & Categorization Analytics</span>
+                <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--cyan-light); background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); padding:2px 7px; border-radius:5px;">CATEGORIES</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:18px;">
+                <!-- Source Modes -->
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <h4 style="font-size:14.5px; font-weight:700; color:var(--emerald-light);">Ingestion & Source Modes</h4>
+                            <p style="font-size:11.5px; color:var(--text-secondary);">Uploads, Video extracts, YouTube, Live Mic, Streams.</p>
+                        </div>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embSourceModesCount">Modes</span>
+                    </div>
+                    <div style="position:relative; height:220px; width:100%;">
+                        <canvas id="embSourceModesChart"></canvas>
+                    </div>
+                    <div id="embSourceModesList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+
+                <!-- Formats -->
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <h4 style="font-size:14.5px; font-weight:700; color:var(--cyan-light);">File Formats & Extensions</h4>
+                            <p style="font-size:11.5px; color:var(--text-secondary);">.mp3, .wav, .m4a, .mp4, .stream media breakdown.</p>
+                        </div>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embFileFormatsCount">Formats</span>
+                    </div>
+                    <div style="position:relative; height:220px; width:100%;">
+                        <canvas id="embFileFormatsChart"></canvas>
+                    </div>
+                    <div id="embFileFormatsList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+
+                <!-- Tiers -->
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                    <div>
+                        <h4 style="font-size:14.5px; font-weight:700; color:var(--amber-light);">Audio Duration Length Tiers</h4>
+                        <p style="font-size:11.5px; color:var(--text-secondary);">Quick (&lt;2m), Short (2-10m), Medium (10-30m), Extended (30m+).</p>
+                    </div>
+                    <div style="position:relative; height:220px; width:100%;">
+                        <canvas id="embLengthTiersChart"></canvas>
+                    </div>
+                    <div id="embLengthTiersList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+
+                <!-- Languages -->
+                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                    <div>
+                        <h4 style="font-size:14.5px; font-weight:700; color:var(--purple-light);">Language Taxonomy</h4>
+                        <p style="font-size:11.5px; color:var(--text-secondary);">Luganda, English, Swahili, French workloads.</p>
+                    </div>
+                    <div style="position:relative; height:220px; width:100%;">
+                        <canvas id="embLanguagesChart"></canvas>
+                    </div>
+                    <div id="embLanguagesList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+            </div>
+
+            <!-- User Management & Adoption Section -->
+            <div id="embSectionUsers" style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h3 style="font-size:16px; font-weight:700; color:#F9FAFB; display:flex; align-items:center; gap:8px;">
+                            <span>User Management & Adoption Tracking</span>
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; padding:2px 7px; border-radius:5px; background:rgba(255,255,255,0.05); color:var(--text-secondary); border:1px solid rgba(255,255,255,0.08);">ACCOUNTS</span>
+                        </h3>
+                        <p style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Inspect user portfolios, toggle active/suspended status, or add users.</p>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="embUserSearchInput" placeholder="Search user or email..." oninput="filterEmbeddedUsers(this.value)" style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#F9FAFB; font-size:12px; padding:7px 12px; width:210px; outline:none;">
+                        <button type="button" onclick="openEmbeddedCreateUserModal()" style="background:var(--emerald-primary); color:#030712; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Add User</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="width:100%; overflow-x:auto; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                    <table style="width:100%; border-collapse:collapse; font-size:12.5px; text-align:left;">
+                        <thead>
+                            <tr style="background:rgba(0,0,0,0.5); color:var(--text-secondary); font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase;">
+                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">User</th>
+                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Role</th>
+                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Status</th>
+                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Jobs</th>
+                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Audio Time</th>
+                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Joined</th>
+                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="embUserTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align:center; color:var(--text-muted); padding:24px;">Loading user records...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Floating Quick-Scroll Navigation Pill HUD -->
+            <div class="emb-scroll-hud" id="embScrollHud">
+                <button type="button" class="emb-hud-btn emb-hud-btn-top" onclick="scrollEmbTo('top')" title="Smooth Scroll to Top">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                    <span>Top</span>
+                </button>
+                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionKpis')" title="Jump to KPI Metrics">
+                    <span>KPIs</span>
+                </button>
+                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionCharts')" title="Jump to Volume & Growth Timeline">
+                    <span>Timeline</span>
+                </button>
+                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionCategories')" title="Jump to File Categories Breakdown">
+                    <span>Taxonomy</span>
+                </button>
+                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionUsers')" title="Jump to User Management Table">
+                    <span>Users</span>
+                </button>
+                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('bottom')" title="Smooth Scroll to Bottom">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <span>Bottom</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Embedded Modals for Admin Gideoni -->
+        <div class="dash-modal-overlay" id="embCreateUserModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(3,7,18,0.85); backdrop-filter:blur(12px); z-index:999999; display:none; align-items:center; justify-content:center; padding:20px;">
+            <div style="background:#0d121f; border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:100%; max-width:520px; padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+                    <h3 style="font-size:16px; font-weight:700; color:#F9FAFB;">Create User Account</h3>
+                    <button type="button" onclick="closeEmbeddedCreateUserModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;">✕</button>
+                </div>
+                <form onsubmit="submitEmbeddedCreateUser(event)" style="display:flex; flex-direction:column; gap:14px;">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Username *</label>
+                        <input type="text" id="embNewUsername" required style="background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:9px 12px; color:#F9FAFB; font-size:13px; outline:none;">
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Email</label>
+                        <input type="email" id="embNewEmail" style="background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:9px 12px; color:#F9FAFB; font-size:13px; outline:none;">
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <label style="font-size:12px; font-weight:600; color:var(--text-secondary);">Password *</label>
+                        <input type="password" id="embNewPassword" required minlength="6" style="background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:9px 12px; color:#F9FAFB; font-size:13px; outline:none;">
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="embNewIsStaff" style="accent-color:var(--emerald-primary);">
+                        <label for="embNewIsStaff" style="font-size:12px; color:var(--text-secondary); cursor:pointer;">Grant Staff Privileges</label>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                        <button type="button" onclick="closeEmbeddedCreateUserModal()" style="background:transparent; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:7px 14px; font-size:12px; color:var(--text-secondary); cursor:pointer;">Cancel</button>
+                        <button type="submit" id="btnEmbSubmitUser" style="background:var(--emerald-primary); color:#030712; font-weight:700; border:none; border-radius:8px; padding:7px 16px; font-size:12px; cursor:pointer;">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="dash-modal-overlay" id="embUserPortfolioModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(3,7,18,0.85); backdrop-filter:blur(12px); z-index:999999; display:none; align-items:center; justify-content:center; padding:20px;">
+            <div style="background:#0d121f; border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:100%; max-width:760px; max-height:85vh; padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+                    <h3 id="embPortfolioModalTitle" style="font-size:16px; font-weight:700; color:#F9FAFB;">User Audio Portfolio</h3>
+                    <button type="button" onclick="closeEmbeddedPortfolioModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;">✕</button>
+                </div>
+                <div id="embPortfolioListContainer" style="overflow-y:auto; display:flex; flex-direction:column; gap:12px; max-height:60vh;">
+                    <!-- Portfolios injected dynamically -->
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button type="button" onclick="closeEmbeddedPortfolioModal()" style="background:transparent; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:7px 16px; font-size:12px; color:var(--text-secondary); cursor:pointer;">Close</button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Floating AI context helper toolbar (Disabled) -->
         <div class="floating-ai-menu" id="floating-ai-menu" style="display: none !important;">
             <button class="floating-ai-btn" onclick="aiActionOnSelection('Identify speaker for')">Identify Speaker</button>
@@ -1390,8 +1793,12 @@
             closeMobileDrawer();
             const dash = document.getElementById('dashboard-screen');
             const work = document.getElementById('workspace-screen');
+            const anal = document.getElementById('analytics-screen');
+            const mainContent = document.getElementById('main-content');
             if (dash) dash.style.setProperty('display', 'flex', 'important');
             if (work) work.style.setProperty('display', 'none', 'important');
+            if (anal) anal.style.setProperty('display', 'none', 'important');
+            if (mainContent) mainContent.style.overflow = '';
             currentTranscriptionId = null;
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1401,9 +1808,581 @@
             closeMobileDrawer();
             const dash = document.getElementById('dashboard-screen');
             const work = document.getElementById('workspace-screen');
+            const anal = document.getElementById('analytics-screen');
+            const mainContent = document.getElementById('main-content');
             if (dash) dash.style.setProperty('display', 'none', 'important');
             if (work) work.style.setProperty('display', 'flex', 'important');
+            if (anal) anal.style.setProperty('display', 'none', 'important');
+            if (mainContent) mainContent.style.overflow = '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showAnalyticsScreen() {
+            closeMobileDrawer();
+            const dash = document.getElementById('dashboard-screen');
+            const work = document.getElementById('workspace-screen');
+            const anal = document.getElementById('analytics-screen');
+            const mainContent = document.getElementById('main-content');
+            if (dash) dash.style.setProperty('display', 'none', 'important');
+            if (work) work.style.setProperty('display', 'none', 'important');
+            if (anal) {
+                anal.style.setProperty('display', 'flex', 'important');
+                anal.scrollTop = 0;
+            }
+            if (mainContent) {
+                mainContent.style.setProperty('overflow', 'hidden', 'important');
+            }
+            currentTranscriptionId = null;
+            document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+            if (typeof initEmbeddedAnalytics === 'function') {
+                initEmbeddedAnalytics();
+            }
+        }
+
+        function scrollEmbTo(target) {
+            const anal = document.getElementById('analytics-screen');
+            if (!anal) return;
+            if (target === 'top') {
+                anal.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (target === 'bottom') {
+                anal.scrollTo({ top: anal.scrollHeight, behavior: 'smooth' });
+            } else {
+                const el = document.getElementById(target);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+
+        // =========================================================
+        // Embedded Analytics & User Management for Admin Gideoni
+        // =========================================================
+        let embCurrentRange = 'all';
+        let embTimelineMetric = 'minutes';
+        let embStatsData = null;
+        let embUsersList = [];
+
+        let embAudioTimelineChart = null;
+        let embUserEvolutionChart = null;
+        let embSourceModesChart = null;
+        let embFileFormatsChart = null;
+        let embLengthTiersChart = null;
+        let embLanguagesChart = null;
+
+        const EMB_PALETTE = {
+            emerald: '#10B981',
+            emeraldLight: '#34D399',
+            cyan: '#06B6D4',
+            cyanLight: '#38BDF8',
+            purple: '#A855F7',
+            purpleLight: '#C084FC',
+            amber: '#F59E0B',
+            amberLight: '#FBBF24',
+            rose: '#F43F5E'
+        };
+
+        function initEmbeddedAnalytics() {
+            loadEmbeddedStats(embCurrentRange);
+            loadEmbeddedUsers();
+        }
+
+        function changeEmbeddedRange(range) {
+            embCurrentRange = range;
+            document.querySelectorAll('#analytics-screen .range-btn[data-range]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === range);
+            });
+            loadEmbeddedStats(range);
+        }
+
+        function toggleEmbeddedTimelineMetric(metric) {
+            embTimelineMetric = metric;
+            const btnMin = document.getElementById('btnEmbMetricMinutes');
+            const btnJob = document.getElementById('btnEmbMetricJobs');
+            if (btnMin) btnMin.classList.toggle('active', metric === 'minutes');
+            if (btnJob) btnJob.classList.toggle('active', metric === 'jobs');
+            if (embStatsData) {
+                renderEmbeddedAudioTimeline(embStatsData.audio_volume_timeline);
+            }
+        }
+
+        function refreshEmbeddedAnalytics() {
+            const btn = document.getElementById('btnRefreshEmbedded');
+            if (btn) btn.classList.add('spinning');
+            Promise.all([
+                loadEmbeddedStats(embCurrentRange),
+                loadEmbeddedUsers()
+            ]).finally(() => {
+                if (btn) setTimeout(() => btn.classList.remove('spinning'), 500);
+            });
+        }
+
+        async function loadEmbeddedStats(range) {
+            try {
+                const res = await fetch(`/api/dashboard/stats/?range=${range}`);
+                const data = await res.json();
+                if (data.success) {
+                    embStatsData = data;
+                    renderEmbeddedKpis(data.kpi);
+                    renderEmbeddedAudioTimeline(data.audio_volume_timeline);
+                    renderEmbeddedUserEvolution(data.user_evolution);
+                    renderEmbeddedCategories(data.categories);
+                }
+            } catch (err) {
+                console.error("Error loading embedded stats:", err);
+            }
+        }
+
+        function renderEmbeddedKpis(kpi) {
+            if (!kpi) return;
+            const elTotalAudio = document.getElementById('embKpiTotalAudio');
+            const elTotalMin = document.getElementById('embKpiTotalMinutes');
+            const elTotalJobs = document.getElementById('embKpiTotalJobs');
+            const elAvgDur = document.getElementById('embKpiAvgDuration');
+            const elTotalUsers = document.getElementById('embKpiTotalUsers');
+            const elActContrib = document.getElementById('embKpiActiveContributors');
+
+            if (elTotalAudio) elTotalAudio.textContent = kpi.total_formatted || '0s';
+            if (elTotalMin) elTotalMin.textContent = `${kpi.total_minutes || 0} Total Minutes`;
+            if (elTotalJobs) elTotalJobs.textContent = `${kpi.total_jobs || 0} Jobs`;
+            if (elAvgDur) elAvgDur.textContent = kpi.avg_duration_formatted || '0s';
+            if (elTotalUsers) elTotalUsers.textContent = `${kpi.total_users || 0} Registered`;
+            if (elActContrib) elActContrib.textContent = `${kpi.active_users || 0} Active (${kpi.guest_jobs || 0} Guests)`;
+        }
+
+        function renderEmbeddedAudioTimeline(timeline) {
+            const canvas = document.getElementById('embAudioTimelineChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (embAudioTimelineChart) embAudioTimelineChart.destroy();
+
+            const labels = timeline.map(t => t.label);
+            const isMin = embTimelineMetric === 'minutes';
+            const primaryData = timeline.map(t => isMin ? t.minutes : t.jobs);
+            const primaryColor = isMin ? EMB_PALETTE.emerald : EMB_PALETTE.cyan;
+
+            embAudioTimelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: isMin ? 'Audio Minutes' : 'Jobs Processed',
+                            data: primaryData,
+                            borderColor: primaryColor,
+                            backgroundColor: isMin ? 'rgba(16, 185, 129, 0.2)' : 'rgba(6, 182, 212, 0.2)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.2,
+                            pointRadius: 3.5,
+                            pointBackgroundColor: primaryColor,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Cumulative Hours',
+                            data: timeline.map(t => t.cumulative_hours),
+                            borderColor: EMB_PALETTE.purpleLight,
+                            borderDash: [4, 4],
+                            borderWidth: 1.8,
+                            pointRadius: 2,
+                            fill: false,
+                            tension: 0.2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { labels: { color: '#9CA3AF', font: { size: 10.5 } } },
+                        tooltip: { backgroundColor: '#111827', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6B7280', font: { size: 10 } } },
+                        y: { position: 'left', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9CA3AF', font: { size: 10 } } },
+                        y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: EMB_PALETTE.purpleLight, font: { size: 10 }, callback: v => v + 'h' } }
+                    }
+                }
+            });
+        }
+
+        function renderEmbeddedUserEvolution(evolution) {
+            const canvas = document.getElementById('embUserEvolutionChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (embUserEvolutionChart) embUserEvolutionChart.destroy();
+
+            embUserEvolutionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: evolution.map(e => e.label),
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Cumulative Users',
+                            data: evolution.map(e => e.cumulative_users),
+                            borderColor: EMB_PALETTE.purple,
+                            backgroundColor: 'rgba(168, 85, 247, 0.15)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2.2,
+                            pointRadius: 3.5,
+                            pointBackgroundColor: EMB_PALETTE.purpleLight,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Daily Activity',
+                            data: evolution.map(e => e.active_jobs),
+                            backgroundColor: 'rgba(6, 182, 212, 0.65)',
+                            borderRadius: 4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9CA3AF', font: { size: 10.5 } } },
+                        tooltip: { backgroundColor: '#111827', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 }
+                    },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6B7280', font: { size: 10 } } },
+                        y: { position: 'left', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: EMB_PALETTE.purpleLight, font: { size: 10 }, stepSize: 1 } },
+                        y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: EMB_PALETTE.cyanLight, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderEmbeddedCategories(categories) {
+            if (!categories) return;
+            const colors = [EMB_PALETTE.emerald, EMB_PALETTE.cyan, EMB_PALETTE.purple, EMB_PALETTE.amber, EMB_PALETTE.rose];
+
+            // Source Modes
+            renderEmbDoughnut('embSourceModesChart', 'embSourceModesList', 'embSourceModesCount', categories.source_modes, colors, 'Modes');
+            // Formats
+            renderEmbDoughnut('embFileFormatsChart', 'embFileFormatsList', 'embFileFormatsCount', categories.file_formats, [EMB_PALETTE.cyan, EMB_PALETTE.emerald, EMB_PALETTE.purple, EMB_PALETTE.amber], 'Formats');
+            // Tiers
+            renderEmbTiers('embLengthTiersChart', 'embLengthTiersList', categories.length_tiers);
+            // Languages
+            renderEmbDoughnut('embLanguagesChart', 'embLanguagesList', null, categories.languages, [EMB_PALETTE.purple, EMB_PALETTE.emerald, EMB_PALETTE.cyan, EMB_PALETTE.amber], 'Languages');
+        }
+
+        function renderEmbDoughnut(canvasId, listId, countId, items, colors, labelSuffix) {
+            const canvas = document.getElementById(canvasId);
+            const list = document.getElementById(listId);
+            const countEl = countId ? document.getElementById(countId) : null;
+            if (!canvas || !list) return;
+
+            if (countEl && items) countEl.textContent = `${items.length} ${labelSuffix}`;
+
+            if (canvasId === 'embSourceModesChart' && embSourceModesChart) embSourceModesChart.destroy();
+            if (canvasId === 'embFileFormatsChart' && embFileFormatsChart) embFileFormatsChart.destroy();
+            if (canvasId === 'embLanguagesChart' && embLanguagesChart) embLanguagesChart.destroy();
+
+            const chart = new Chart(canvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: items.map(i => i.name),
+                    datasets: [{
+                        data: items.map(i => i.count),
+                        backgroundColor: items.map((_, idx) => colors[idx % colors.length]),
+                        borderWidth: 1.5,
+                        borderColor: '#0d121f'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#9CA3AF', font: { size: 10 }, boxWidth: 10 } }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            if (canvasId === 'embSourceModesChart') embSourceModesChart = chart;
+            if (canvasId === 'embFileFormatsChart') embFileFormatsChart = chart;
+            if (canvasId === 'embLanguagesChart') embLanguagesChart = chart;
+
+            list.innerHTML = '';
+            items.forEach((item, idx) => {
+                const color = colors[idx % colors.length];
+                const d = document.createElement('div');
+                d.style.cssText = 'display:flex; flex-direction:column; gap:4px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:8px 12px;';
+                d.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+                        <span style="display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:${color};"></span>${item.name}</span>
+                        <span style="font-family:'JetBrains Mono',monospace; color:var(--cyan-light); font-size:11.5px;">${item.count} (${item.formatted})</span>
+                    </div>
+                    <div style="width:100%; height:4px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden;">
+                        <div style="height:100%; width:${item.percentage}%; background:${color};"></div>
+                    </div>
+                `;
+                list.appendChild(d);
+            });
+        }
+
+        function renderEmbTiers(canvasId, listId, tiers) {
+            const canvas = document.getElementById(canvasId);
+            const list = document.getElementById(listId);
+            if (!canvas || !list) return;
+
+            if (embLengthTiersChart) embLengthTiersChart.destroy();
+            const colors = [EMB_PALETTE.emeraldLight, EMB_PALETTE.cyanLight, EMB_PALETTE.amberLight, EMB_PALETTE.rose];
+
+            embLengthTiersChart = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: tiers.map(t => t.label),
+                    datasets: [{
+                        data: tiers.map(t => t.minutes),
+                        backgroundColor: colors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9CA3AF', font: { size: 9.5 } } },
+                        y: { grid: { display: false }, ticks: { color: '#E5E7EB', font: { size: 10.5, weight: '600' } } }
+                    }
+                }
+            });
+
+            list.innerHTML = '';
+            tiers.forEach((tier, idx) => {
+                const color = colors[idx % colors.length];
+                const d = document.createElement('div');
+                d.style.cssText = 'display:flex; flex-direction:column; gap:4px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:8px 12px;';
+                d.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600;">
+                        <span style="display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:${color};"></span>${tier.label}</span>
+                        <span style="font-family:'JetBrains Mono',monospace; color:var(--amber-light); font-size:11.5px;">${tier.count} (${tier.formatted})</span>
+                    </div>
+                    <div style="width:100%; height:4px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden;">
+                        <div style="height:100%; width:${tier.time_percentage}%; background:${color};"></div>
+                    </div>
+                `;
+                list.appendChild(d);
+            });
+        }
+
+        async function loadEmbeddedUsers() {
+            try {
+                const res = await fetch('/api/dashboard/users/');
+                const data = await res.json();
+                if (data.success) {
+                    embUsersList = data.users || [];
+                    renderEmbeddedUsersTable(embUsersList);
+                }
+            } catch (err) {
+                console.error("Error loading embedded users:", err);
+            }
+        }
+
+        function filterEmbeddedUsers(q) {
+            const val = q.toLowerCase().trim();
+            if (!val) {
+                renderEmbeddedUsersTable(embUsersList);
+                return;
+            }
+            renderEmbeddedUsersTable(embUsersList.filter(u =>
+                u.username.toLowerCase().includes(val) || (u.email && u.email.toLowerCase().includes(val))
+            ));
+        }
+
+        function renderEmbeddedUsersTable(users) {
+            const tbody = document.getElementById('embUserTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No matching accounts.</td></tr>`;
+                return;
+            }
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                const isGuest = u.is_guest;
+                const roleBadge = isGuest
+                    ? '<span style="font-size:10px; font-family:\'JetBrains Mono\',monospace; color:var(--text-secondary); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">Guest</span>'
+                    : (u.is_staff || u.is_superuser
+                        ? '<span style="font-size:10px; font-family:\'JetBrains Mono\',monospace; color:var(--purple-light); background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px; border:1px solid rgba(168,85,247,0.3);">Staff</span>'
+                        : '<span style="font-size:10px; font-family:\'JetBrains Mono\',monospace; color:var(--emerald-light); background:rgba(16,185,129,0.12); padding:2px 6px; border-radius:4px;">User</span>');
+
+                const statusBtn = isGuest
+                    ? '<span style="font-size:11px; color:var(--text-muted);">Session</span>'
+                    : `<button type="button" onclick="toggleEmbeddedUserStatus(${u.id})" style="background:${u.is_active ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)'}; color:${u.is_active ? 'var(--emerald-light)' : '#FB7185'}; border:1px solid ${u.is_active ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}; border-radius:5px; font-size:10.5px; font-family:'JetBrains Mono',monospace; font-weight:700; padding:2px 7px; cursor:pointer;">
+                         ${u.is_active ? 'Active' : 'Suspended'}
+                       </button>`;
+
+                const actions = `
+                    <div style="display:flex; justify-content:flex-end; gap:6px;">
+                        <button type="button" onclick="openEmbeddedPortfolioModal('${u.id}', '${escapeHtml(u.username)}')" title="View Portfolio" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:var(--cyan-light); border-radius:6px; padding:4px 8px; cursor:pointer;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                        ${!isGuest ? `
+                        <button type="button" onclick="toggleEmbeddedUserRole(${u.id})" title="Toggle Role" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:var(--purple-light); border-radius:6px; padding:4px 8px; cursor:pointer;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        </button>
+                        <button type="button" onclick="deleteEmbeddedUser(${u.id}, '${escapeHtml(u.username)}')" title="Delete User" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); color:#FB7185; border-radius:6px; padding:4px 8px; cursor:pointer;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+
+                tr.innerHTML = `
+                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <div style="font-weight:700; color:#F9FAFB;">${escapeHtml(u.username)}</div>
+                        <div style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">${escapeHtml(u.email)}</div>
+                    </td>
+                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">${roleBadge}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">${statusBtn}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; font-weight:700;">${u.transcriptions_count}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--cyan-light);">${u.total_formatted}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; color:var(--text-secondary); font-family:'JetBrains Mono',monospace;">${u.date_joined || '—'}</td>
+                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:right;">${actions}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function toggleEmbeddedUserStatus(userId) {
+            try {
+                const res = await fetch(`/api/dashboard/users/toggle_status/${userId}/`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    loadEmbeddedUsers();
+                } else {
+                    alert(data.error || 'Failed');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function toggleEmbeddedUserRole(userId) {
+            try {
+                const res = await fetch(`/api/dashboard/users/toggle_role/${userId}/`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    loadEmbeddedUsers();
+                } else {
+                    alert(data.error || 'Failed');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function deleteEmbeddedUser(userId, name) {
+            if (!confirm(`Delete user '${name}'? Historical transcriptions will be safely archived.`)) return;
+            try {
+                const res = await fetch(`/api/dashboard/users/delete/${userId}/`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    loadEmbeddedUsers();
+                    loadEmbeddedStats(embCurrentRange);
+                } else {
+                    alert(data.error || 'Failed');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function openEmbeddedCreateUserModal() {
+            const m = document.getElementById('embCreateUserModal');
+            if (m) m.style.display = 'flex';
+        }
+
+        function closeEmbeddedCreateUserModal() {
+            const m = document.getElementById('embCreateUserModal');
+            if (m) m.style.display = 'none';
+        }
+
+        async function submitEmbeddedCreateUser(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnEmbSubmitUser');
+            if (btn) btn.disabled = true;
+
+            const u = document.getElementById('embNewUsername').value.trim();
+            const em = document.getElementById('embNewEmail').value.trim();
+            const p = document.getElementById('embNewPassword').value.trim();
+            const isSt = document.getElementById('embNewIsStaff').checked;
+
+            try {
+                const res = await fetch('/api/dashboard/users/create/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, email: em, password: p, is_staff: isSt })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeEmbeddedCreateUserModal();
+                    document.getElementById('embNewUsername').value = '';
+                    document.getElementById('embNewEmail').value = '';
+                    document.getElementById('embNewPassword').value = '';
+                    document.getElementById('embNewIsStaff').checked = false;
+                    loadEmbeddedUsers();
+                    loadEmbeddedStats(embCurrentRange);
+                } else {
+                    alert(data.error || 'Failed to create user');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function openEmbeddedPortfolioModal(userId, name) {
+            const m = document.getElementById('embUserPortfolioModal');
+            const title = document.getElementById('embPortfolioModalTitle');
+            const cont = document.getElementById('embPortfolioListContainer');
+            if (!m || !cont) return;
+
+            title.textContent = `Portfolio: ${name}`;
+            cont.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">Loading portfolio...</div>';
+            m.style.display = 'flex';
+
+            try {
+                const res = await fetch(`/api/dashboard/users/${userId}/transcriptions/`);
+                const data = await res.json();
+                if (data.success) {
+                    if (data.transcriptions.length === 0) {
+                        cont.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">No transcriptions for this account.</div>';
+                        return;
+                    }
+                    cont.innerHTML = '';
+                    data.transcriptions.forEach(t => {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:6px;';
+                        div.innerHTML = `
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:700; color:#F9FAFB; font-size:13px;">${escapeHtml(t.original_name)}</span>
+                                <div style="display:flex; gap:6px;">
+                                    <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--emerald-light); background:rgba(16,185,129,0.12); padding:2px 6px; border-radius:4px;">${escapeHtml(t.source_mode)}</span>
+                                    <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--cyan-light); background:rgba(6,182,212,0.12); padding:2px 6px; border-radius:4px;">${t.duration_formatted}</span>
+                                </div>
+                            </div>
+                            <div style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">Date: ${t.created_at}</div>
+                            <div style="font-size:12px; color:var(--text-secondary); background:rgba(255,255,255,0.02); padding:6px 8px; border-radius:6px; border-left:2px solid var(--border-glow);">${escapeHtml(t.preview || 'No preview text')}</div>
+                        `;
+                        cont.appendChild(div);
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+                cont.innerHTML = '<div style="color:#FB7185; text-align:center;">Network error</div>';
+            }
+        }
+
+        function closeEmbeddedPortfolioModal() {
+            const m = document.getElementById('embUserPortfolioModal');
+            if (m) m.style.display = 'none';
         }
 
         function formatCapitalizedTitle(name) {
