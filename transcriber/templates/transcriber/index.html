@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=22.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        /* Embedded Analytics & Customer Evaluation Screen (Admin Gideoni Only) - Ultra Scrollable */
+        /* Embedded Analytics & Customer Evaluation Screen (Admin Gideoni Only) - Ultra Scrollable & Fully Responsive */
         .analytics-screen {
             flex: 1 1 0% !important;
             min-height: 0 !important;
@@ -33,7 +33,7 @@
             overflow-x: hidden !important;
             padding: 24px 32px 220px !important;
             box-sizing: border-box;
-            gap: 26px;
+            gap: 24px;
             scroll-behavior: smooth !important;
             -webkit-overflow-scrolling: touch !important;
             overscroll-behavior-y: contain !important;
@@ -56,6 +56,125 @@
         }
         .analytics-screen::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+        }
+
+        /* Responsive Layout Elements for Analytics */
+        .emb-top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: linear-gradient(180deg, rgba(17,24,39,0.7) 0%, rgba(13,18,31,0.9) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 18px 24px;
+        }
+
+        .emb-top-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .emb-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .emb-kpi-card {
+            background: linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .emb-kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.18);
+        }
+
+        .emb-charts-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+        }
+
+        .emb-chart-card {
+            background: linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .emb-chart-canvas-wrap {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        .emb-categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .emb-category-card {
+            background: linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .emb-cat-canvas-wrap {
+            position: relative;
+            height: 220px;
+            width: 100%;
+        }
+
+        .emb-users-card {
+            background: linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .emb-users-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .emb-users-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         /* Floating Quick-Scroll Navigation Pill HUD */
@@ -106,6 +225,127 @@
             border-color: rgba(16, 185, 129, 0.4);
             color: var(--emerald-light);
             font-weight: 700;
+        }
+
+        /* TABLET RESPONSIVE RULES (max-width: 1024px) */
+        @media (max-width: 1024px) {
+            .analytics-screen {
+                padding: 20px 20px 200px !important;
+                gap: 20px !important;
+            }
+            .emb-kpi-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 14px !important;
+            }
+            .emb-charts-grid {
+                grid-template-columns: 1fr !important;
+                gap: 18px !important;
+            }
+            .emb-categories-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            .emb-chart-canvas-wrap {
+                height: 260px !important;
+            }
+            .emb-cat-canvas-wrap {
+                height: 200px !important;
+            }
+            .emb-scroll-hud {
+                bottom: 20px !important;
+                right: 18px !important;
+                padding: 4px 6px !important;
+            }
+        }
+
+        /* PHONE & MOBILE RESPONSIVE RULES (max-width: 640px) */
+        @media (max-width: 640px) {
+            .analytics-screen {
+                padding: 14px 12px 180px !important;
+                gap: 16px !important;
+            }
+            .emb-top-bar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 14px 16px !important;
+                gap: 14px !important;
+            }
+            .emb-top-bar h2 {
+                font-size: 17px !important;
+                flex-wrap: wrap !important;
+            }
+            .emb-top-bar p {
+                font-size: 11.5px !important;
+            }
+            .emb-top-controls {
+                width: 100% !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                gap: 8px !important;
+            }
+            .emb-range-pills {
+                flex: 1 !important;
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+            .emb-range-pills .range-btn {
+                padding: 6px 8px !important;
+                font-size: 11px !important;
+                flex: 1 !important;
+                text-align: center !important;
+            }
+            .emb-kpi-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+            .emb-kpi-card {
+                padding: 16px !important;
+                gap: 10px !important;
+            }
+            .emb-kpi-card .kpi-num {
+                font-size: 24px !important;
+            }
+            .emb-chart-card,
+            .emb-category-card,
+            .emb-users-card {
+                padding: 16px 14px !important;
+                border-radius: 14px !important;
+            }
+            .emb-chart-canvas-wrap {
+                height: 220px !important;
+            }
+            .emb-cat-canvas-wrap {
+                height: 180px !important;
+            }
+            .emb-users-toolbar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 12px !important;
+            }
+            .emb-users-actions {
+                width: 100% !important;
+                display: flex !important;
+                gap: 8px !important;
+            }
+            #embUserSearchInput {
+                flex: 1 !important;
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+            .emb-scroll-hud {
+                bottom: 14px !important;
+                right: 8px !important;
+                padding: 4px 6px !important;
+                gap: 3px !important;
+                max-width: calc(100vw - 16px) !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .emb-hud-btn {
+                padding: 4px 7px !important;
+                font-size: 10px !important;
+            }
         }
 
         #mainSidebar.sidebar-collapsed .btn-analytics-dash {
@@ -1087,8 +1327,8 @@
         {% if is_gideoni_admin or user.is_authenticated and user.username|lower == 'gideoni' %}
         <!-- Screen 3: Embedded Customer & Software Analytics Dashboard (Admin Gideoni Only) -->
         <div class="analytics-screen" id="analytics-screen">
-            <!-- Analytics Top Action Bar -->
-            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; background:linear-gradient(180deg, rgba(17,24,39,0.7) 0%, rgba(13,18,31,0.9) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 24px;">
+            <!-- Analytics Top Action Bar (Responsive) -->
+            <div class="emb-top-bar">
                 <div>
                     <h2 style="font-size:20px; font-weight:800; color:#F9FAFB; display:flex; align-items:center; gap:10px;">
                         <span>Customer & Software Analytics</span>
@@ -1097,8 +1337,8 @@
                     <p style="font-size:12.5px; color:var(--text-secondary); margin-top:4px;">Workspace telemetry: audio hours transcribed, file taxonomy breakdown, and user management.</p>
                 </div>
 
-                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <div style="display:flex; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:9px; padding:3px; gap:2px;">
+                <div class="emb-top-controls">
+                    <div class="emb-range-pills" style="display:flex; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:9px; padding:3px; gap:2px;">
                         <button type="button" class="range-btn active" data-range="all" onclick="changeEmbeddedRange('all')">All Time</button>
                         <button type="button" class="range-btn" data-range="30d" onclick="changeEmbeddedRange('30d')">Last 30 Days</button>
                         <button type="button" class="range-btn" data-range="7d" onclick="changeEmbeddedRange('7d')">Last 7 Days</button>
@@ -1108,66 +1348,61 @@
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                         <span>Refresh</span>
                     </button>
-
-                    <a href="/dashboard/" target="_blank" style="padding:8px 14px; border-radius:9px; font-size:12px; font-family:'JetBrains Mono',monospace; font-weight:700; background:rgba(168,85,247,0.14); border:1px solid rgba(168,85,247,0.4); color:#C084FC; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                        <span>Standalone Window</span>
-                    </a>
                 </div>
             </div>
 
-            <!-- 4 Glowing KPI Cards -->
-            <div id="embSectionKpis" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--emerald-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+            <!-- 4 Glowing KPI Cards (Responsive Grid) -->
+            <div id="embSectionKpis" class="emb-kpi-grid">
+                <div class="emb-kpi-card" style="border-left:3px solid var(--emerald-primary);">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Audio Volume Transcribed</span>
                         <div style="width:32px; height:32px; border-radius:8px; background:rgba(16,185,129,0.12); color:var(--emerald-light); display:flex; align-items:center; justify-content:center;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                         </div>
                     </div>
-                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalAudio">--</div>
+                    <div class="kpi-num" style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalAudio">--</div>
                     <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
                         <span id="embKpiTotalMinutes">-- Audio Minutes</span>
                         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--emerald-light); background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:4px;">VOLUME</span>
                     </div>
                 </div>
 
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--cyan-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                <div class="emb-kpi-card" style="border-left:3px solid var(--cyan-primary);">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Jobs Processed</span>
                         <div style="width:32px; height:32px; border-radius:8px; background:rgba(6,182,212,0.12); color:var(--cyan-light); display:flex; align-items:center; justify-content:center;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                         </div>
                     </div>
-                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalJobs">--</div>
+                    <div class="kpi-num" style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalJobs">--</div>
                     <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
                         <span>100% RunPod GPU</span>
                         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--cyan-light); background:rgba(6,182,212,0.15); padding:2px 6px; border-radius:4px;">THROUGHPUT</span>
                     </div>
                 </div>
 
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--amber-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                <div class="emb-kpi-card" style="border-left:3px solid var(--amber-primary);">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Average Audio Length</span>
                         <div style="width:32px; height:32px; border-radius:8px; background:rgba(245,158,11,0.12); color:var(--amber-light); display:flex; align-items:center; justify-content:center;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                         </div>
                     </div>
-                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiAvgDuration">--</div>
+                    <div class="kpi-num" style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiAvgDuration">--</div>
                     <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
                         <span>Per Ingestion</span>
                         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--amber-light); background:rgba(245,158,11,0.15); padding:2px 6px; border-radius:4px;">EFFICIENCY</span>
                     </div>
                 </div>
 
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.75) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--purple-primary); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px;">
+                <div class="emb-kpi-card" style="border-left:3px solid var(--purple-primary);">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <span style="font-size:11.5px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Users & Contributors</span>
                         <div style="width:32px; height:32px; border-radius:8px; background:rgba(168,85,247,0.12); color:var(--purple-light); display:flex; align-items:center; justify-content:center;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
                         </div>
                     </div>
-                    <div style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalUsers">--</div>
+                    <div class="kpi-num" style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalUsers">--</div>
                     <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
                         <span id="embKpiActiveContributors">-- Active</span>
                         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--purple-light); background:rgba(168,85,247,0.15); padding:2px 6px; border-radius:4px;">ADOPTION</span>
@@ -1175,9 +1410,9 @@
                 </div>
             </div>
 
-            <!-- Charts Row: Audio Volume Evolution + User Evolution -->
-            <div id="embSectionCharts" style="display:grid; grid-template-columns:1.5fr 1fr; gap:20px;">
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
+            <!-- Charts Row: Audio Volume Evolution + User Evolution (Responsive Grid) -->
+            <div id="embSectionCharts" class="emb-charts-grid">
+                <div class="emb-chart-card">
                     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                         <div>
                             <h3 style="font-size:15.5px; font-weight:700; color:#F9FAFB; display:flex; align-items:center; gap:8px;">
@@ -1191,12 +1426,12 @@
                             <button type="button" class="range-btn" id="btnEmbMetricJobs" onclick="toggleEmbeddedTimelineMetric('jobs')">Jobs</button>
                         </div>
                     </div>
-                    <div style="position:relative; height:280px; width:100%;">
+                    <div class="emb-chart-canvas-wrap">
                         <canvas id="embAudioTimelineChart"></canvas>
                     </div>
                 </div>
 
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
+                <div class="emb-chart-card">
                     <div>
                         <h3 style="font-size:15.5px; font-weight:700; color:#F9FAFB; display:flex; align-items:center; gap:8px;">
                             <span style="color:var(--purple-light);">User Growth & Adoption</span>
@@ -1204,21 +1439,21 @@
                         </h3>
                         <p style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Cumulative accounts and daily activity volume.</p>
                     </div>
-                    <div style="position:relative; height:280px; width:100%;">
+                    <div class="emb-chart-canvas-wrap">
                         <canvas id="embUserEvolutionChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- Categories 4-Grid -->
+            <!-- Categories 4-Grid (Responsive Grid) -->
             <div id="embSectionCategories" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
                 <span style="font-size:17px; font-weight:800; color:#F9FAFB;">File Taxonomy & Categorization Analytics</span>
                 <span style="font-size:10.5px; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--cyan-light); background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); padding:2px 7px; border-radius:5px;">CATEGORIES</span>
             </div>
 
-            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:18px;">
+            <div class="emb-categories-grid">
                 <!-- Source Modes -->
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                <div class="emb-category-card">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <div>
                             <h4 style="font-size:14.5px; font-weight:700; color:var(--emerald-light);">Ingestion & Source Modes</h4>
@@ -1226,14 +1461,14 @@
                         </div>
                         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embSourceModesCount">Modes</span>
                     </div>
-                    <div style="position:relative; height:220px; width:100%;">
+                    <div class="emb-cat-canvas-wrap">
                         <canvas id="embSourceModesChart"></canvas>
                     </div>
                     <div id="embSourceModesList" style="display:flex; flex-direction:column; gap:8px;"></div>
                 </div>
 
                 <!-- Formats -->
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                <div class="emb-category-card">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <div>
                             <h4 style="font-size:14.5px; font-weight:700; color:var(--cyan-light);">File Formats & Extensions</h4>
@@ -1241,40 +1476,40 @@
                         </div>
                         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-secondary);" id="embFileFormatsCount">Formats</span>
                     </div>
-                    <div style="position:relative; height:220px; width:100%;">
+                    <div class="emb-cat-canvas-wrap">
                         <canvas id="embFileFormatsChart"></canvas>
                     </div>
                     <div id="embFileFormatsList" style="display:flex; flex-direction:column; gap:8px;"></div>
                 </div>
 
                 <!-- Tiers -->
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                <div class="emb-category-card">
                     <div>
                         <h4 style="font-size:14.5px; font-weight:700; color:var(--amber-light);">Audio Duration Length Tiers</h4>
                         <p style="font-size:11.5px; color:var(--text-secondary);">Quick (&lt;2m), Short (2-10m), Medium (10-30m), Extended (30m+).</p>
                     </div>
-                    <div style="position:relative; height:220px; width:100%;">
+                    <div class="emb-cat-canvas-wrap">
                         <canvas id="embLengthTiersChart"></canvas>
                     </div>
                     <div id="embLengthTiersList" style="display:flex; flex-direction:column; gap:8px;"></div>
                 </div>
 
                 <!-- Languages -->
-                <div style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                <div class="emb-category-card">
                     <div>
                         <h4 style="font-size:14.5px; font-weight:700; color:var(--purple-light);">Language Taxonomy</h4>
                         <p style="font-size:11.5px; color:var(--text-secondary);">Luganda, English, Swahili, French workloads.</p>
                     </div>
-                    <div style="position:relative; height:220px; width:100%;">
+                    <div class="emb-cat-canvas-wrap">
                         <canvas id="embLanguagesChart"></canvas>
                     </div>
                     <div id="embLanguagesList" style="display:flex; flex-direction:column; gap:8px;"></div>
                 </div>
             </div>
 
-            <!-- User Management & Adoption Section -->
-            <div id="embSectionUsers" style="background:linear-gradient(180deg, rgba(17,24,39,0.8) 0%, rgba(13,18,31,0.95) 100%); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:16px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+            <!-- User Management & Adoption Section (Responsive Card) -->
+            <div id="embSectionUsers" class="emb-users-card">
+                <div class="emb-users-toolbar">
                     <div>
                         <h3 style="font-size:16px; font-weight:700; color:#F9FAFB; display:flex; align-items:center; gap:8px;">
                             <span>User Management & Adoption Tracking</span>
@@ -1283,17 +1518,17 @@
                         <p style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">Inspect user portfolios, toggle active/suspended status, or add users.</p>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <div class="emb-users-actions">
                         <input type="text" id="embUserSearchInput" placeholder="Search user or email..." oninput="filterEmbeddedUsers(this.value)" style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#F9FAFB; font-size:12px; padding:7px 12px; width:210px; outline:none;">
-                        <button type="button" onclick="openEmbeddedCreateUserModal()" style="background:var(--emerald-primary); color:#030712; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                        <button type="button" onclick="openEmbeddedCreateUserModal()" style="background:var(--emerald-primary); color:#030712; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             <span>Add User</span>
                         </button>
                     </div>
                 </div>
 
-                <div style="width:100%; overflow-x:auto; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-                    <table style="width:100%; border-collapse:collapse; font-size:12.5px; text-align:left;">
+                <div style="width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                    <table style="width:100%; min-width:620px; border-collapse:collapse; font-size:12.5px; text-align:left;">
                         <thead>
                             <tr style="background:rgba(0,0,0,0.5); color:var(--text-secondary); font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase;">
                                 <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">User</th>
