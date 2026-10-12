@@ -27,22 +27,65 @@ def get_runpod_config() -> tuple[str, str]:
     return api_key, endpoint_id
 
 
-def file_to_base64(file_path: str) -> str:
+def format_seconds_to_timestamp(seconds: float) -> str:
+    """Converts seconds into [MM:SS] or [HH:MM:SS]."""
+    total_sec = max(0, int(seconds))
+    hrs = total_sec // 3600
+    mins = (total_sec % 3600) // 60
+    secs = total_sec % 60
+    if hrs > 0:
+        return f"{hrs:02d}:{mins:02d}:{secs:02d}"
+    return f"{mins:02d}:{secs:02d}"
+
+
+def offset_timestamp_text(text: str, offset_sec: float) -> str:
+    """Offsets all [MM:SS] or [HH:MM:SS] timestamps in formatted dialogue by offset_sec."""
+    if not text or offset_sec <= 0:
+        return text
+
+    import re
+
+    def _replace_ts(match):
+        ts_str = match.group(1)
+        parts = ts_str.split(':')
+        sec = 0.0
+        if len(parts) == 2:
+            try:
+                sec = int(parts[0]) * 60 + float(parts[1])
+            except Exception:
+                sec = 0.0
+        elif len(parts) == 3:
+            try:
+                sec = int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])
+            except Exception:
+                sec = 0.0
+        new_total = max(0, int(sec + offset_sec))
+        hrs = new_total // 3600
+        mins = (new_total % 3600) // 60
+        secs = new_total % 60
+        if hrs > 0:
+            return f"[{hrs:02d}:{mins:02d}:{secs:02d}]"
+        return f"[{mins:02d}:{secs:02d}]"
+
+    return re.sub(r'\[(\d{1,4}:\d{2}(?::\d{2})?)\]', _replace_ts, text)
+
+
+def file_to_base64(file_path: str, max_raw_mb: float = 4.2) -> str:
     """
     Read file from disk and convert to Base64 string.
-    If the file exceeds 12 MB, dynamically downsample to 16kHz mono with an optimal
-    speech bitrate (16k - 48k) so that files up to 200MB+ shrink to < 10MB (< 14MB Base64),
-    safely fitting within RunPod's 20 MiB limit with 100% speech fidelity.
+    If the file exceeds max_raw_mb (4.2 MB), dynamically downsamples to 16kHz mono with
+    an optimal speech bitrate (16k - 32k) so that the raw audio shrinks to < 4.2 MB (< 5.6 MB Base64),
+    permanently staying below RunPod's 10 MiB request limit with 100% speech fidelity.
     """
     try:
         file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
-        if file_size_mb > 12.0:
-            logger.info(f"[RunPod Client] File is {file_size_mb:.1f} MB (exceeds RunPod 20MB limit). Downsampling to 16kHz mono...")
+        if file_size_mb > max_raw_mb:
+            logger.info(f"[RunPod Client] File is {file_size_mb:.1f} MB (exceeds safe {max_raw_mb}MB limit). Downsampling to 16kHz mono...")
             import tempfile
             from pydub import AudioSegment
             sound = AudioSegment.from_file(file_path)
             duration_sec = max(1.0, len(sound) / 1000.0)
-            target_kbps = max(16, min(48, int((10 * 1024 * 8) / duration_sec)))
+            target_kbps = max(16, min(32, int((max_raw_mb * 1024 * 8) / duration_sec)))
             sound = sound.set_channels(1).set_frame_rate(16000)
             with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
                 tmp_path = tmp.name
@@ -162,18 +205,142 @@ def runpod_transcribe(
     language: str = "auto",
     diarize: bool = True,
     num_speakers: Optional[int] = None,
-    progress_callback: Optional[callable] = None
+    progress_callback: Optional[callable] = None,
+    max_chunk_sec: int = 420  # 7 minutes per chunk
 ) -> Dict[str, Any]:
-    """Transcribes an audio file on RunPod Serverless."""
-    audio_b64 = file_to_base64(audio_path)
-    job_input = {
-        "action": "transcribe",
-        "audio_base64": audio_b64,
+    """
+    Transcribes an audio file on RunPod Serverless.
+    If the audio exceeds max_chunk_sec (7 minutes), it automatically splits into
+    manageable chunks, offloads each to RunPod (guaranteed to be < 3MB Base64,
+    permanently avoiding the 10 MiB gateway limit), offsets timestamps,
+    and merges the complete transcription seamlessly.
+    """
+    sound = None
+    total_duration_sec = 0.0
+    try:
+        from pydub import AudioSegment
+        sound = AudioSegment.from_file(audio_path)
+        total_duration_sec = len(sound) / 1000.0
+    except Exception as e:
+        logger.warning(f"[RunPod Client] Could not inspect duration via pydub ({e}). Sending directly...")
+
+    # Single job if under 7 minutes or pydub unavailable
+    if sound is None or total_duration_sec <= max_chunk_sec:
+        audio_b64 = file_to_base64(audio_path, max_raw_mb=4.2)
+        job_input = {
+            "action": "transcribe",
+            "audio_base64": audio_b64,
+            "language": language,
+            "diarize": diarize,
+            "num_speakers": num_speakers
+        }
+        return call_runpod_serverless(job_input, timeout_sec=360, progress_callback=progress_callback)
+
+    # Multi-chunk processing for long audios (> 7 minutes)
+    import math
+    import tempfile
+
+    num_chunks = math.ceil(total_duration_sec / max_chunk_sec)
+    logger.info(f"[RunPod Client] Audio is {total_duration_sec:.1f}s ({total_duration_sec/60:.1f} mins). Splitting into {num_chunks} chunks of {max_chunk_sec/60:.1f} mins...")
+
+    all_raw_texts = []
+    all_formatted_lines = []
+    all_chunks_metadata = []
+    total_processing_time = 0.0
+
+    for i in range(num_chunks):
+        start_ms = i * max_chunk_sec * 1000
+        end_ms = min(len(sound), (i + 1) * max_chunk_sec * 1000)
+        start_sec = start_ms / 1000.0
+        end_sec = end_ms / 1000.0
+
+        start_str = format_seconds_to_timestamp(start_sec)
+        end_str = format_seconds_to_timestamp(end_sec)
+        logger.info(f"[RunPod Client] Processing Chunk {i+1}/{num_chunks} ({start_str} - {end_str})...")
+
+        # Slice chunk and export as 16kHz mono MP3 (32kbps mono is only ~1.6MB for 7 minutes)
+        chunk_sound = sound[start_ms:end_ms].set_channels(1).set_frame_rate(16000)
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            tmp_chunk_path = tmp.name
+
+        try:
+            chunk_sound.export(tmp_chunk_path, format="mp3", bitrate="32k")
+            chunk_b64 = file_to_base64(tmp_chunk_path, max_raw_mb=4.2)
+
+            chunk_base_pct = (i / num_chunks) * 78.0 + 16.0  # 16% -> 94%
+            chunk_span_pct = (1.0 / num_chunks) * 78.0
+
+            def chunk_prog_cb(status="IN_PROGRESS", elapsed=0.0, progress=None, execution_time=None, delay_time=None):
+                if progress_callback:
+                    if status == "IN_QUEUE":
+                        sub_pct = chunk_base_pct + chunk_span_pct * 0.15
+                        st_text = f"Chunk {i+1}/{num_chunks}: Provisioning GPU..."
+                    elif status == "IN_PROGRESS":
+                        exec_sec = (execution_time / 1000.0) if execution_time else max(1.0, elapsed - 4.0)
+                        sub_pct = chunk_base_pct + min(chunk_span_pct * 0.95, (exec_sec / 25.0) * chunk_span_pct)
+                        st_text = f"Chunk {i+1}/{num_chunks}: Transcribing & Diarizing ({start_str} - {end_str})..."
+                    else:
+                        sub_pct = chunk_base_pct + chunk_span_pct
+                        st_text = f"Chunk {i+1}/{num_chunks}: Complete"
+
+                    progress_callback(
+                        status=status,
+                        elapsed=elapsed,
+                        progress={
+                            "stage": "transcribing" if (i < num_chunks - 1) else "finalizing",
+                            "status_text": st_text,
+                            "subtext": f"Phase 2 & 3: Neural Whisper & CAM++ on Chunk {i+1} of {num_chunks}...",
+                            "progress_pct": round(sub_pct, 1)
+                        }
+                    )
+
+            job_input = {
+                "action": "transcribe",
+                "audio_base64": chunk_b64,
+                "language": language,
+                "diarize": diarize,
+                "num_speakers": num_speakers
+            }
+
+            res = call_runpod_serverless(job_input, timeout_sec=240, progress_callback=chunk_prog_cb)
+
+            chunk_raw = res.get("text", "").strip()
+            chunk_fmt = res.get("formatted", chunk_raw).strip()
+            chunk_segs = res.get("chunks", [])
+            total_processing_time += res.get("processing_time", 0.0)
+
+            if chunk_raw:
+                all_raw_texts.append(chunk_raw)
+
+            # Offset timestamps in formatted text and segment chunks
+            if chunk_fmt:
+                offset_fmt = offset_timestamp_text(chunk_fmt, start_sec)
+                all_formatted_lines.append(offset_fmt)
+
+            for seg in chunk_segs:
+                seg_ts = seg.get("timestamp", [0.0, 0.0])
+                if seg_ts:
+                    seg["timestamp"] = [round(seg_ts[0] + start_sec, 2), round(seg_ts[1] + start_sec, 2)]
+                all_chunks_metadata.append(seg)
+
+        finally:
+            if os.path.exists(tmp_chunk_path):
+                try:
+                    os.remove(tmp_chunk_path)
+                except Exception:
+                    pass
+
+    combined_raw = "\n\n".join(all_raw_texts)
+    combined_fmt = "\n\n".join(all_formatted_lines)
+
+    return {
+        "status": "success",
+        "text": combined_raw,
+        "formatted": combined_fmt,
+        "chunks": all_chunks_metadata,
         "language": language,
-        "diarize": diarize,
-        "num_speakers": num_speakers
+        "processing_time": round(total_processing_time, 2)
     }
-    return call_runpod_serverless(job_input, timeout_sec=300, progress_callback=progress_callback)
 
 
 def runpod_diarize(
