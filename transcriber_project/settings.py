@@ -100,22 +100,95 @@ WSGI_APPLICATION = 'transcriber_project.wsgi.application'
 
 # Database
 # Connects to Railway PostgreSQL if DATABASE_URL is present, otherwise falls back to local SQLite
-try:
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+def _configure_database():
+    import re
+    import urllib.parse
+
+    raw_url = os.getenv('DATABASE_URL', '')
+
+    # Strip prefixes, outer quotes, backslashes, and whitespace
+    if raw_url:
+        raw_url = str(raw_url).strip()
+        if raw_url.startswith('DATABASE_URL='):
+            raw_url = raw_url[len('DATABASE_URL='):].strip()
+        while raw_url and (raw_url[0] in ('"', "'", '\\') or raw_url[-1] in ('"', "'", '\\')):
+            raw_url = raw_url.strip('"\'\\').strip()
+
+    # If empty and running in Railway, default to the user's Railway PostgreSQL URL
+    if not raw_url and (
+        os.getenv('RAILWAY_ENVIRONMENT')
+        or os.getenv('RAILWAY_ENVIRONMENT_NAME')
+        or os.getenv('RAILWAY_PROJECT_ID')
+        or os.getenv('RAILWAY_STATIC_URL')
+        or os.getenv('RAILWAY_PUBLIC_DOMAIN')
+    ):
+        raw_url = 'postgresql://postgres:<password>@<host>:<port>/railway'
+
+    # Fallback to local SQLite if no valid database URL
+    if not raw_url:
+        return {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+
+    # If explicit SQLite
+    if raw_url.startswith('sqlite://'):
+        db_path = raw_url.replace('sqlite:///', '').replace('sqlite://', '')
+        return {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / db_path if not os.path.isabs(db_path) else Path(db_path),
+            }
+        }
+
+    # Attempt to parse via dj_database_url
+    try:
+        import dj_database_url
+        parsed = dj_database_url.parse(
+            raw_url,
             conn_max_age=600,
             conn_health_checks=True,
         )
-    }
-except ImportError:
-    DATABASES = {
+        if parsed and parsed.get('ENGINE'):
+            return {'default': parsed}
+    except Exception as e:
+        print(f"[DATABASE] dj_database_url note: {e}. Falling back to URL parser.")
+
+    # Robust regex parser for postgres:// or postgresql:// URLs
+    try:
+        m = re.match(
+            r'^(?:postgres|postgresql):\/\/(?:(.+?):(.+)@)?([^:\/\?]+)(?::([^:\/\?]+))?(?:\/([^?]+))?(?:\?(.*))?$',
+            raw_url
+        )
+        if m:
+            user, password, host, port, name, query = m.groups()
+            port_val = int(port) if port and str(port).isdigit() else 5432
+            return {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': name or 'railway',
+                    'USER': urllib.parse.unquote(user or ''),
+                    'PASSWORD': urllib.parse.unquote(password or ''),
+                    'HOST': host or '',
+                    'PORT': port_val,
+                    'CONN_MAX_AGE': 600,
+                    'CONN_HEALTH_CHECKS': True,
+                }
+            }
+    except Exception as e:
+        print(f"[DATABASE] URL parse error: {e}")
+
+    # Safe fallback
+    return {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+DATABASES = _configure_database()
 
 
 # Password validation
