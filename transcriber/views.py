@@ -486,6 +486,11 @@ def get_transcription_view(request, tid):
 # ====== REAL-TIME PROGRESS & ETA TRACKING ======
 PROGRESS_TRACKER = {}
 _PROGRESS_LOCK = threading.Lock()
+PROGRESS_DIR = os.path.join(getattr(settings, 'TEMP_DIR', os.path.join(BASE_DIR, '.cache', 'temp')), 'job_progress')
+try:
+    os.makedirs(PROGRESS_DIR, exist_ok=True)
+except Exception:
+    pass
 
 def update_job_progress(job_id, stage, status_text, subtext="", progress_pct=0.0, current_sec=0.0, total_sec=0.0, speed_ratio=0.0, eta_sec=None):
     if not job_id:
@@ -510,7 +515,7 @@ def update_job_progress(job_id, stage, status_text, subtext="", progress_pct=0.0
                 mins = int((eta_sec % 3600) // 60)
                 eta_str = f"~{hrs}h {mins:02d}m"
 
-        PROGRESS_TRACKER[job_id] = {
+        payload = {
             'stage': stage,
             'status_text': status_text,
             'subtext': subtext,
@@ -522,12 +527,32 @@ def update_job_progress(job_id, stage, status_text, subtext="", progress_pct=0.0
             'eta_str': eta_str,
             'updated_at': now
         }
+        PROGRESS_TRACKER[job_id] = payload
+
+        # Persist to disk so all multi-process workers (e.g. Gunicorn on Railway) share exact progress
+        try:
+            prog_file = os.path.join(PROGRESS_DIR, f"{job_id}.json")
+            with open(prog_file, "w", encoding="utf-8") as pf:
+                json.dump(payload, pf)
+        except Exception:
+            pass
 
 
 def get_progress_view(request, job_id):
     """API endpoint to poll job progress and estimated remaining time during transcription"""
     with _PROGRESS_LOCK:
         data = PROGRESS_TRACKER.get(job_id)
+        if not data:
+            # Check shared filesystem cache for multi-worker setups
+            try:
+                prog_file = os.path.join(PROGRESS_DIR, f"{job_id}.json")
+                if os.path.exists(prog_file):
+                    with open(prog_file, "r", encoding="utf-8") as pf:
+                        data = json.load(pf)
+                        PROGRESS_TRACKER[job_id] = data
+            except Exception:
+                data = None
+
         if not data:
             return JsonResponse({'stage': 'processing', 'progress_pct': 8.0, 'status_text': 'Processing media...', 'subtext': ''})
         return JsonResponse(data)
@@ -684,20 +709,88 @@ def transcribe_view(request):
                 job_id,
                 stage='transcribing',
                 status_text='Dispatching to RunPod Cloud GPU...',
-                subtext=f'Offloading [{language}] audio to RunPod Serverless worker...',
-                progress_pct=30.0
+                subtext=f'Preparing & offloading [{language}] audio to GPU worker...',
+                progress_pct=18.0
             )
             logging.info(f'[RUNPOD ROUTING] Running RunPod Serverless transcription for [{language}] (diarize={diarize})')
 
-            def runpod_prog_cb(status, elapsed):
-                status_desc = 'Worker starting up (cold start)...' if status == 'IN_QUEUE' else 'Transcribing audio on GPU...'
-                update_job_progress(
-                    job_id,
-                    stage='transcribing',
-                    status_text=f'RunPod Cloud GPU: {status}',
-                    subtext=f'{status_desc} ({int(elapsed)}s elapsed)',
-                    progress_pct=min(92.0, 30.0 + elapsed * 1.5)
-                )
+            def runpod_prog_cb(status="IN_PROGRESS", elapsed=0.0, progress=None, execution_time=None, delay_time=None):
+                # 1. Custom progress payload from worker (if available)
+                if isinstance(progress, dict):
+                    stage = progress.get('stage', 'transcribing')
+                    status_text = progress.get('status_text') or progress.get('message', 'Processing on Cloud GPU...')
+                    subtext = progress.get('subtext', f'Active GPU computation ({int(elapsed)}s elapsed)')
+                    pct = float(progress.get('progress_pct', progress.get('pct', 50.0)))
+                    update_job_progress(
+                        job_id,
+                        stage=stage,
+                        status_text=status_text,
+                        subtext=subtext,
+                        progress_pct=pct
+                    )
+                    return
+
+                # 2. Dynamic progress calculation based on RunPod worker lifecycle
+                if status == 'IN_QUEUE':
+                    q_sec = int(elapsed)
+                    update_job_progress(
+                        job_id,
+                        stage='transcribing',
+                        status_text='RunPod Cloud GPU: Provisioning Worker...',
+                        subtext=f'Phase 1: Booting NVIDIA GPU worker & loading weights ({q_sec}s elapsed)...',
+                        progress_pct=min(32.0, 18.0 + elapsed * 1.2)
+                    )
+                elif status == 'IN_PROGRESS':
+                    # Calculate active GPU time
+                    exec_sec = (execution_time / 1000.0) if execution_time else max(1.0, elapsed - 6.0)
+                    
+                    if diarize:
+                        # With diarization: 32% -> 65% STT, 65% -> 88% VAD & Diarization, 88% -> 95% formatting
+                        if exec_sec < 18.0:
+                            trans_pct = min(65.0, 32.0 + exec_sec * 1.8)
+                            update_job_progress(
+                                job_id,
+                                stage='transcribing',
+                                status_text=f'Neural Speech Recognition ({int(trans_pct)}%)',
+                                subtext=f'Phase 2: Whisper inference for [{language}] on GPU ({int(exec_sec)}s)...',
+                                progress_pct=trans_pct
+                            )
+                        elif exec_sec < 38.0:
+                            diar_pct = min(88.0, 65.0 + (exec_sec - 18.0) * 1.2)
+                            update_job_progress(
+                                job_id,
+                                stage='diarizing',
+                                status_text=f'Acoustic Speaker Diarization ({int(diar_pct)}%)',
+                                subtext=f'Phase 3: FSMN-VAD voice detection & CAM++ speaker voiceprints ({int(exec_sec)}s)...',
+                                progress_pct=diar_pct
+                            )
+                        else:
+                            fin_pct = min(94.0, 88.0 + (exec_sec - 38.0) * 0.4)
+                            update_job_progress(
+                                job_id,
+                                stage='finalizing',
+                                status_text='Structuring Concise Portions...',
+                                subtext=f'Phase 4: Merging dialogue turns & timeline synchronization ({int(exec_sec)}s)...',
+                                progress_pct=fin_pct
+                            )
+                    else:
+                        # Transcription only (no diarization): 32% -> 92%
+                        trans_pct = min(92.0, 32.0 + exec_sec * 2.5)
+                        update_job_progress(
+                            job_id,
+                            stage='transcribing',
+                            status_text=f'Neural Speech Recognition ({int(trans_pct)}%)',
+                            subtext=f'Phase 2: Whisper model inference on GPU ({int(exec_sec)}s)...',
+                            progress_pct=trans_pct
+                        )
+                elif status == 'COMPLETED':
+                    update_job_progress(
+                        job_id,
+                        stage='finalizing',
+                        status_text='Finalizing Transcription...',
+                        subtext='Phase 4: Structuring concise portions and timeline sync...',
+                        progress_pct=96.0
+                    )
 
             runpod_out = runpod_transcribe(
                 audio_path,

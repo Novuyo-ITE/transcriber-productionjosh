@@ -65,17 +65,18 @@ def file_to_base64(file_path: str) -> str:
 
 def call_runpod_serverless(
     job_input: Dict[str, Any],
-    timeout_sec: int = 240,
+    timeout_sec: int = 360,
     progress_callback: Optional[callable] = None
 ) -> Dict[str, Any]:
     """
-    Submits a job to RunPod Serverless via /runsync, with automatic status polling fallback.
+    Submits a job asynchronously to RunPod Serverless via /run and streams real-time
+    status and progress updates to progress_callback on every polling tick.
     """
     api_key, endpoint_id = get_runpod_config()
     if not api_key or not endpoint_id:
         raise ValueError("RUNPOD_API_KEY and RUNPOD_ENDPOINT_ID must be configured.")
 
-    run_url = f"https://api.runpod.ai/v2/{endpoint_id}/runsync"
+    run_url = f"https://api.runpod.ai/v2/{endpoint_id}/run"
     status_url_base = f"https://api.runpod.ai/v2/{endpoint_id}/status"
     headers = {
         "Content-Type": "application/json",
@@ -83,22 +84,25 @@ def call_runpod_serverless(
     }
 
     payload = {"input": job_input}
-    logger.info(f"[RunPod Client] Sending job (action={job_input.get('action')}) to {run_url}...")
+    action = job_input.get('action', 'transcribe')
+    logger.info(f"[RunPod Client] Submitting asynchronous job (action={action}) to {run_url}...")
 
     t0 = time.time()
     try:
-        response = requests.post(run_url, json=payload, headers=headers, timeout=timeout_sec)
+        response = requests.post(run_url, json=payload, headers=headers, timeout=25)
     except requests.exceptions.Timeout:
-        raise TimeoutError("RunPod initial request timed out.")
+        logger.warning("[RunPod Client] /run timed out. Trying /runsync fallback...")
+        run_url = f"https://api.runpod.ai/v2/{endpoint_id}/runsync"
+        response = requests.post(run_url, json=payload, headers=headers, timeout=timeout_sec)
 
     if response.status_code != 200:
         logger.error(f"[RunPod Client] Request error {response.status_code}: {response.text}")
         raise RuntimeError(f"RunPod API error ({response.status_code}): {response.text}")
 
     res_json = response.json()
-    status = res_json.get("status")
     job_id = res_json.get("id")
-    logger.info(f"[RunPod Client] Initial status: {status} (Job ID: {job_id})")
+    status = res_json.get("status")
+    logger.info(f"[RunPod Client] Job initiated: {status} (Job ID: {job_id})")
 
     if status == "COMPLETED":
         output = res_json.get("output", {})
@@ -106,41 +110,51 @@ def call_runpod_serverless(
             raise RuntimeError(f"RunPod model error: {output.get('error')}")
         return output
 
-    # Polling fallback if job is queued or executing asynchronously
-    if status in ("IN_QUEUE", "IN_PROGRESS"):
-        poll_interval = 2.5
-        max_polls = int(timeout_sec / poll_interval)
+    # Polling loop with real-time status and progress streaming
+    poll_interval = 1.2
+    max_polls = int(timeout_sec / poll_interval)
 
-        for attempt in range(max_polls):
-            time.sleep(poll_interval)
-            elapsed = time.time() - t0
+    for attempt in range(max_polls):
+        time.sleep(poll_interval)
+        elapsed = time.time() - t0
 
-            if progress_callback:
-                try:
-                    progress_callback(status=status, elapsed=elapsed)
-                except Exception:
-                    pass
+        try:
+            poll_resp = requests.get(f"{status_url_base}/{job_id}", headers=headers, timeout=12)
+        except Exception:
+            continue
 
-            poll_resp = requests.get(f"{status_url_base}/{job_id}", headers=headers, timeout=15)
-            if poll_resp.status_code != 200:
-                continue
+        if poll_resp.status_code != 200:
+            continue
 
-            poll_data = poll_resp.json()
-            curr_status = poll_data.get("status")
+        poll_data = poll_resp.json()
+        curr_status = poll_data.get("status")
+        progress_data = poll_data.get("progress")
+        execution_time = poll_data.get("executionTime")
+        delay_time = poll_data.get("delayTime")
 
-            if curr_status == "COMPLETED":
-                output = poll_data.get("output", {})
-                if isinstance(output, dict) and output.get("status") == "error":
-                    raise RuntimeError(f"RunPod model error: {output.get('error')}")
-                logger.info(f"[RunPod Client] Job {job_id} COMPLETED in {time.time() - t0:.2f}s")
-                return output
-            elif curr_status in ("FAILED", "CANCELLED"):
-                error_msg = poll_data.get("error", "Job failed on RunPod worker.")
-                raise RuntimeError(f"RunPod job {curr_status}: {error_msg}")
+        if progress_callback:
+            try:
+                progress_callback(
+                    status=curr_status,
+                    elapsed=elapsed,
+                    progress=progress_data,
+                    execution_time=execution_time,
+                    delay_time=delay_time
+                )
+            except Exception as e:
+                logger.debug(f"[RunPod Client] Error in progress_callback: {e}")
 
-        raise TimeoutError(f"RunPod execution exceeded {timeout_sec}s timeout.")
+        if curr_status == "COMPLETED":
+            output = poll_data.get("output", {})
+            if isinstance(output, dict) and output.get("status") == "error":
+                raise RuntimeError(f"RunPod model error: {output.get('error')}")
+            logger.info(f"[RunPod Client] Job {job_id} COMPLETED in {time.time() - t0:.2f}s")
+            return output
+        elif curr_status in ("FAILED", "CANCELLED"):
+            error_msg = poll_data.get("error", "Job failed on RunPod worker.")
+            raise RuntimeError(f"RunPod job {curr_status}: {error_msg}")
 
-    raise RuntimeError(f"Unexpected RunPod response status: {status}")
+    raise TimeoutError(f"RunPod execution exceeded {timeout_sec}s timeout.")
 
 
 def runpod_transcribe(
