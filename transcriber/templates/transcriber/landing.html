@@ -43,21 +43,13 @@
             </a>
 
             <div class="nav-actions">
-                {% if user.is_authenticated and user.username|lower == 'gideoni' %}
-                <a href="{% url 'transcriber:dashboard' %}" class="btn-dash-link" style="padding: 7px 13px; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 8px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #C084FC; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                    <span>Analytics</span>
-                </a>
-                {% endif %}
                 {% if user.is_authenticated %}
-                <span class="nav-user-label" style="font-size: 13px; font-family: var(--font-mono); color: var(--emerald-primary); margin-right: 4px;">{{ user.username }}</span>
                 <a href="{% url 'transcriber:app' %}" class="btn-nav-primary">
                     <span>Open Workspace</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
                 {% else %}
                 <button type="button" class="btn-nav-signin" onclick="openAuthModal('login')">Sign In</button>
-                <button type="button" onclick="openAuthModal('register')" style="padding: 7px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; background: var(--brand-gradient); color: #030712; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">Sign Up</button>
                 {% endif %}
             </div>
         </div>
@@ -89,8 +81,8 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
                     {% else %}
-                    <button type="button" onclick="openAuthModal('register')" class="btn-hero-primary" style="border:none; cursor:pointer;">
-                        <span>Get Started Free</span>
+                    <button type="button" onclick="openAuthModal('login')" class="btn-hero-primary" style="border:none; cursor:pointer;">
+                        <span>Sign In to Transcribe</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
                     {% endif %}
@@ -340,8 +332,8 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
                 {% else %}
-                <button type="button" onclick="openAuthModal('register')" class="btn-hero-primary" style="display:inline-flex; border:none; cursor:pointer;">
-                    <span>Create Free Account & Start</span>
+                <button type="button" onclick="openAuthModal('login')" class="btn-hero-primary" style="display:inline-flex; border:none; cursor:pointer;">
+                    <span>Sign In to Transcribe</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </button>
                 {% endif %}

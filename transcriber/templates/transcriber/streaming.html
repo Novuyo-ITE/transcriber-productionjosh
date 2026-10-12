@@ -594,7 +594,7 @@
             justify-content: center !important;
             cursor: pointer !important;
             flex-shrink: 0 !important;
-            margin-right: 4px !important;
+            z-index: 3;
             transition: background 0.2s ease, border-color 0.2s ease;
         }
 
@@ -604,10 +604,14 @@
         }
 
         .fixed-top-nav-brand {
+            position: absolute !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
             display: inline-flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 10px !important;
+            justify-content: center !important;
+            gap: 9px !important;
             text-decoration: none !important;
             cursor: pointer !important;
             white-space: nowrap !important;
@@ -615,8 +619,8 @@
             font-size: 19px !important;
             font-family: 'Plus Jakarta Sans', sans-serif !important;
             letter-spacing: -0.4px !important;
-            margin-right: auto !important;
-            margin-left: 2px !important;
+            margin: 0 !important;
+            z-index: 2;
         }
 
         .fixed-top-nav-brand div {
@@ -632,6 +636,7 @@
             align-items: center;
             margin-left: auto;
             flex-shrink: 0;
+            z-index: 3;
         }
 
         .btn-fixed-nav-new {
@@ -1051,17 +1056,17 @@
                     <span>Sign Out</span>
                 </button>
                 {% else %}
-                <div style="display: flex; align-items: center; gap: 8px; width: 100%;" onclick="openAuthModal('register')" title="Account Required - Sign Up">
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;" onclick="openAuthModal('login')" title="Account Required - Sign In">
                     <div class="user-avatar-badge" style="width: 28px; height: 28px; border-radius: 50%; background: var(--spk-1-bg); color: var(--emerald-primary); font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; border: 1px solid var(--border-glow);">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
                     </div>
                     <div class="user-info-text" style="display: flex; flex-direction: column;">
                         <span style="font-size: 12px; font-weight: 700; color: #F3F4F6;">Account Required</span>
-                        <span style="font-size: 9.5px; font-family: 'JetBrains Mono', monospace; color: var(--emerald-light);">REGISTER / SIGN IN</span>
+                        <span style="font-size: 9.5px; font-family: 'JetBrains Mono', monospace; color: var(--emerald-light);">PLEASE SIGN IN</span>
                     </div>
                 </div>
-                <button type="button" class="btn-auth-action" onclick="openAuthModal('register')" style="width: 100%; padding: 7px; background: var(--brand-gradient); border: none; color: #030712; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    <span>Create Account</span>
+                <button type="button" class="btn-auth-action" onclick="openAuthModal('login')" style="width: 100%; padding: 7px; background: var(--brand-gradient); border: none; color: #030712; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Sign In</span>
                 </button>
                 {% endif %}
             </div>

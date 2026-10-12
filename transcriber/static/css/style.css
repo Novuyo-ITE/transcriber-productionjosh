@@ -2609,7 +2609,7 @@ body.sidebar-open #sidebarBackdrop {
     justify-content: center !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
-    margin-right: 4px !important;
+    z-index: 3;
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
@@ -2619,10 +2619,14 @@ body.sidebar-open #sidebarBackdrop {
 }
 
 .fixed-top-nav-brand {
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
     display: inline-flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 10px !important;
+    justify-content: center !important;
+    gap: 9px !important;
     text-decoration: none !important;
     cursor: pointer !important;
     white-space: nowrap !important;
@@ -2630,8 +2634,8 @@ body.sidebar-open #sidebarBackdrop {
     font-size: 19px !important;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     letter-spacing: -0.4px !important;
-    margin-right: auto !important;
-    margin-left: 2px !important;
+    margin: 0 !important;
+    z-index: 2;
 }
 
 .fixed-top-nav-brand div,
@@ -2649,6 +2653,7 @@ body.sidebar-open #sidebarBackdrop {
     align-items: center;
     margin-left: auto;
     flex-shrink: 0;
+    z-index: 3;
 }
 
 .btn-fixed-nav-new {

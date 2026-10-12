@@ -438,7 +438,7 @@ def landing_view(request):
 def index_view(request):
     """Render the main transcription workspace UI - requires user account"""
     if not request.user.is_authenticated:
-        return redirect('/?auth=signup')
+        return redirect('/?auth=login')
     history = Transcription.objects.filter(user=request.user).order_by('-created_at')
     is_admin = bool(request.user.username.lower() == 'gideoni')
     return render(request, 'transcriber/index.html', {
@@ -449,7 +449,7 @@ def index_view(request):
 def stream_page_view(request):
     """Render the dedicated Real-Time Streaming interface - requires user account"""
     if not request.user.is_authenticated:
-        return redirect('/?auth=signup')
+        return redirect('/?auth=login')
     history = Transcription.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'transcriber/streaming.html', {'history': history})
 
