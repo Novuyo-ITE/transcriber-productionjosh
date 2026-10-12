@@ -177,6 +177,44 @@
             flex-wrap: wrap;
         }
 
+        .emb-users-table-wrap {
+            width: 100%;
+            max-height: 480px;
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.25);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.5) rgba(3, 7, 18, 0.6);
+            position: relative;
+        }
+
+        .emb-users-table-wrap::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .emb-users-table-wrap::-webkit-scrollbar-track {
+            background: rgba(3, 7, 18, 0.6);
+            border-radius: 4px;
+        }
+        .emb-users-table-wrap::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            border-radius: 4px;
+        }
+        .emb-users-table-wrap::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+        }
+
+        .emb-users-table-wrap thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(11, 16, 29, 0.98);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
 
         /* TABLET RESPONSIVE RULES (max-width: 1024px) */
         @media (max-width: 1024px) {
@@ -1523,17 +1561,17 @@
                     </div>
                 </div>
 
-                <div style="width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
-                    <table style="width:100%; min-width:620px; border-collapse:collapse; font-size:12.5px; text-align:left;">
+                <div class="emb-users-table-wrap">
+                    <table style="width:100%; min-width:1020px; border-collapse:collapse; font-size:12.5px; text-align:left;">
                         <thead>
-                            <tr style="background:rgba(0,0,0,0.5); color:var(--text-secondary); font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase;">
-                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">User</th>
-                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Role</th>
-                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Status</th>
-                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Jobs</th>
-                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Audio Time</th>
-                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08);">Joined</th>
-                                <th style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:right;">Actions</th>
+                            <tr style="color:var(--text-secondary); font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase;">
+                                <th style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); white-space:nowrap;">User</th>
+                                <th style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); white-space:nowrap;">Role</th>
+                                <th style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); white-space:nowrap;">Status</th>
+                                <th style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); white-space:nowrap;">Jobs</th>
+                                <th style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); white-space:nowrap;">Audio Time</th>
+                                <th style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); white-space:nowrap;">Joined</th>
+                                <th style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:right; white-space:nowrap;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="embUserTableBody">
@@ -2576,16 +2614,16 @@
                 `;
 
                 tr.innerHTML = `
-                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); white-space:nowrap;">
                         <div style="font-weight:700; color:#F9FAFB;">${escapeHtml(u.username)}</div>
                         <div style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">${escapeHtml(u.email)}</div>
                     </td>
-                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">${roleBadge}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05);">${statusBtn}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; font-weight:700;">${u.transcriptions_count}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--cyan-light);">${u.total_formatted}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; color:var(--text-secondary); font-family:'JetBrains Mono',monospace;">${u.date_joined || '—'}</td>
-                    <td style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:right;">${actions}</td>
+                    <td style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); white-space:nowrap;">${roleBadge}</td>
+                    <td style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); white-space:nowrap;">${statusBtn}</td>
+                    <td style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; font-weight:700; white-space:nowrap;">${u.transcriptions_count}</td>
+                    <td style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--cyan-light); white-space:nowrap;">${u.total_formatted}</td>
+                    <td style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; color:var(--text-secondary); font-family:'JetBrains Mono',monospace; white-space:nowrap;">${u.date_joined || '—'}</td>
+                    <td style="padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:right; white-space:nowrap;">${actions}</td>
                 `;
                 tbody.appendChild(tr);
             });

@@ -682,20 +682,53 @@
         /* User Table */
         .table-responsive {
             width: 100%;
-            overflow-x: auto;
+            max-height: 480px;
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
             border-radius: 12px;
             border: 1px solid var(--border-panel);
+            background: rgba(0, 0, 0, 0.25);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.5) rgba(3, 7, 18, 0.6);
+            position: relative;
+        }
+
+        .table-responsive::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .table-responsive::-webkit-scrollbar-track {
+            background: rgba(3, 7, 18, 0.6);
+            border-radius: 4px;
+        }
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+            border-radius: 4px;
+        }
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
         }
 
         .dash-table {
             width: 100%;
+            min-width: 1020px;
             border-collapse: collapse;
             font-size: 13px;
             text-align: left;
         }
 
+        .dash-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(11, 16, 29, 0.98);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            white-space: nowrap;
+        }
+
         .dash-table th {
-            background: rgba(0, 0, 0, 0.5);
             color: var(--text-secondary);
             font-family: var(--font-mono);
             font-size: 11px;
@@ -710,6 +743,7 @@
             padding: 14px 16px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             vertical-align: middle;
+            white-space: nowrap;
         }
 
         .dash-table tr:last-child td {
