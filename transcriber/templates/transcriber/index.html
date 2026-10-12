@@ -177,55 +177,6 @@
             flex-wrap: wrap;
         }
 
-        /* Floating Quick-Scroll Navigation Pill HUD */
-        .emb-scroll-hud {
-            position: fixed;
-            bottom: 24px;
-            right: 28px;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(13, 18, 31, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 18px rgba(16, 185, 129, 0.18);
-            padding: 5px 8px;
-            border-radius: 30px;
-            transition: all 0.25s ease;
-        }
-
-        .emb-hud-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-secondary);
-            border-radius: 20px;
-            padding: 5px 11px;
-            font-size: 11px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .emb-hud-btn:hover {
-            background: rgba(16, 185, 129, 0.18);
-            border-color: rgba(16, 185, 129, 0.45);
-            color: #6EE7B7;
-            transform: translateY(-1px);
-        }
-
-        .emb-hud-btn.emb-hud-btn-top {
-            background: rgba(16, 185, 129, 0.15);
-            border-color: rgba(16, 185, 129, 0.4);
-            color: var(--emerald-light);
-            font-weight: 700;
-        }
 
         /* TABLET RESPONSIVE RULES (max-width: 1024px) */
         @media (max-width: 1024px) {
@@ -251,22 +202,27 @@
             .emb-cat-canvas-wrap {
                 height: 200px !important;
             }
-            .emb-scroll-hud {
-                bottom: 20px !important;
-                right: 18px !important;
-                padding: 4px 6px !important;
+        }
+
+        /* PHONES & TABLETS: natural page scrolling (no inner scroll container) */
+        @media (max-width: 768px) {
+            .analytics-screen {
+                height: auto !important;
+                max-height: none !important;
+                min-height: 0 !important;
+                flex: none !important;
+                overflow: visible !important;
+                padding-bottom: 40px !important;
+                overscroll-behavior-y: auto !important;
+                touch-action: auto !important;
             }
         }
 
         /* PHONE & MOBILE RESPONSIVE RULES (max-width: 640px) */
         @media (max-width: 640px) {
             .analytics-screen {
-                padding: 14px 12px 180px !important;
+                padding: 14px 12px 40px !important;
                 gap: 16px !important;
-                height: auto !important;
-                min-height: calc(100vh - 60px) !important;
-                max-height: none !important;
-                overflow-y: visible !important;
             }
             .emb-top-bar {
                 flex-direction: column !important;
@@ -336,19 +292,6 @@
                 flex: 1 !important;
                 min-width: 0 !important;
                 width: 100% !important;
-            }
-            .emb-scroll-hud {
-                bottom: 14px !important;
-                right: 8px !important;
-                padding: 4px 6px !important;
-                gap: 3px !important;
-                max-width: calc(100vw - 16px) !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-            }
-            .emb-hud-btn {
-                padding: 4px 7px !important;
-                font-size: 10px !important;
             }
         }
 
@@ -1569,29 +1512,6 @@
                 </div>
             </div>
 
-            <!-- Floating Quick-Scroll Navigation Pill HUD -->
-            <div class="emb-scroll-hud" id="embScrollHud">
-                <button type="button" class="emb-hud-btn emb-hud-btn-top" onclick="scrollEmbTo('top')" title="Smooth Scroll to Top">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                    <span>Top</span>
-                </button>
-                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionKpis')" title="Jump to KPI Metrics">
-                    <span>KPIs</span>
-                </button>
-                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionCharts')" title="Jump to Volume & Growth Timeline">
-                    <span>Timeline</span>
-                </button>
-                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionCategories')" title="Jump to File Categories Breakdown">
-                    <span>Taxonomy</span>
-                </button>
-                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('embSectionUsers')" title="Jump to User Management Table">
-                    <span>Users</span>
-                </button>
-                <button type="button" class="emb-hud-btn" onclick="scrollEmbTo('bottom')" title="Smooth Scroll to Bottom">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-                    <span>Bottom</span>
-                </button>
-            </div>
         </div>
 
         <!-- Embedded Modals for Admin Gideoni -->
@@ -2096,24 +2016,6 @@
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
             if (typeof initEmbeddedAnalytics === 'function') {
                 initEmbeddedAnalytics();
-            }
-        }
-
-        function scrollEmbTo(target) {
-            const anal = document.getElementById('analytics-screen');
-            if (!anal) return;
-            const isMobile = window.innerWidth <= 768;
-            if (target === 'top') {
-                anal.scrollTo({ top: 0, behavior: 'smooth' });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else if (target === 'bottom') {
-                anal.scrollTo({ top: anal.scrollHeight, behavior: 'smooth' });
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            } else {
-                const el = document.getElementById(target);
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
             }
         }
 
@@ -2802,31 +2704,61 @@
                     .catch(() => {});
             }, 600);
 
+            const finishUI = () => {
+                clearInterval(timerInterval);
+                clearInterval(pollInterval);
+                form.style.display = 'block';
+                overlay.style.display = 'none';
+            };
+
+            // Wait for the background job to finish by polling the shared progress file.
+            const waitForJob = (jid) => new Promise((resolve, reject) => {
+                let misses = 0;
+                const tick = () => {
+                    fetch(`/api/progress/${jid}/`)
+                        .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+                        .then(p => {
+                            misses = 0;
+                            if (p && p.stage === 'complete' && p.result_id) return resolve(p);
+                            if (p && p.stage === 'error') return reject(new Error(p.error || p.subtext || 'Transcription failed'));
+                            setTimeout(tick, 1500);
+                        })
+                        .catch(() => {
+                            // Tolerate temporary network/proxy hiccups (e.g. phone switching networks)
+                            if (++misses > 40) return reject(new Error('Lost connection to the server while transcribing.'));
+                            setTimeout(tick, 3000);
+                        });
+                };
+                tick();
+            });
+
             fetch('/api/transcribe/', {
                 method: 'POST',
                 body: formData
             })
-            .then(res => res.json())
-            .then(data => {
-                clearInterval(timerInterval);
-                clearInterval(pollInterval);
-                form.style.display = 'block';
-                overlay.style.display = 'none';
-                
-                if (data.error) {
-                    alert("Transcription failed: " + data.error);
-                } else {
-                    currentTranscriptionId = data.id;
-                    loadHistory();
-                    loadTranscription(data.id, data.processing_time);
+            .then(async res => {
+                const raw = await res.text();
+                try {
+                    return JSON.parse(raw);
+                } catch (_) {
+                    // Non-JSON (e.g. proxy "upstream error"): the job may still be running — keep waiting on it.
+                    return { queued: true, job_id: jobId, proxy_note: raw.slice(0, 120) };
                 }
             })
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                if (data.queued) return waitForJob(data.job_id || jobId).then(p => ({ id: p.result_id, processing_time: p.processing_time }));
+                return data;
+            })
+            .then(data => {
+                finishUI();
+                currentTranscriptionId = data.id;
+                loadHistory();
+                loadTranscription(data.id, data.processing_time);
+            })
             .catch(err => {
-                clearInterval(timerInterval);
-                clearInterval(pollInterval);
-                form.style.display = 'block';
-                overlay.style.display = 'none';
-                alert("An error occurred: " + err);
+                finishUI();
+                alert(String(err && err.message ? err.message : err));
             });
         }
 

@@ -496,7 +496,7 @@ try:
 except Exception:
     pass
 
-def update_job_progress(job_id, stage, status_text, subtext="", progress_pct=0.0, current_sec=0.0, total_sec=0.0, speed_ratio=0.0, eta_sec=None):
+def update_job_progress(job_id, stage, status_text, subtext="", progress_pct=0.0, current_sec=0.0, total_sec=0.0, speed_ratio=0.0, eta_sec=None, **extra):
     if not job_id:
         return
     with _PROGRESS_LOCK:
@@ -531,6 +531,8 @@ def update_job_progress(job_id, stage, status_text, subtext="", progress_pct=0.0
             'eta_str': eta_str,
             'updated_at': now
         }
+        if extra:
+            payload.update(extra)
         PROGRESS_TRACKER[job_id] = payload
 
         # Persist to disk so all multi-process workers (e.g. Gunicorn on Railway) share exact progress
@@ -545,17 +547,18 @@ def update_job_progress(job_id, stage, status_text, subtext="", progress_pct=0.0
 def get_progress_view(request, job_id):
     """API endpoint to poll job progress and estimated remaining time during transcription"""
     with _PROGRESS_LOCK:
-        data = PROGRESS_TRACKER.get(job_id)
+        data = None
+        # Always prefer the shared file: another Gunicorn worker may be running the job
+        try:
+            prog_file = os.path.join(PROGRESS_DIR, f"{job_id}.json")
+            if os.path.exists(prog_file):
+                with open(prog_file, "r", encoding="utf-8") as pf:
+                    data = json.load(pf)
+                    PROGRESS_TRACKER[job_id] = data
+        except Exception:
+            data = None
         if not data:
-            # Check shared filesystem cache for multi-worker setups
-            try:
-                prog_file = os.path.join(PROGRESS_DIR, f"{job_id}.json")
-                if os.path.exists(prog_file):
-                    with open(prog_file, "r", encoding="utf-8") as pf:
-                        data = json.load(pf)
-                        PROGRESS_TRACKER[job_id] = data
-            except Exception:
-                data = None
+            data = PROGRESS_TRACKER.get(job_id)
 
         if not data:
             return JsonResponse({'stage': 'processing', 'progress_pct': 8.0, 'status_text': 'Processing media...', 'subtext': ''})
@@ -662,12 +665,60 @@ def transcribe_view(request):
                 return JsonResponse({'error': f'YouTube download failed: {str(yt_exc)}'}, status=500)
         else:
             return JsonResponse({'error': 'Invalid source type'}, status=400)
+    except Exception as e:
+        update_job_progress(
+            job_id,
+            stage='error',
+            status_text='Transcription Failed',
+            subtext=str(e),
+            progress_pct=0.0,
+            error=f'Transcription failed: {str(e)}'
+        )
+        logging.exception('Transcription ingest error')
+        if temp_path and os.path.exists(temp_path):
+            try: os.remove(temp_path)
+            except: pass
+        return JsonResponse({'error': f'Transcription failed: {str(e)}'}, status=500)
 
+    # Heavy GPU / RunPod work runs in a background thread so the HTTP request returns
+    # immediately. This avoids Railway proxy & Gunicorn timeouts ("upstream error")
+    # on long audios. The browser polls /api/progress/<job_id>/ for the result.
+    if not job_id:
+        job_id = uuid.uuid4().hex
+    user_obj = request.user if request.user.is_authenticated else None
+    is_live_rec_flag = request.POST.get('is_live_rec') == 'true'
+
+    worker = threading.Thread(
+        target=_run_transcription_job,
+        kwargs=dict(
+            job_id=job_id,
+            audio_path=audio_path,
+            original_name=original_name,
+            language=language,
+            lang_code=lang_code,
+            diarize=diarize,
+            num_speakers=num_speakers,
+            user_obj=user_obj,
+            is_live_rec_flag=is_live_rec_flag,
+            overall_start=overall_start,
+            temp_path=temp_path,
+        ),
+        daemon=True,
+    )
+    worker.start()
+    return JsonResponse({'success': True, 'queued': True, 'job_id': job_id})
+
+
+def _run_transcription_job(job_id, audio_path, original_name, language, lang_code, diarize,
+                           num_speakers, user_obj, is_live_rec_flag, overall_start, temp_path):
+    """Background worker: runs STT (RunPod or local), diarization and saves the result."""
+    from django.db import connection
+    try:
         # 2. Run STT Transcription Engine
         start_ts = time.time()
         
         is_luganda = (language and language.lower() == 'luganda') or lang_code in ('lg', 'luganda')
-        is_live_recording = request.POST.get('is_live_rec') == 'true' or (original_name and 'live_recording' in original_name.lower())
+        is_live_recording = is_live_rec_flag or (original_name and 'live_recording' in original_name.lower())
         
         update_job_progress(
             job_id,
@@ -890,7 +941,6 @@ def transcribe_view(request):
         )
 
         # 4. Save to Database with exact timeline mapping
-        user_obj = request.user if request.user.is_authenticated else None
         original_name = capitalize_title(original_name)
         t = Transcription.objects.create(
             user=user_obj,
@@ -901,22 +951,16 @@ def transcribe_view(request):
             formatted=formatted_text
         )
 
+        total_duration = round(time.time() - overall_start, 2)
         update_job_progress(
             job_id,
             stage='complete',
             status_text='Complete!',
             subtext='Loading workspace...',
-            progress_pct=100.0
+            progress_pct=100.0,
+            result_id=str(t.id),
+            processing_time=total_duration
         )
-
-        total_duration = round(time.time() - overall_start, 2)
-        return JsonResponse({
-            'success': True,
-            'id': str(t.id),
-            'transcription': clean_raw_text,
-            'formatted': formatted_text,
-            'processing_time': total_duration
-        })
 
     except Exception as e:
         update_job_progress(
@@ -924,16 +968,18 @@ def transcribe_view(request):
             stage='error',
             status_text='Transcription Failed',
             subtext=str(e),
-            progress_pct=0.0
+            progress_pct=0.0,
+            error=f'Transcription failed: {str(e)}'
         )
         logging.exception('Transcription pipeline error')
-        # Preserve original traceback for debugging
-        import traceback
-        traceback.print_exc()
         if temp_path and os.path.exists(temp_path):
             try: os.remove(temp_path)
             except: pass
-        return JsonResponse({'error': f'Transcription failed: {str(e)}'}, status=500)
+    finally:
+        try:
+            connection.close()
+        except Exception:
+            pass
 
 @csrf_exempt
 def update_transcription_view(request, tid):

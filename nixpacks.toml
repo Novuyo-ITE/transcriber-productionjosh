@@ -8,4 +8,4 @@ cmds = [
 ]
 
 [start]
-cmd = "python manage.py migrate --noinput && gunicorn transcriber_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 300"
+cmd = "python manage.py migrate --noinput && gunicorn transcriber_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 600"

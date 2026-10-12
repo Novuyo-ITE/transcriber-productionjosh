@@ -204,55 +204,7 @@
             position: relative;
         }
 
-        /* Floating Quick-Scroll Navigation Pill HUD */
-        .dash-scroll-hud {
-            position: fixed;
-            bottom: 24px;
-            right: 28px;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(13, 18, 31, 0.92);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 18px rgba(16, 185, 129, 0.18);
-            padding: 5px 8px;
-            border-radius: 30px;
-            transition: all 0.25s ease;
-        }
 
-        .dash-hud-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-secondary);
-            border-radius: 20px;
-            padding: 5px 11px;
-            font-size: 11px;
-            font-family: var(--font-mono);
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .dash-hud-btn:hover {
-            background: rgba(16, 185, 129, 0.18);
-            border-color: rgba(16, 185, 129, 0.45);
-            color: #6EE7B7;
-            transform: translateY(-1px);
-        }
-
-        .dash-hud-btn.dash-hud-btn-top {
-            background: rgba(16, 185, 129, 0.15);
-            border-color: rgba(16, 185, 129, 0.4);
-            color: var(--emerald-light);
-            font-weight: 700;
-        }
 
         /* Top Action Bar: Range Filters & Refresh */
         .dash-hero-bar {
@@ -1466,29 +1418,7 @@
             </div>
         </section>
 
-        <!-- Floating Quick-Scroll Navigation Pill HUD -->
-        <div class="dash-scroll-hud" id="dashScrollHud">
-            <button type="button" class="dash-hud-btn dash-hud-btn-top" onclick="scrollDashTo('top')" title="Smooth Scroll to Top">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                <span>Top</span>
-            </button>
-            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionKpis')" title="Jump to KPI Metrics">
-                <span>KPIs</span>
-            </button>
-            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionCharts')" title="Jump to Volume & Growth Timeline">
-                <span>Timeline</span>
-            </button>
-            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionCategories')" title="Jump to File Categories Breakdown">
-                <span>Taxonomy</span>
-            </button>
-            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('dashSectionUsers')" title="Jump to User Management Table">
-                <span>Users</span>
-            </button>
-            <button type="button" class="dash-hud-btn" onclick="scrollDashTo('bottom')" title="Smooth Scroll to Bottom">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-                <span>Bottom</span>
-            </button>
-        </div>
+
 
     </main>
 
@@ -2371,18 +2301,7 @@
                 .replace(/'/g, '&#039;');
         }
 
-        function scrollDashTo(target) {
-            if (target === 'top') {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else if (target === 'bottom') {
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            } else {
-                const el = document.getElementById(target);
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }
-        }
+
     </script>
 </body>
 </html>
