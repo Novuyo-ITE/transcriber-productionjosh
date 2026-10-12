@@ -29,7 +29,7 @@ This guide details how to deploy the **Transcriber AI** full-stack web applicati
                       +-----------------------------+
 ```
 
-- **Frontend & Backend (Railway)**: GitHub repo: [kyangwi/transcriber-production](https://github.com/kyangwi/transcriber-production)
+- **Frontend & Backend (Railway)**: GitHub repo: [Novuyo-ITE/transcriber-productionjosh](https://github.com/Novuyo-ITE/transcriber-productionjosh)
 - **Model Worker (RunPod Serverless)**: GitHub repo: [kyangwi/transcriber-luganda-worker](https://github.com/kyangwi/transcriber-luganda-worker)
 
 ---
