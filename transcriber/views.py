@@ -1532,3 +1532,518 @@ def save_stream_session_view(request):
         'title': transcription.original_name,
         'message': 'Streaming conversation saved successfully to workspace'
     })
+
+
+# =========================================================================
+# DASHBOARD, ANALYTICS & USER MANAGEMENT
+# =========================================================================
+
+def _extract_audio_duration_seconds(formatted_text, raw_text):
+    """
+    Extracts duration from timestamps [MM:SS] or [HH:MM:SS] in formatted_text,
+    or falls back to word count calculation (~130 words per minute).
+    """
+    if formatted_text:
+        matches = re.findall(r'\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]', formatted_text)
+        if matches:
+            last_m = matches[-1]
+            if last_m[2]:
+                return int(last_m[0]) * 3600 + int(last_m[1]) * 60 + int(last_m[2]) + 5
+            else:
+                return int(last_m[0]) * 60 + int(last_m[1]) + 5
+    if raw_text:
+        words = len(raw_text.split())
+        if words > 0:
+            return max(15.0, (words / 130.0) * 60.0)
+    return 15.0
+
+
+def _categorize_transcription_file(original_name, audio_path):
+    """
+    Categorizes a transcription into:
+    1. Source Mode: 'Live Recording', 'Real-Time Stream', 'YouTube / Web Media', 'Video Extraction', 'Audio Upload'
+    2. File Extension: '.mp3', '.wav', '.m4a', '.mp4', '.stream', '.webm', etc.
+    """
+    name_l = (original_name or '').lower()
+    path_l = (audio_path or '').lower()
+
+    if name_l.startswith('live_recording') or 'live_rec' in name_l:
+        source_mode = 'Live Recording'
+    elif name_l.startswith('stream_') or 'streaming' in name_l:
+        source_mode = 'Real-Time Stream'
+    elif name_l.startswith('youtube') or 'youtube' in path_l:
+        source_mode = 'YouTube / Web Media'
+    elif any(name_l.endswith(ext) or path_l.endswith(ext) for ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm']):
+        source_mode = 'Video Extraction'
+    else:
+        source_mode = 'Audio Upload'
+
+    ext = os.path.splitext(original_name or '')[1].lower()
+    if not ext:
+        ext = os.path.splitext(audio_path or '')[1].lower()
+    if not ext:
+        if source_mode == 'Real-Time Stream':
+            ext = '.stream'
+        elif source_mode == 'Live Recording':
+            ext = '.wav'
+        else:
+            ext = '.mp3'
+
+    return source_mode, ext
+
+
+def _format_seconds_to_human(seconds):
+    """Formats raw seconds into human-readable duration like '8h 04m' or '2m 15s'"""
+    sec = int(round(seconds))
+    if sec < 60:
+        return f"{sec}s"
+    mins = sec // 60
+    rem_sec = sec % 60
+    if mins < 60:
+        return f"{mins}m {rem_sec:02d}s" if rem_sec else f"{mins}m"
+    hrs = mins // 60
+    rem_mins = mins % 60
+    return f"{hrs}h {rem_mins:02d}m"
+
+
+def dashboard_view(request):
+    """
+    Renders the modern Executive & Admin Analytics Dashboard.
+    Provides software evaluation, audio duration analytics, file taxonomy breakdown,
+    and comprehensive user tracking & management.
+    """
+    return render(request, 'transcriber/dashboard.html', {
+        'page_title': 'NOVUscribe Analytics & User Intelligence',
+        'user': request.user
+    })
+
+
+def dashboard_stats_api_view(request):
+    """
+    API: Returns aggregated analytics on:
+    1. Overall KPIs (audio duration volume, total jobs, user counts, avg length)
+    2. Audio Volume Evolution Timeline (daily audio time & jobs)
+    3. User Growth & Activity Evolution
+    4. Category Analytics:
+       - Ingestion modes (Audio upload, Live mic, Real-time stream, Video extraction, YouTube)
+       - File extensions (.mp3, .wav, .m4a, .mp4, .stream, etc.)
+       - Duration length tiers (<2m, 2-10m, 10-30m, 30m+)
+       - Language distribution (Luganda, English, Swahili, French, Lingala)
+    """
+    from collections import defaultdict
+    from datetime import datetime, timedelta
+    from django.utils import timezone
+
+    time_range = request.GET.get('range', 'all').lower()
+    now = timezone.now()
+
+    qs = Transcription.objects.all().order_by('created_at')
+    if time_range == '7d':
+        cutoff = now - timedelta(days=7)
+        qs = qs.filter(created_at__gte=cutoff)
+    elif time_range == '30d':
+        cutoff = now - timedelta(days=30)
+        qs = qs.filter(created_at__gte=cutoff)
+
+    all_transcriptions = list(qs)
+    all_users = list(User.objects.all().order_by('date_joined'))
+
+    total_seconds = 0.0
+    timeline = defaultdict(lambda: {'count': 0, 'seconds': 0.0})
+    source_modes = defaultdict(lambda: {'count': 0, 'seconds': 0.0})
+    file_formats = defaultdict(lambda: {'count': 0, 'seconds': 0.0})
+    length_tiers = {
+        '<2m': {'label': 'Quick (< 2m)', 'count': 0, 'seconds': 0.0},
+        '2-10m': {'label': 'Short (2 - 10m)', 'count': 0, 'seconds': 0.0},
+        '10-30m': {'label': 'Medium (10 - 30m)', 'count': 0, 'seconds': 0.0},
+        '30m+': {'label': 'Extended (30m+)', 'count': 0, 'seconds': 0.0},
+    }
+    languages = defaultdict(lambda: {'count': 0, 'seconds': 0.0})
+    user_activity_counts = defaultdict(int)
+
+    for t in all_transcriptions:
+        sec = _extract_audio_duration_seconds(t.formatted, t.transcription)
+        total_seconds += sec
+
+        d_str = t.created_at.strftime('%Y-%m-%d')
+        timeline[d_str]['count'] += 1
+        timeline[d_str]['seconds'] += sec
+
+        # Source mode & format
+        mode, ext = _categorize_transcription_file(t.original_name, t.audio_path)
+        source_modes[mode]['count'] += 1
+        source_modes[mode]['seconds'] += sec
+
+        file_formats[ext]['count'] += 1
+        file_formats[ext]['seconds'] += sec
+
+        # Duration tier
+        if sec < 120:
+            tier_k = '<2m'
+        elif sec < 600:
+            tier_k = '2-10m'
+        elif sec < 1800:
+            tier_k = '10-30m'
+        else:
+            tier_k = '30m+'
+        length_tiers[tier_k]['count'] += 1
+        length_tiers[tier_k]['seconds'] += sec
+
+        # Language normalization
+        raw_lang = (t.language or 'Other').strip()
+        l_low = raw_lang.lower()
+        if l_low in ('en', 'english'):
+            norm_lang = 'English'
+        elif l_low in ('lg', 'luganda'):
+            norm_lang = 'Luganda'
+        elif l_low in ('sw', 'swahili'):
+            norm_lang = 'Swahili'
+        elif l_low in ('fr', 'french'):
+            norm_lang = 'French'
+        elif l_low in ('ln', 'lingala'):
+            norm_lang = 'Lingala'
+        else:
+            norm_lang = raw_lang.capitalize()
+        languages[norm_lang]['count'] += 1
+        languages[norm_lang]['seconds'] += sec
+
+        if t.user_id:
+            user_activity_counts[t.user_id] += 1
+
+    total_jobs = len(all_transcriptions)
+    avg_sec = (total_seconds / total_jobs) if total_jobs > 0 else 0.0
+
+    # User timeline & growth
+    user_reg_by_date = defaultdict(int)
+    for u in all_users:
+        u_d = u.date_joined.strftime('%Y-%m-%d')
+        user_reg_by_date[u_d] += 1
+
+    # Build chronological timeline
+    all_dates = sorted(set(list(timeline.keys()) + list(user_reg_by_date.keys())))
+    timeline_records = []
+    user_evolution_records = []
+    cum_hours = 0.0
+    cum_users = 0
+
+    for d in all_dates:
+        t_data = timeline.get(d, {'count': 0, 'seconds': 0.0})
+        mins = round(t_data['seconds'] / 60.0, 1)
+        hrs = round(t_data['seconds'] / 3600.0, 2)
+        cum_hours = round(cum_hours + hrs, 2)
+
+        try:
+            d_obj = datetime.strptime(d, '%Y-%m-%d')
+            label = d_obj.strftime('%b %d')
+        except Exception:
+            label = d
+
+        timeline_records.append({
+            'date': d,
+            'label': label,
+            'minutes': mins,
+            'hours': hrs,
+            'jobs': t_data['count'],
+            'cumulative_hours': cum_hours
+        })
+
+        new_u = user_reg_by_date.get(d, 0)
+        cum_users += new_u
+        user_evolution_records.append({
+            'date': d,
+            'label': label,
+            'new_users': new_u,
+            'cumulative_users': cum_users,
+            'active_jobs': t_data['count']
+        })
+
+    # Prepare categories lists sorted by count
+    def _to_sorted_list(d_dict):
+        res = []
+        for name, data in d_dict.items():
+            cnt = data['count']
+            s = data['seconds']
+            pct = round((cnt / total_jobs * 100), 1) if total_jobs > 0 else 0
+            time_pct = round((s / total_seconds * 100), 1) if total_seconds > 0 else 0
+            res.append({
+                'name': name,
+                'count': cnt,
+                'seconds': round(s, 1),
+                'minutes': round(s / 60.0, 1),
+                'hours': round(s / 3600.0, 2),
+                'formatted': _format_seconds_to_human(s),
+                'percentage': pct,
+                'time_percentage': time_pct
+            })
+        res.sort(key=lambda x: x['count'], reverse=True)
+        return res
+
+    sources_list = _to_sorted_list(source_modes)
+    formats_list = _to_sorted_list(file_formats)
+    langs_list = _to_sorted_list(languages)
+
+    tiers_list = []
+    for k in ['<2m', '2-10m', '10-30m', '30m+']:
+        data = length_tiers[k]
+        cnt = data['count']
+        s = data['seconds']
+        pct = round((cnt / total_jobs * 100), 1) if total_jobs > 0 else 0
+        time_pct = round((s / total_seconds * 100), 1) if total_seconds > 0 else 0
+        tiers_list.append({
+            'key': k,
+            'label': data['label'],
+            'count': cnt,
+            'seconds': round(s, 1),
+            'minutes': round(s / 60.0, 1),
+            'hours': round(s / 3600.0, 2),
+            'formatted': _format_seconds_to_human(s),
+            'percentage': pct,
+            'time_percentage': time_pct
+        })
+
+    active_reg_users = len(user_activity_counts)
+    guest_jobs = qs.filter(user__isnull=True).count()
+
+    response_data = {
+        'success': True,
+        'kpi': {
+            'total_jobs': total_jobs,
+            'total_seconds': round(total_seconds, 1),
+            'total_minutes': round(total_seconds / 60.0, 1),
+            'total_hours': round(total_seconds / 3600.0, 2),
+            'total_formatted': _format_seconds_to_human(total_seconds),
+            'avg_duration_seconds': round(avg_sec, 1),
+            'avg_duration_formatted': _format_seconds_to_human(avg_sec),
+            'total_users': len(all_users),
+            'active_users': active_reg_users + (1 if guest_jobs > 0 else 0),
+            'registered_users_count': len(all_users),
+            'guest_jobs': guest_jobs,
+        },
+        'audio_volume_timeline': timeline_records,
+        'user_evolution': user_evolution_records,
+        'categories': {
+            'source_modes': sources_list,
+            'file_formats': formats_list,
+            'length_tiers': tiers_list,
+            'languages': langs_list
+        }
+    }
+    return JsonResponse(response_data)
+
+
+def dashboard_users_api_view(request):
+    """
+    API: Returns list of all registered users with transcription volume statistics,
+    plus a summarized entry for Guest contributors.
+    Supports ?search= parameter.
+    """
+    from django.db.models import Q
+
+    search_q = request.GET.get('search', '').strip().lower()
+
+    users_qs = User.objects.all().order_by('-date_joined')
+    if search_q:
+        users_qs = users_qs.filter(
+            Q(username__icontains=search_q) | Q(email__icontains=search_q)
+        )
+
+    users_data = []
+    for u in users_qs:
+        user_transcriptions = list(u.transcriptions.all().order_by('-created_at'))
+        u_sec = sum(_extract_audio_duration_seconds(t.formatted, t.transcription) for t in user_transcriptions)
+        last_t = user_transcriptions[0].created_at if user_transcriptions else None
+
+        users_data.append({
+            'id': u.id,
+            'username': u.username,
+            'email': u.email or '—',
+            'is_active': u.is_active,
+            'is_staff': u.is_staff,
+            'is_superuser': u.is_superuser,
+            'date_joined': u.date_joined.strftime('%Y-%m-%d %H:%M'),
+            'last_login': u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else 'Never',
+            'transcriptions_count': len(user_transcriptions),
+            'total_seconds': round(u_sec, 1),
+            'total_formatted': _format_seconds_to_human(u_sec),
+            'last_active': last_t.strftime('%Y-%m-%d %H:%M') if last_t else (u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else '—'),
+            'is_guest': False
+        })
+
+    # Summary entry for Guest sessions
+    if not search_q or 'guest' in search_q or 'incognito' in search_q:
+        guest_transcriptions = list(Transcription.objects.filter(user__isnull=True).order_by('-created_at'))
+        if guest_transcriptions:
+            g_sec = sum(_extract_audio_duration_seconds(t.formatted, t.transcription) for t in guest_transcriptions)
+            last_gt = guest_transcriptions[0].created_at if guest_transcriptions else None
+            users_data.insert(0, {
+                'id': 'guest',
+                'username': 'Guest / Incognito Sessions',
+                'email': 'guest-anonymous@session.local',
+                'is_active': True,
+                'is_staff': False,
+                'is_superuser': False,
+                'date_joined': guest_transcriptions[-1].created_at.strftime('%Y-%m-%d %H:%M') if guest_transcriptions else '—',
+                'last_login': last_gt.strftime('%Y-%m-%d %H:%M') if last_gt else '—',
+                'transcriptions_count': len(guest_transcriptions),
+                'total_seconds': round(g_sec, 1),
+                'total_formatted': _format_seconds_to_human(g_sec),
+                'last_active': last_gt.strftime('%Y-%m-%d %H:%M') if last_gt else '—',
+                'is_guest': True
+            })
+
+    return JsonResponse({'success': True, 'users': users_data})
+
+
+def dashboard_user_transcriptions_api_view(request, user_id):
+    """
+    API: Returns transcription portfolio for a specific user (or 'guest').
+    """
+    if str(user_id).lower() == 'guest':
+        qs = Transcription.objects.filter(user__isnull=True).order_by('-created_at')
+        user_name = "Guest / Incognito Sessions"
+    else:
+        try:
+            target_user = User.objects.get(id=user_id)
+            user_name = target_user.username
+            qs = Transcription.objects.filter(user=target_user).order_by('-created_at')
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+
+    items = []
+    for t in qs:
+        sec = _extract_audio_duration_seconds(t.formatted, t.transcription)
+        mode, ext = _categorize_transcription_file(t.original_name, t.audio_path)
+        preview = (t.transcription or '')[:140].strip()
+        if len(t.transcription or '') > 140:
+            preview += '...'
+
+        items.append({
+            'id': str(t.id),
+            'original_name': t.original_name,
+            'language': t.language or 'auto',
+            'source_mode': mode,
+            'file_format': ext,
+            'duration_seconds': round(sec, 1),
+            'duration_formatted': _format_seconds_to_human(sec),
+            'created_at': t.created_at.strftime('%Y-%m-%d %H:%M'),
+            'preview': preview
+        })
+
+    return JsonResponse({
+        'success': True,
+        'user_name': user_name,
+        'total_count': len(items),
+        'transcriptions': items
+    })
+
+
+@csrf_exempt
+def dashboard_user_create_view(request):
+    """API: Creates a new user directly from the dashboard"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    username = data.get('username', '').strip()
+    email = data.get('email', '').strip()
+    password = data.get('password', '').strip()
+    is_staff = bool(data.get('is_staff', False))
+
+    if not username or not password:
+        return JsonResponse({'success': False, 'error': 'Username and password are required'}, status=400)
+
+    if User.objects.filter(username__iexact=username).exists():
+        return JsonResponse({'success': False, 'error': f"Username '{username}' already exists"}, status=400)
+
+    try:
+        user = User.objects.create_user(username=username, email=email, password=password)
+        if is_staff:
+            user.is_staff = True
+            user.save()
+        return JsonResponse({
+            'success': True,
+            'message': f"User '{username}' created successfully",
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'is_staff': user.is_staff
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def dashboard_user_toggle_status_view(request, user_id):
+    """API: Toggles a user's active/suspended status"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
+
+    try:
+        user = User.objects.get(id=user_id)
+        user.is_active = not user.is_active
+        user.save()
+        status_text = "Activated" if user.is_active else "Suspended / Deactivated"
+        return JsonResponse({
+            'success': True,
+            'is_active': user.is_active,
+            'message': f"User '{user.username}' is now {status_text}"
+        })
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def dashboard_user_toggle_role_view(request, user_id):
+    """API: Toggles a user's staff/admin role"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
+
+    try:
+        user = User.objects.get(id=user_id)
+        user.is_staff = not user.is_staff
+        user.save()
+        role_text = "Staff / Admin" if user.is_staff else "Standard User"
+        return JsonResponse({
+            'success': True,
+            'is_staff': user.is_staff,
+            'message': f"User '{user.username}' is now assigned {role_text}"
+        })
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def dashboard_user_delete_view(request, user_id):
+    """
+    API: Deletes a user.
+    Preserves all of the user's transcriptions by unlinking them (setting user=None),
+    so historical audio transcriptions remain safely in the system.
+    """
+    if request.method not in ('POST', 'DELETE'):
+        return JsonResponse({'error': 'POST or DELETE method required', 'success': False}, status=405)
+
+    try:
+        user = User.objects.get(id=user_id)
+        u_name = user.username
+        # Preserve transcriptions by setting user to None
+        Transcription.objects.filter(user=user).update(user=None)
+        user.delete()
+        return JsonResponse({
+            'success': True,
+            'message': f"User '{u_name}' removed. Their audio transcriptions have been preserved as archival records."
+        })
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+

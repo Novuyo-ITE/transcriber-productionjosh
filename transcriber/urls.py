@@ -28,4 +28,15 @@ urlpatterns = [
     path('api/login/', views.login_view, name='login'),
     path('api/register/', views.register_view, name='register'),
     path('api/logout/', views.logout_view, name='logout'),
+    # Analytics & Customer Evaluation Dashboard
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('analytics/', views.dashboard_view, name='analytics'),
+    path('api/dashboard/stats/', views.dashboard_stats_api_view, name='dashboard_stats_api'),
+    path('api/dashboard/users/', views.dashboard_users_api_view, name='dashboard_users_api'),
+    path('api/dashboard/users/create/', views.dashboard_user_create_view, name='dashboard_user_create'),
+    path('api/dashboard/users/toggle_status/<int:user_id>/', views.dashboard_user_toggle_status_view, name='dashboard_user_toggle_status'),
+    path('api/dashboard/users/toggle_role/<int:user_id>/', views.dashboard_user_toggle_role_view, name='dashboard_user_toggle_role'),
+    path('api/dashboard/users/delete/<int:user_id>/', views.dashboard_user_delete_view, name='dashboard_user_delete'),
+    path('api/dashboard/users/<str:user_id>/transcriptions/', views.dashboard_user_transcriptions_api_view, name='dashboard_user_transcriptions_api'),
 ]
+

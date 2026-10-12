@@ -43,6 +43,10 @@
             </a>
 
             <div class="nav-actions">
+                <a href="{% url 'transcriber:dashboard' %}" class="btn-dash-link" style="padding: 7px 13px; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics</span>
+                </a>
                 {% if user.is_authenticated %}
                 <span class="nav-user-label" style="font-size: 13px; font-family: var(--font-mono); color: var(--emerald-primary); margin-right: 4px;">{{ user.username }}</span>
                 <a href="{% url 'transcriber:app' %}" class="btn-nav-primary">

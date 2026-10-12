@@ -1,0 +1,2270 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="theme-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics & User Evaluation Dashboard • NOVUscribe</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Base Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        :root {
+            --bg-main: #030712;
+            --bg-panel: rgba(17, 24, 39, 0.85);
+            --bg-panel-solid: #111827;
+            --bg-card: #0d121f;
+            --bg-card-hover: #131b2e;
+            --border-panel: rgba(255, 255, 255, 0.08);
+            --border-panel-hover: rgba(16, 185, 129, 0.35);
+            --border-glow: rgba(16, 185, 129, 0.25);
+            --emerald-primary: #10B981;
+            --emerald-light: #34D399;
+            --emerald-dark: #059669;
+            --cyan-primary: #06B6D4;
+            --cyan-light: #38BDF8;
+            --purple-primary: #A855F7;
+            --purple-light: #C084FC;
+            --amber-primary: #F59E0B;
+            --amber-light: #FBBF24;
+            --rose-primary: #F43F5E;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navigation Bar */
+        .dash-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(3, 7, 18, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-panel);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .dash-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand-badge-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: #030712;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .brand-title-wrap {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #F9FAFB;
+        }
+
+        .brand-subtitle {
+            font-size: 10.5px;
+            font-family: var(--font-mono);
+            color: var(--emerald-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dash-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-panel);
+            transition: all 0.2s ease;
+        }
+
+        .btn-dash-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .btn-dash-link.btn-dash-emerald {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: var(--emerald-light);
+        }
+
+        .btn-dash-link.btn-dash-emerald:hover {
+            background: rgba(16, 185, 129, 0.22);
+            color: #6EE7B7;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+        }
+
+        /* Dashboard Container */
+        .dash-main {
+            flex: 1;
+            max-width: 1540px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 28px 28px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Top Action Bar: Range Filters & Refresh */
+        .dash-hero-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.6) 0%, rgba(13, 18, 31, 0.8) 100%);
+            border: 1px solid var(--border-panel);
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-headline h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #F9FAFB;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hero-headline p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .dash-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .range-pills {
+            display: flex;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-panel);
+            border-radius: 9px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .range-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 11.5px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .range-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .range-btn.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--emerald-light);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-refresh {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-panel);
+            color: var(--text-secondary);
+            border-radius: 9px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-refresh.spinning svg {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* KPI Metric Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .kpi-card {
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.75) 0%, rgba(13, 18, 31, 0.95) 100%);
+            border: 1px solid var(--border-panel);
+            border-radius: 16px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
+        }
+
+        .kpi-card.kpi-emerald {
+            border-left: 3px solid var(--emerald-primary);
+        }
+        .kpi-card.kpi-cyan {
+            border-left: 3px solid var(--cyan-primary);
+        }
+        .kpi-card.kpi-purple {
+            border-left: 3px solid var(--purple-primary);
+        }
+        .kpi-card.kpi-amber {
+            border-left: 3px solid var(--amber-primary);
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .kpi-emerald .kpi-icon-wrap {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--emerald-light);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .kpi-cyan .kpi-icon-wrap {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--cyan-light);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+        .kpi-purple .kpi-icon-wrap {
+            background: rgba(168, 85, 247, 0.12);
+            color: var(--purple-light);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .kpi-amber .kpi-icon-wrap {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--amber-light);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            letter-spacing: -0.03em;
+            color: #F9FAFB;
+            line-height: 1.1;
+        }
+
+        .kpi-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .kpi-pill {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .kpi-emerald .kpi-pill {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--emerald-light);
+        }
+        .kpi-cyan .kpi-pill {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--cyan-light);
+        }
+        .kpi-purple .kpi-pill {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--purple-light);
+        }
+        .kpi-amber .kpi-pill {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--amber-light);
+        }
+
+        /* Evolution & Timeline Section */
+        .dash-row-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1.1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1080px) {
+            .dash-row-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dash-panel {
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.8) 0%, rgba(13, 18, 31, 0.95) 100%);
+            border: 1px solid var(--border-panel);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .panel-title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #F9FAFB;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .panel-tag {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .chart-container-lg {
+            position: relative;
+            height: 310px;
+            width: 100%;
+        }
+
+        .chart-container-sm {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        /* Category Breakdown 4-Grid */
+        .category-section-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #F9FAFB;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: -10px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .category-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px 14px;
+            transition: all 0.15s ease;
+        }
+
+        .category-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .category-row-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .category-badge-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cat-color-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .cat-stats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        .cat-count {
+            color: var(--text-primary);
+        }
+
+        .cat-duration {
+            color: var(--cyan-light);
+        }
+
+        .cat-pct {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .cat-progress-bg {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .cat-progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* User Management Section */
+        .user-mgmt-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .user-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-search-input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-panel);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 12.5px;
+            padding: 8px 14px 8px 34px;
+            width: 240px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .user-search-input:focus {
+            border-color: var(--emerald-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+        }
+
+        .user-search-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .user-search-icon {
+            position: absolute;
+            left: 11px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .btn-add-user {
+            background: var(--emerald-primary);
+            color: #030712;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-user:hover {
+            background: var(--emerald-light);
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+        }
+
+        /* User Table */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-panel);
+        }
+
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .dash-table th {
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-panel);
+        }
+
+        .dash-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        .dash-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dash-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .user-identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar.avatar-reg {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: #030712;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .user-avatar.avatar-guest {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .user-avatar.avatar-staff {
+            background: linear-gradient(135deg, #A855F7, #7C3AED);
+            color: #FFFFFF;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.35);
+        }
+
+        .user-names {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .u-name {
+            font-weight: 700;
+            color: #F9FAFB;
+        }
+
+        .u-email {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .badge-role {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .role-staff {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--purple-light);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+        }
+
+        .role-user {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--emerald-light);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .role-guest {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-toggle-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--emerald-light);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-suspended {
+            background: rgba(244, 63, 94, 0.12);
+            color: #FB7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+        }
+
+        .action-icon-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-table-action {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            border-radius: 7px;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-table-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-table-action.btn-del:hover {
+            background: rgba(244, 63, 94, 0.18);
+            color: #FB7185;
+            border-color: rgba(244, 63, 94, 0.4);
+        }
+
+        .btn-table-action.btn-view:hover {
+            background: rgba(6, 182, 212, 0.18);
+            color: var(--cyan-light);
+            border-color: rgba(6, 182, 212, 0.4);
+        }
+
+        /* Modal Styles */
+        .dash-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dash-modal-card {
+            background: #0d121f;
+            border: 1px solid var(--border-panel);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 580px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9), 0 0 30px rgba(16, 185, 129, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dash-modal-card.modal-card-lg {
+            max-width: 860px;
+            max-height: 85vh;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-head {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border-panel);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .modal-head h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #F9FAFB;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            transition: color 0.15s ease;
+        }
+
+        .btn-modal-close:hover {
+            color: #F9FAFB;
+        }
+
+        .modal-body {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            background: #111827;
+            border: 1px solid var(--border-panel);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #F9FAFB;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--emerald-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+        }
+
+        .form-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .modal-foot {
+            padding: 16px 22px;
+            border-top: 1px solid var(--border-panel);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-panel);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #F9FAFB;
+        }
+
+        .btn-primary {
+            background: var(--emerald-primary);
+            color: #030712;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--emerald-light);
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+        }
+
+        /* Portfolio Drawer / Audio List inside Modal */
+        .portfolio-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color 0.15s ease;
+        }
+
+        .portfolio-item:hover {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .portfolio-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .portfolio-title {
+            font-weight: 700;
+            font-size: 13.5px;
+            color: #F9FAFB;
+        }
+
+        .portfolio-badges {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .p-badge {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 5px;
+        }
+
+        .p-badge-mode {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--emerald-light);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .p-badge-time {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--cyan-light);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+        }
+
+        .portfolio-snippet {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border-left: 2px solid var(--border-glow);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-msg {
+            background: #111827;
+            border: 1px solid var(--emerald-primary);
+            color: #F9FAFB;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 15px rgba(16, 185, 129, 0.2);
+            animation: toastIn 0.25s ease-out;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="dash-nav">
+        <a href="/" class="dash-brand">
+            <div class="brand-badge-mini">N</div>
+            <div class="brand-title-wrap">
+                <span class="brand-title"><span style="color:#10B981;">Novu</span>scribe</span>
+                <span class="brand-subtitle">
+                    <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10B981; box-shadow:0 0 6px #10B981;"></span>
+                    Analytics & Evaluation
+                </span>
+            </div>
+        </a>
+
+        <div class="dash-nav-links">
+            <a href="{% url 'transcriber:workspace' %}" class="btn-dash-link btn-dash-emerald">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <span>Open Workspace</span>
+            </a>
+            <a href="{% url 'transcriber:stream_page' %}" class="btn-dash-link">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Live Studio</span>
+            </a>
+            <a href="{% url 'transcriber:landing' %}" class="btn-dash-link">
+                <span>Landing Page</span>
+            </a>
+            {% if user.is_authenticated %}
+            <div style="display:inline-flex; align-items:center; gap:8px; margin-left:6px; padding:4px 10px; background:rgba(255,255,255,0.04); border:1px solid var(--border-panel); border-radius:8px;">
+                <span style="width:7px; height:7px; border-radius:50%; background:var(--emerald-primary);"></span>
+                <span style="font-size:12px; font-family:var(--font-mono); color:var(--emerald-light); font-weight:700;">{{ user.username }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="dash-main">
+
+        <!-- Header Action Bar: Title, Range Selectors, Refresh -->
+        <section class="dash-hero-bar">
+            <div class="hero-headline">
+                <h1>
+                    <span>Customer & Software Analytics</span>
+                    <span style="font-size: 11px; font-family: var(--font-mono); font-weight: 700; color: var(--emerald-primary); background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 9px; border-radius: 6px;">PROD TELEMETRY</span>
+                </h1>
+                <p>Track real user adoption, total audio processing volume over time, file categorization taxonomy, and account management.</p>
+            </div>
+
+            <div class="dash-controls">
+                <div class="range-pills">
+                    <button type="button" class="range-btn active" data-range="all" onclick="changeRange('all')">All Time</button>
+                    <button type="button" class="range-btn" data-range="30d" onclick="changeRange('30d')">Last 30 Days</button>
+                    <button type="button" class="range-btn" data-range="7d" onclick="changeRange('7d')">Last 7 Days</button>
+                </div>
+
+                <button type="button" class="btn-refresh" id="btnRefresh" onclick="refreshDashboardData()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- KPI Metrics Grid (Audio Volume, Total Jobs, Avg Length, Users) -->
+        <section class="kpi-grid">
+            <!-- KPI 1: Audio Volume (Time) -->
+            <div class="kpi-card kpi-emerald">
+                <div class="kpi-top">
+                    <span class="kpi-label">Audio Volume Transcribed</span>
+                    <div class="kpi-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiTotalAudio">--</div>
+                <div class="kpi-meta">
+                    <span id="kpiTotalMinutes">-- Total Audio Minutes</span>
+                    <span class="kpi-pill">VOLUME</span>
+                </div>
+            </div>
+
+            <!-- KPI 2: Total Transcription Jobs -->
+            <div class="kpi-card kpi-cyan">
+                <div class="kpi-top">
+                    <span class="kpi-label">Transcriptions Processed</span>
+                    <div class="kpi-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiTotalJobs">--</div>
+                <div class="kpi-meta">
+                    <span>100% GPU Accelerated</span>
+                    <span class="kpi-pill">THROUGHPUT</span>
+                </div>
+            </div>
+
+            <!-- KPI 3: Average Audio Length -->
+            <div class="kpi-card kpi-amber">
+                <div class="kpi-top">
+                    <span class="kpi-label">Average Audio Length</span>
+                    <div class="kpi-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiAvgDuration">--</div>
+                <div class="kpi-meta">
+                    <span>Per Media Ingestion</span>
+                    <span class="kpi-pill">EFFICIENCY</span>
+                </div>
+            </div>
+
+            <!-- KPI 4: Users & Evolution -->
+            <div class="kpi-card kpi-purple">
+                <div class="kpi-top">
+                    <span class="kpi-label">Users & Contributors</span>
+                    <div class="kpi-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                </div>
+                <div class="kpi-value" id="kpiTotalUsers">--</div>
+                <div class="kpi-meta">
+                    <span id="kpiActiveContributors">-- Active</span>
+                    <span class="kpi-pill">ADOPTION</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row: Audio Volume Timeline + User Evolution -->
+        <section class="dash-row-grid">
+            <!-- Left Chart: Audio Processing Volume Over Time -->
+            <div class="dash-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <h2 class="panel-title">
+                            <span style="color:var(--emerald-light);">Audio Volume Evolution</span>
+                            <span class="panel-tag">TIME PROCESSED</span>
+                        </h2>
+                        <p class="panel-desc">Daily audio volume transcribed in minutes and cumulative processing curve.</p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <button type="button" class="range-btn active" id="btnChartMetricMinutes" onclick="toggleTimelineMetric('minutes')">Minutes</button>
+                        <button type="button" class="range-btn" id="btnChartMetricJobs" onclick="toggleTimelineMetric('jobs')">Job Count</button>
+                    </div>
+                </div>
+                <div class="chart-container-lg">
+                    <canvas id="audioTimelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Chart: User Evolution & Adoption Curve -->
+            <div class="dash-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <h2 class="panel-title">
+                            <span style="color:var(--purple-light);">User Growth & Evolution</span>
+                            <span class="panel-tag">USER ADOPTION</span>
+                        </h2>
+                        <p class="panel-desc">Cumulative registered user accounts and daily active transcribers over time.</p>
+                    </div>
+                </div>
+                <div class="chart-container-lg">
+                    <canvas id="userEvolutionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics of Transcription by Category of Files (Requested Feature!) -->
+        <div class="category-section-title">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span>File Taxonomy & Categorization Analytics</span>
+                <span style="font-size:11px; font-family:var(--font-mono); font-weight:700; color:var(--cyan-light); background:rgba(6, 182, 212, 0.12); border:1px solid rgba(6, 182, 212, 0.3); padding:3px 8px; border-radius:6px;">CATEGORIES</span>
+            </div>
+        </div>
+
+        <section class="category-grid">
+            <!-- Category Panel 1: Ingestion & Source Modes -->
+            <div class="dash-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <h3 class="panel-title">
+                            <span style="color:var(--emerald-light);">Ingestion & Source Modes</span>
+                        </h3>
+                        <p class="panel-desc">Audio Uploads, Video Extractions, YouTube Media, Live Mic, and Real-Time Streams.</p>
+                    </div>
+                    <span class="panel-tag" id="sourceModesCount">5 Modes</span>
+                </div>
+                <div class="chart-container-sm">
+                    <canvas id="sourceModesChart"></canvas>
+                </div>
+                <div class="category-list" id="sourceModesList">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Category Panel 2: File Formats / Extensions -->
+            <div class="dash-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <h3 class="panel-title">
+                            <span style="color:var(--cyan-light);">File Formats & Extensions</span>
+                        </h3>
+                        <p class="panel-desc">Media extension distribution (.mp3, .wav, .m4a, .mp4, .stream, etc.)</p>
+                    </div>
+                    <span class="panel-tag" id="fileFormatsCount">Formats</span>
+                </div>
+                <div class="chart-container-sm">
+                    <canvas id="fileFormatsChart"></canvas>
+                </div>
+                <div class="category-list" id="fileFormatsList">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Category Panel 3: Audio Duration Length Tiers -->
+            <div class="dash-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <h3 class="panel-title">
+                            <span style="color:var(--amber-light);">Audio Duration Length Tiers</span>
+                        </h3>
+                        <p class="panel-desc">Quick snips (&lt;2m), Short (2-10m), Medium (10-30m), Extended (30m+).</p>
+                    </div>
+                    <span class="panel-tag">4 Tiers</span>
+                </div>
+                <div class="chart-container-sm">
+                    <canvas id="lengthTiersChart"></canvas>
+                </div>
+                <div class="category-list" id="lengthTiersList">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Category Panel 4: Language Distribution -->
+            <div class="dash-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <h3 class="panel-title">
+                            <span style="color:var(--purple-light);">Language Taxonomy Distribution</span>
+                        </h3>
+                        <p class="panel-desc">Luganda, English, Swahili, French, Lingala model workloads.</p>
+                    </div>
+                    <span class="panel-tag" id="languagesCount">Languages</span>
+                </div>
+                <div class="chart-container-sm">
+                    <canvas id="languagesChart"></canvas>
+                </div>
+                <div class="category-list" id="languagesList">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- User Management & Portfolio Section -->
+        <section class="dash-panel">
+            <div class="user-mgmt-header">
+                <div class="panel-title-wrap">
+                    <h2 class="panel-title" style="font-size:18px;">
+                        <span>User Management & Adoption Tracking</span>
+                        <span class="panel-tag">ACCOUNTS & GUESTS</span>
+                    </h2>
+                    <p class="panel-desc">Evaluate registered user activity, inspect transcribed audio portfolios, toggle account status, or add users.</p>
+                </div>
+
+                <div class="user-filter-bar">
+                    <div class="user-search-wrapper">
+                        <svg class="user-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" class="user-search-input" id="userSearchInput" placeholder="Search user or email..." oninput="filterUsers(this.value)">
+                    </div>
+
+                    <button type="button" class="btn-add-user" onclick="openCreateUserModal()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Add User</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-responsive">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>User / Account</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Transcriptions</th>
+                            <th>Audio Volume</th>
+                            <th>Joined / First Seen</th>
+                            <th>Last Active</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                Loading user adoption data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal 1: Add New User -->
+    <div class="dash-modal-overlay" id="createUserModal">
+        <div class="dash-modal-card">
+            <div class="modal-head">
+                <h3>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-primary)" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                    <span>Create User Account</span>
+                </h3>
+                <button type="button" class="btn-modal-close" onclick="closeCreateUserModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <form onsubmit="submitCreateUser(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="newUsername">Username *</label>
+                        <input type="text" id="newUsername" class="form-input" placeholder="e.g. joshua_eval" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newEmail">Email Address</label>
+                        <input type="email" id="newEmail" class="form-input" placeholder="user@company.com" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newPassword">Password *</label>
+                        <input type="password" id="newPassword" class="form-input" placeholder="Secure account password" required minlength="6">
+                    </div>
+                    <div class="form-checkbox-row">
+                        <input type="checkbox" id="newIsStaff" style="accent-color: var(--emerald-primary); width: 16px; height: 16px; cursor: pointer;">
+                        <label for="newIsStaff" class="form-label" style="cursor: pointer; margin: 0;">Grant Staff / Administrative Privileges</label>
+                    </div>
+                </div>
+                <div class="modal-foot">
+                    <button type="button" class="btn-secondary" onclick="closeCreateUserModal()">Cancel</button>
+                    <button type="submit" class="btn-primary" id="btnSubmitUser">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: View User Transcription Portfolio -->
+    <div class="dash-modal-overlay" id="userPortfolioModal">
+        <div class="dash-modal-card modal-card-lg">
+            <div class="modal-head">
+                <h3 id="portfolioModalTitle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-light)" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <span>User Audio Portfolio</span>
+                </h3>
+                <button type="button" class="btn-modal-close" onclick="closePortfolioModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="portfolioListContainer">
+                <!-- Dynamically populated with transcriptions -->
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn-secondary" onclick="closePortfolioModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Dashboard Logic Script -->
+    <script>
+        let currentRange = 'all';
+        let currentTimelineMetric = 'minutes'; // 'minutes' or 'jobs'
+        let dashboardStatsData = null;
+        let allUsersList = [];
+
+        // Chart instances
+        let audioTimelineChart = null;
+        let userEvolutionChart = null;
+        let sourceModesChart = null;
+        let fileFormatsChart = null;
+        let lengthTiersChart = null;
+        let languagesChart = null;
+
+        // Unified Theme Colors
+        const PALETTE = {
+            emerald: '#10B981',
+            emeraldLight: '#34D399',
+            emeraldDark: '#059669',
+            cyan: '#06B6D4',
+            cyanLight: '#38BDF8',
+            purple: '#A855F7',
+            purpleLight: '#C084FC',
+            amber: '#F59E0B',
+            amberLight: '#FBBF24',
+            rose: '#F43F5E',
+            indigo: '#6366F1',
+            blue: '#3B82F6',
+            gray: '#4B5563',
+            darkPanel: '#111827',
+            border: 'rgba(255, 255, 255, 0.08)'
+        };
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardStats(currentRange);
+            loadUsersList();
+        });
+
+        // Range Filter Switcher
+        function changeRange(range) {
+            currentRange = range;
+            document.querySelectorAll('.range-btn[data-range]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === range);
+            });
+            loadDashboardStats(range);
+        }
+
+        // Toggle Minutes vs Jobs on Timeline
+        function toggleTimelineMetric(metric) {
+            currentTimelineMetric = metric;
+            document.getElementById('btnChartMetricMinutes').classList.toggle('active', metric === 'minutes');
+            document.getElementById('btnChartMetricJobs').classList.toggle('active', metric === 'jobs');
+            if (dashboardStatsData) {
+                renderAudioTimelineChart(dashboardStatsData.audio_volume_timeline);
+            }
+        }
+
+        // Manual Refresh
+        function refreshDashboardData() {
+            const btn = document.getElementById('btnRefresh');
+            btn.classList.add('spinning');
+            Promise.all([
+                loadDashboardStats(currentRange),
+                loadUsersList()
+            ]).finally(() => {
+                setTimeout(() => btn.classList.remove('spinning'), 600);
+                showToast("Dashboard analytics refreshed with latest telemetry.");
+            });
+        }
+
+        // Fetch Stats API
+        async function loadDashboardStats(range) {
+            try {
+                const res = await fetch(`/api/dashboard/stats/?range=${range}`);
+                const data = await res.json();
+                if (data.success) {
+                    dashboardStatsData = data;
+                    renderKpis(data.kpi);
+                    renderAudioTimelineChart(data.audio_volume_timeline);
+                    renderUserEvolutionChart(data.user_evolution);
+                    renderCategoryAnalytics(data.categories);
+                } else {
+                    console.error("Failed to load dashboard stats", data);
+                }
+            } catch (err) {
+                console.error("Error fetching stats:", err);
+            }
+        }
+
+        // Render KPI Cards
+        function renderKpis(kpi) {
+            if (!kpi) return;
+            document.getElementById('kpiTotalAudio').textContent = kpi.total_formatted || '0s';
+            document.getElementById('kpiTotalMinutes').textContent = `${kpi.total_minutes || 0} Total Audio Minutes`;
+            document.getElementById('kpiTotalJobs').textContent = `${kpi.total_jobs || 0} Jobs`;
+            document.getElementById('kpiAvgDuration').textContent = kpi.avg_duration_formatted || '0s';
+            document.getElementById('kpiTotalUsers').textContent = `${kpi.total_users || 0} Registered`;
+            document.getElementById('kpiActiveContributors').textContent = `${kpi.active_users || 0} Active Contributors (${kpi.guest_jobs || 0} Guest Jobs)`;
+        }
+
+        // 1. Audio Timeline Chart (Minutes or Jobs)
+        function renderAudioTimelineChart(timeline) {
+            const ctx = document.getElementById('audioTimelineChart').getContext('2d');
+            if (audioTimelineChart) audioTimelineChart.destroy();
+
+            const labels = timeline.map(t => t.label);
+            const dataMinutes = timeline.map(t => t.minutes);
+            const dataJobs = timeline.map(t => t.jobs);
+            const dataCumulativeHours = timeline.map(t => t.cumulative_hours);
+
+            const isMinutes = currentTimelineMetric === 'minutes';
+            const primaryData = isMinutes ? dataMinutes : dataJobs;
+            const primaryLabel = isMinutes ? 'Audio Minutes' : 'Jobs Processed';
+            const primaryColor = isMinutes ? PALETTE.emerald : PALETTE.cyan;
+
+            audioTimelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: primaryLabel,
+                            data: primaryData,
+                            borderColor: primaryColor,
+                            backgroundColor: (context) => {
+                                const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 300);
+                                gradient.addColorStop(0, isMinutes ? 'rgba(16, 185, 129, 0.35)' : 'rgba(6, 182, 212, 0.35)');
+                                gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+                                return gradient;
+                            },
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: primaryColor,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Cumulative Hours',
+                            data: dataCumulativeHours,
+                            borderColor: PALETTE.purpleLight,
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 2,
+                            fill: false,
+                            tension: 0.2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#9CA3AF',
+                                font: { family: 'Plus Jakarta Sans', size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#111827',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            titleColor: '#F9FAFB',
+                            bodyColor: '#D1D5DB',
+                            padding: 10,
+                            bodyFont: { family: 'JetBrains Mono' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: { color: '#6B7280', font: { family: 'JetBrains Mono', size: 10.5 } }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9CA3AF', font: { family: 'JetBrains Mono', size: 10.5 } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                color: PALETTE.purpleLight,
+                                font: { family: 'JetBrains Mono', size: 10.5 },
+                                callback: val => val + 'h'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. User Evolution & Adoption Curve Chart
+        function renderUserEvolutionChart(evolution) {
+            const ctx = document.getElementById('userEvolutionChart').getContext('2d');
+            if (userEvolutionChart) userEvolutionChart.destroy();
+
+            const labels = evolution.map(e => e.label);
+            const cumulativeUsers = evolution.map(e => e.cumulative_users);
+            const activeJobs = evolution.map(e => e.active_jobs);
+
+            userEvolutionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Cumulative Users',
+                            data: cumulativeUsers,
+                            borderColor: PALETTE.purple,
+                            backgroundColor: 'rgba(168, 85, 247, 0.15)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: PALETTE.purpleLight,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Daily Transcribing Activity',
+                            data: activeJobs,
+                            backgroundColor: 'rgba(6, 182, 212, 0.65)',
+                            borderRadius: 5,
+                            borderWidth: 0,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#9CA3AF',
+                                font: { family: 'Plus Jakarta Sans', size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#111827',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            titleColor: '#F9FAFB',
+                            bodyColor: '#D1D5DB',
+                            padding: 10,
+                            bodyFont: { family: 'JetBrains Mono' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: { color: '#6B7280', font: { family: 'JetBrains Mono', size: 10.5 } }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: PALETTE.purpleLight, font: { family: 'JetBrains Mono', size: 10.5 }, stepSize: 1 }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: PALETTE.cyanLight, font: { family: 'JetBrains Mono', size: 10.5 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 3. Category Analytics (Source modes, File formats, Length Tiers, Languages)
+        function renderCategoryAnalytics(categories) {
+            if (!categories) return;
+
+            // Palette colors for doughnuts & lists
+            const colors = [
+                PALETTE.emerald,
+                PALETTE.cyan,
+                PALETTE.purple,
+                PALETTE.amber,
+                PALETTE.rose,
+                PALETTE.indigo,
+                PALETTE.blue
+            ];
+
+            // A. Ingestion / Source Modes
+            renderDoughnutAndList(
+                'sourceModesChart',
+                'sourceModesList',
+                'sourceModesCount',
+                categories.source_modes,
+                colors,
+                'source'
+            );
+
+            // B. File Formats / Extensions
+            renderDoughnutAndList(
+                'fileFormatsChart',
+                'fileFormatsList',
+                'fileFormatsCount',
+                categories.file_formats,
+                [PALETTE.cyan, PALETTE.emerald, PALETTE.purple, PALETTE.amber, PALETTE.rose],
+                'format'
+            );
+
+            // C. Duration Length Tiers
+            renderTiersBarAndList(
+                'lengthTiersChart',
+                'lengthTiersList',
+                categories.length_tiers
+            );
+
+            // D. Languages Distribution
+            renderDoughnutAndList(
+                'languagesChart',
+                'languagesList',
+                'languagesCount',
+                categories.languages,
+                [PALETTE.purple, PALETTE.emerald, PALETTE.cyan, PALETTE.amber, PALETTE.rose],
+                'language'
+            );
+        }
+
+        // Helper for Doughnut Charts + Category List Bars
+        function renderDoughnutAndList(canvasId, listId, badgeId, items, colorPalette, type) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const listElem = document.getElementById(listId);
+            const badgeElem = document.getElementById(badgeId);
+
+            if (badgeElem && items) {
+                badgeElem.textContent = `${items.length} ${type === 'format' ? 'Formats' : (type === 'language' ? 'Languages' : 'Modes')}`;
+            }
+
+            // Destroy previous chart
+            if (canvasId === 'sourceModesChart' && sourceModesChart) sourceModesChart.destroy();
+            if (canvasId === 'fileFormatsChart' && fileFormatsChart) fileFormatsChart.destroy();
+            if (canvasId === 'languagesChart' && languagesChart) languagesChart.destroy();
+
+            const labels = items.map(i => i.name);
+            const counts = items.map(i => i.count);
+            const sliceColors = items.map((_, idx) => colorPalette[idx % colorPalette.length]);
+
+            const chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: sliceColors,
+                        borderColor: '#0d121f',
+                        borderWidth: 2,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#9CA3AF',
+                                font: { family: 'Plus Jakarta Sans', size: 11 },
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#111827',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            bodyFont: { family: 'JetBrains Mono' }
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            if (canvasId === 'sourceModesChart') sourceModesChart = chartInstance;
+            if (canvasId === 'fileFormatsChart') fileFormatsChart = chartInstance;
+            if (canvasId === 'languagesChart') languagesChart = chartInstance;
+
+            // Build List
+            listElem.innerHTML = '';
+            items.forEach((item, idx) => {
+                const color = colorPalette[idx % colorPalette.length];
+                const row = document.createElement('div');
+                row.className = 'category-row';
+                row.innerHTML = `
+                    <div class="category-row-header">
+                        <div class="category-badge-name">
+                            <span class="cat-color-dot" style="background: ${color};"></span>
+                            <span>${item.name}</span>
+                        </div>
+                        <div class="cat-stats">
+                            <span class="cat-count">${item.count} files</span>
+                            <span class="cat-duration">${item.formatted}</span>
+                            <span class="cat-pct">${item.percentage}%</span>
+                        </div>
+                    </div>
+                    <div class="cat-progress-bg">
+                        <div class="cat-progress-fill" style="width: ${item.percentage}%; background: ${color};"></div>
+                    </div>
+                `;
+                listElem.appendChild(row);
+            });
+        }
+
+        // Helper for Length Tiers (Horizontal Bar + List)
+        function renderTiersBarAndList(canvasId, listId, tiers) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const listElem = document.getElementById(listId);
+
+            if (lengthTiersChart) lengthTiersChart.destroy();
+
+            const tierColors = [
+                PALETTE.emeraldLight,
+                PALETTE.cyanLight,
+                PALETTE.amberLight,
+                PALETTE.rose
+            ];
+
+            const labels = tiers.map(t => t.label);
+            const minutes = tiers.map(t => t.minutes);
+
+            lengthTiersChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Audio Minutes',
+                        data: minutes,
+                        backgroundColor: tierColors,
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#111827',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            bodyFont: { family: 'JetBrains Mono' },
+                            callbacks: {
+                                label: ctx => `${ctx.raw} minutes`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9CA3AF', font: { family: 'JetBrains Mono', size: 10 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#E5E7EB', font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } }
+                        }
+                    }
+                }
+            });
+
+            listElem.innerHTML = '';
+            tiers.forEach((tier, idx) => {
+                const color = tierColors[idx % tierColors.length];
+                const row = document.createElement('div');
+                row.className = 'category-row';
+                row.innerHTML = `
+                    <div class="category-row-header">
+                        <div class="category-badge-name">
+                            <span class="cat-color-dot" style="background: ${color};"></span>
+                            <span>${tier.label}</span>
+                        </div>
+                        <div class="cat-stats">
+                            <span class="cat-count">${tier.count} jobs</span>
+                            <span class="cat-duration">${tier.formatted}</span>
+                            <span class="cat-pct">${tier.time_percentage}% time</span>
+                        </div>
+                    </div>
+                    <div class="cat-progress-bg">
+                        <div class="cat-progress-fill" style="width: ${tier.time_percentage}%; background: ${color};"></div>
+                    </div>
+                `;
+                listElem.appendChild(row);
+            });
+        }
+
+        // =========================================================================
+        // USER MANAGEMENT FUNCTIONS
+        // =========================================================================
+
+        async function loadUsersList() {
+            try {
+                const res = await fetch('/api/dashboard/users/');
+                const data = await res.json();
+                if (data.success) {
+                    allUsersList = data.users || [];
+                    renderUsersTable(allUsersList);
+                }
+            } catch (err) {
+                console.error("Error loading users:", err);
+            }
+        }
+
+        function filterUsers(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                renderUsersTable(allUsersList);
+                return;
+            }
+            const filtered = allUsersList.filter(u =>
+                u.username.toLowerCase().includes(q) || (u.email && u.email.toLowerCase().includes(q))
+            );
+            renderUsersTable(filtered);
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            No user accounts match the search criteria.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                const isGuest = user.is_guest;
+                const avatarClass = isGuest ? 'avatar-guest' : (user.is_staff ? 'avatar-staff' : 'avatar-reg');
+                const initial = isGuest ? '?' : (user.username ? user.username.charAt(0).toUpperCase() : 'U');
+
+                let roleBadge = '<span class="badge-role role-user">User</span>';
+                if (isGuest) {
+                    roleBadge = '<span class="badge-role role-guest">Incognito Guest</span>';
+                } else if (user.is_superuser) {
+                    roleBadge = '<span class="badge-role role-staff">Superadmin</span>';
+                } else if (user.is_staff) {
+                    roleBadge = '<span class="badge-role role-staff">Staff Admin</span>';
+                }
+
+                const statusBtn = isGuest
+                    ? '<span style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted);">Session</span>'
+                    : `<button type="button" class="status-toggle-btn ${user.is_active ? 'status-active' : 'status-suspended'}" onclick="toggleUserStatus(${user.id})" title="Click to toggle active/suspended">
+                         <span style="width:6px; height:6px; border-radius:50%; background:${user.is_active ? 'var(--emerald-light)' : '#FB7185'};"></span>
+                         <span>${user.is_active ? 'Active' : 'Suspended'}</span>
+                       </button>`;
+
+                const actionButtons = `
+                    <div class="action-icon-group" style="justify-content: flex-end;">
+                        <button type="button" class="btn-table-action btn-view" onclick="openPortfolioModal('${user.id}', '${escapeHtml(user.username)}')" title="View Transcribed Audio Portfolio">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                        ${!isGuest ? `
+                        <button type="button" class="btn-table-action" onclick="toggleUserRole(${user.id})" title="Toggle Staff / Admin Role">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        </button>
+                        <button type="button" class="btn-table-action btn-del" onclick="deleteUserAccount(${user.id}, '${escapeHtml(user.username)}')" title="Delete User Account">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="user-identity">
+                            <div class="user-avatar ${avatarClass}">${initial}</div>
+                            <div class="user-names">
+                                <span class="u-name">${escapeHtml(user.username)}</span>
+                                <span class="u-email">${escapeHtml(user.email)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${roleBadge}</td>
+                    <td>${statusBtn}</td>
+                    <td><span style="font-family:var(--font-mono); font-weight:700; color:#F9FAFB;">${user.transcriptions_count}</span></td>
+                    <td><span style="font-family:var(--font-mono); font-weight:700; color:var(--cyan-light);">${user.total_formatted}</span></td>
+                    <td><span style="font-size:12px; color:var(--text-secondary); font-family:var(--font-mono);">${user.date_joined || '—'}</span></td>
+                    <td><span style="font-size:12px; color:var(--text-secondary); font-family:var(--font-mono);">${user.last_active || '—'}</span></td>
+                    <td style="text-align: right;">${actionButtons}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Toggle User Active Status
+        async function toggleUserStatus(userId) {
+            try {
+                const res = await fetch(`/api/dashboard/users/toggle_status/${userId}/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message);
+                    loadUsersList();
+                } else {
+                    showToast(data.error || 'Failed to update user status', true);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Request error occurred", true);
+            }
+        }
+
+        // Toggle User Staff Role
+        async function toggleUserRole(userId) {
+            try {
+                const res = await fetch(`/api/dashboard/users/toggle_role/${userId}/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message);
+                    loadUsersList();
+                } else {
+                    showToast(data.error || 'Failed to toggle user role', true);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Request error occurred", true);
+            }
+        }
+
+        // Delete User Account
+        async function deleteUserAccount(userId, username) {
+            if (!confirm(`Are you sure you want to delete user '${username}'?\n\nTheir audio transcriptions will remain safely archived.`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`/api/dashboard/users/delete/${userId}/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message);
+                    loadUsersList();
+                    loadDashboardStats(currentRange);
+                } else {
+                    showToast(data.error || 'Failed to delete user', true);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Request error occurred", true);
+            }
+        }
+
+        // Create User Modal Handlers
+        function openCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'flex';
+            document.getElementById('newUsername').focus();
+        }
+
+        function closeCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'none';
+        }
+
+        async function submitCreateUser(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitUser');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            const username = document.getElementById('newUsername').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const isStaff = document.getElementById('newIsStaff').checked;
+
+            try {
+                const res = await fetch('/api/dashboard/users/create/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password,
+                        is_staff: isStaff
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message);
+                    closeCreateUserModal();
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('newIsStaff').checked = false;
+                    loadUsersList();
+                    loadDashboardStats(currentRange);
+                } else {
+                    showToast(data.error || "Failed to create user", true);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network error creating user", true);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        // View User Audio Portfolio Modal
+        async function openPortfolioModal(userId, userName) {
+            const modal = document.getElementById('userPortfolioModal');
+            const title = document.getElementById('portfolioModalTitle');
+            const container = document.getElementById('portfolioListContainer');
+
+            title.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-light)" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <span>Portfolio: ${userName}</span>
+            `;
+            container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:30px;">Loading transcribed audios...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch(`/api/dashboard/users/${userId}/transcriptions/`);
+                const data = await res.json();
+                if (data.success) {
+                    if (data.transcriptions.length === 0) {
+                        container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:30px;">No transcriptions found for this account.</div>';
+                        return;
+                    }
+                    container.innerHTML = '';
+                    data.transcriptions.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'portfolio-item';
+                        div.innerHTML = `
+                            <div class="portfolio-top">
+                                <span class="portfolio-title">${escapeHtml(item.original_name)}</span>
+                                <div class="portfolio-badges">
+                                    <span class="p-badge p-badge-mode">${escapeHtml(item.source_mode)} (${escapeHtml(item.file_format)})</span>
+                                    <span class="p-badge p-badge-time">${item.duration_formatted}</span>
+                                    <span class="p-badge" style="background:rgba(168,85,247,0.15); color:var(--purple-light);">${escapeHtml(item.language)}</span>
+                                </div>
+                            </div>
+                            <div style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted);">Transcribed: ${item.created_at}</div>
+                            <div class="portfolio-snippet">${escapeHtml(item.preview || 'No text snippet recorded')}</div>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = `<div style="color:#FB7185; text-align:center;">${data.error || 'Failed to load portfolio'}</div>`;
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div style="color:#FB7185; text-align:center;">Network error loading portfolio</div>';
+            }
+        }
+
+        function closePortfolioModal() {
+            document.getElementById('userPortfolioModal').style.display = 'none';
+        }
+
+        // Toast Helper
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            if (isError) {
+                toast.style.borderColor = '#FB7185';
+            }
+            toast.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isError ? '#FB7185' : 'var(--emerald-primary)'}" stroke-width="2.5">
+                    ${isError ? '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>' : '<polyline points="20 6 9 17 4 12"></polyline>'}
+                </svg>
+                <span>${escapeHtml(message)}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
