@@ -554,23 +554,25 @@
             50% { opacity: 1; transform: scale(1.2); }
         }
 
-        /* Fixed Top Navigation Bar (Mobile Only) */
+        /* Fixed Top Navigation Bar (Mobile Only) - Clean 3-Item Layout: Hamburger, Brand, New (+) */
         .fixed-top-nav {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 52px;
-            background: var(--bg-main);
+            height: 56px;
+            background: rgba(13, 18, 28, 0.95);
             border-bottom: 1px solid var(--border-panel);
             display: none;
             align-items: center;
-            justify-content: flex-start;
-            padding: 0 12px;
+            justify-content: space-between;
+            padding: 0 16px;
             gap: 12px;
             z-index: 998;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .fixed-top-nav.mobile-visible {
@@ -578,15 +580,99 @@
         }
 
         .fixed-top-nav .mobile-menu-btn {
-            width: 33px;
-            height: 33px;
-            min-width: 33px;
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+            padding: 0 !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            border-radius: 8px !important;
+            color: var(--text-primary) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            flex-shrink: 0 !important;
+            margin-right: 4px !important;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .fixed-top-nav .mobile-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+        }
+
+        .fixed-top-nav-brand {
+            display: inline-flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 10px !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            height: 38px !important;
+            font-size: 19px !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            letter-spacing: -0.4px !important;
+            margin-right: auto !important;
+            margin-left: 2px !important;
+        }
+
+        .fixed-top-nav-brand div {
+            display: inline-flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+            line-height: 1 !important;
+        }
+
+        .fixed-top-nav-actions {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
             flex-shrink: 0;
         }
 
+        .btn-fixed-nav-new {
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+            padding: 0 !important;
+            background: var(--spk-1-bg) !important;
+            border: 1px solid var(--border-glow) !important;
+            color: var(--emerald-primary) !important;
+            border-radius: 8px !important;
+            cursor: pointer;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.15) !important;
+            transition: all 0.2s ease;
+            flex-shrink: 0 !important;
+            text-decoration: none;
+            box-sizing: border-box !important;
+        }
+
+        .btn-fixed-nav-new:hover {
+            background: rgba(16, 185, 129, 0.25) !important;
+            border-color: var(--emerald-primary) !important;
+            color: #6EE7B7 !important;
+        }
+
+        .btn-fixed-nav-new svg {
+            width: 18px !important;
+            height: 18px !important;
+            stroke: var(--emerald-primary) !important;
+            stroke-width: 2.6 !important;
+            display: block !important;
+            transition: stroke 0.15s ease;
+        }
+
         .fixed-top-nav-spacer {
-            display: none;
-            height: 52px;
+            display: none !important;
+            height: 0px;
         }
 
         /* Main Content Adjustment for Fixed Nav */
@@ -595,7 +681,7 @@
         }
 
         .main-content.has-fixed-nav {
-            padding-top: 52px;
+            padding-top: 56px !important;
         }
 
         /* =========================================================
@@ -965,18 +1051,17 @@
                     <span>Sign Out</span>
                 </button>
                 {% else %}
-                <div style="display: flex; align-items: center; gap: 8px; width: 100%;" onclick="openAuthModal('login')" title="Incognito Mode - Click to Sign In">
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;" onclick="openAuthModal('register')" title="Account Required - Sign Up">
                     <div class="user-avatar-badge" style="width: 28px; height: 28px; border-radius: 50%; background: var(--spk-1-bg); color: var(--emerald-primary); font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; border: 1px solid var(--border-glow);">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 14a3 3 0 1 0-3-3 3 3 0 0 0 3 3z"></path></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     </div>
                     <div class="user-info-text" style="display: flex; flex-direction: column;">
-                        <span style="font-size: 12px; font-weight: 700; color: #F3F4F6;">Incognito Mode</span>
-                        <span style="font-size: 9.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">GUEST SESSION</span>
+                        <span style="font-size: 12px; font-weight: 700; color: #F3F4F6;">Account Required</span>
+                        <span style="font-size: 9.5px; font-family: 'JetBrains Mono', monospace; color: var(--emerald-light);">REGISTER / SIGN IN</span>
                     </div>
                 </div>
-                <button type="button" class="btn-auth-action" onclick="openAuthModal('login')" style="width: 100%; padding: 7px; background: var(--spk-1-bg); border: 1px solid var(--border-glow); color: var(--emerald-primary); border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-                    <span>Sign In</span>
+                <button type="button" class="btn-auth-action" onclick="openAuthModal('register')" style="width: 100%; padding: 7px; background: var(--brand-gradient); border: none; color: #030712; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span>Create Account</span>
                 </button>
                 {% endif %}
             </div>

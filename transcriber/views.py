@@ -436,31 +436,28 @@ def landing_view(request):
     })
 
 def index_view(request):
-    """Render the main transcription workspace UI"""
-    if request.user.is_authenticated:
-        history = Transcription.objects.filter(user=request.user).order_by('-created_at')
-    else:
-        history = Transcription.objects.filter(user__isnull=True).order_by('-created_at')
-    is_admin = bool(request.user.is_authenticated and request.user.username.lower() == 'gideoni')
+    """Render the main transcription workspace UI - requires user account"""
+    if not request.user.is_authenticated:
+        return redirect('/?auth=signup')
+    history = Transcription.objects.filter(user=request.user).order_by('-created_at')
+    is_admin = bool(request.user.username.lower() == 'gideoni')
     return render(request, 'transcriber/index.html', {
         'history': history,
         'is_gideoni_admin': is_admin,
     })
 
 def stream_page_view(request):
-    """Render the dedicated, standalone Real-Time Streaming Conversation interface (Faster Whisper Medium)"""
-    if request.user.is_authenticated:
-        history = Transcription.objects.filter(user=request.user).order_by('-created_at')
-    else:
-        history = Transcription.objects.filter(user__isnull=True).order_by('-created_at')
+    """Render the dedicated Real-Time Streaming interface - requires user account"""
+    if not request.user.is_authenticated:
+        return redirect('/?auth=signup')
+    history = Transcription.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'transcriber/streaming.html', {'history': history})
 
 def get_history_view(request):
-    """API endpoint to get transcription list"""
-    if request.user.is_authenticated:
-        transcriptions = Transcription.objects.filter(user=request.user).order_by('-created_at')
-    else:
-        transcriptions = Transcription.objects.filter(user__isnull=True).order_by('-created_at')
+    """API endpoint to get transcription list for the authenticated user"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'history': [], 'error': 'Account required. Please sign up or log in.'}, status=401)
+    transcriptions = Transcription.objects.filter(user=request.user).order_by('-created_at')
     data = []
     for t in transcriptions:
         data.append({
@@ -567,9 +564,16 @@ def get_progress_view(request, job_id):
 
 @csrf_exempt
 def transcribe_view(request):
-    """Handles speech-to-text transcription requests"""
+    """Handles speech-to-text transcription requests - requires registered user account"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'error': 'An account is required to access transcription services. Please sign up or log in.',
+            'auth_required': True
+        }, status=401)
 
     job_id = request.POST.get('job_id')
     source_type = request.POST.get('source_type')
@@ -1394,6 +1398,13 @@ def stream_transcribe_chunk_view(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
 
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'error': 'An account is required to use real-time stream transcription. Please sign up or log in.',
+            'auth_required': True
+        }, status=401)
+
     audio_file = request.FILES.get('audio_chunk') or request.FILES.get('audio_file') or request.FILES.get('audio')
     if not audio_file:
         return JsonResponse({'success': True, 'text': '', 'speaker': '', 'is_speech': False})
@@ -1534,6 +1545,13 @@ def save_stream_session_view(request):
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST method required', 'success': False}, status=405)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'error': 'An account is required to save streaming sessions. Please sign up or log in.',
+            'auth_required': True
+        }, status=401)
 
     try:
         data = json.loads(request.body.decode('utf-8'))
@@ -1950,8 +1968,8 @@ def dashboard_users_api_view(request):
             last_gt = guest_transcriptions[0].created_at if guest_transcriptions else None
             users_data.insert(0, {
                 'id': 'guest',
-                'username': 'Guest / Incognito Sessions',
-                'email': 'guest-anonymous@session.local',
+                'username': 'Archived Legacy Sessions (Pre-Registration)',
+                'email': 'archived-records@system.local',
                 'is_active': True,
                 'is_staff': False,
                 'is_superuser': False,
@@ -1976,7 +1994,7 @@ def dashboard_user_transcriptions_api_view(request, user_id):
 
     if str(user_id).lower() == 'guest':
         qs = Transcription.objects.filter(user__isnull=True).order_by('-created_at')
-        user_name = "Guest / Incognito Sessions"
+        user_name = "Archived Legacy Sessions (Pre-Registration)"
     else:
         try:
             target_user = User.objects.get(id=user_id)

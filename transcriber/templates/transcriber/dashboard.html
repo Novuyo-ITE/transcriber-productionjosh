@@ -1167,10 +1167,24 @@
             </div>
 
             <div class="dash-controls">
-                <div class="range-pills">
-                    <button type="button" class="range-btn active" data-range="all" onclick="changeRange('all')">All Time</button>
-                    <button type="button" class="range-btn" data-range="30d" onclick="changeRange('30d')">Last 30 Days</button>
-                    <button type="button" class="range-btn" data-range="7d" onclick="changeRange('7d')">Last 7 Days</button>
+                <!-- Dropdown Menus: Range (All Time, Last 30 Days, Last 7 Days) and Metric (Minutes, Jobs) -->
+                <div class="dash-filter-group" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <div class="analytics-dropdown-wrap" style="position:relative; display:inline-flex; align-items:center;">
+                        <select id="dashRangeSelect" class="dash-select" onchange="changeRange(this.value)" aria-label="Select Date Range" style="background:#0D121F; color:#F3F4F6; border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:7px 28px 7px 11px; font-size:12px; font-family:var(--font-mono); font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; outline:none; transition:border-color 0.2s, box-shadow 0.2s;">
+                            <option value="all">All Time</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="7d">Last 7 Days</option>
+                        </select>
+                        <svg style="position:absolute; right:9px; pointer-events:none; color:var(--text-secondary);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+
+                    <div class="analytics-dropdown-wrap" style="position:relative; display:inline-flex; align-items:center;">
+                        <select id="dashMetricSelect" class="dash-select" onchange="toggleTimelineMetric(this.value)" aria-label="Select Metric" style="background:#0D121F; color:#F3F4F6; border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:7px 28px 7px 11px; font-size:12px; font-family:var(--font-mono); font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; outline:none; transition:border-color 0.2s, box-shadow 0.2s;">
+                            <option value="minutes">Minutes</option>
+                            <option value="jobs">Jobs</option>
+                        </select>
+                        <svg style="position:absolute; right:9px; pointer-events:none; color:var(--text-secondary);" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
                 </div>
 
                 <button type="button" class="btn-refresh" id="btnRefresh" onclick="refreshDashboardData()">
@@ -1255,9 +1269,12 @@
                         </h2>
                         <p class="panel-desc">Daily audio volume transcribed in minutes and cumulative processing curve.</p>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <button type="button" class="range-btn active" id="btnChartMetricMinutes" onclick="toggleTimelineMetric('minutes')">Minutes</button>
-                        <button type="button" class="range-btn" id="btnChartMetricJobs" onclick="toggleTimelineMetric('jobs')">Job Count</button>
+                    <div class="analytics-dropdown-wrap" style="position:relative; display:inline-flex; align-items:center;">
+                        <select id="dashChartMetricSelect" class="dash-select" onchange="toggleTimelineMetric(this.value)" aria-label="Timeline Metric" style="background:#0D121F; color:#F3F4F6; border:1px solid rgba(255,255,255,0.16); border-radius:8px; padding:6px 26px 6px 10px; font-size:11.5px; font-family:var(--font-mono); font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; outline:none;">
+                            <option value="minutes">Minutes</option>
+                            <option value="jobs">Jobs</option>
+                        </select>
+                        <svg style="position:absolute; right:8px; pointer-events:none; color:var(--text-secondary);" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
                 </div>
                 <div class="chart-container-lg">
@@ -1528,17 +1545,18 @@
         // Range Filter Switcher
         function changeRange(range) {
             currentRange = range;
-            document.querySelectorAll('.range-btn[data-range]').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.range === range);
-            });
+            const selRange = document.getElementById('dashRangeSelect');
+            if (selRange) selRange.value = range;
             loadDashboardStats(range);
         }
 
         // Toggle Minutes vs Jobs on Timeline
         function toggleTimelineMetric(metric) {
             currentTimelineMetric = metric;
-            document.getElementById('btnChartMetricMinutes').classList.toggle('active', metric === 'minutes');
-            document.getElementById('btnChartMetricJobs').classList.toggle('active', metric === 'jobs');
+            const selTop = document.getElementById('dashMetricSelect');
+            const selChart = document.getElementById('dashChartMetricSelect');
+            if (selTop) selTop.value = metric;
+            if (selChart) selChart.value = metric;
             if (dashboardStatsData) {
                 renderAudioTimelineChart(dashboardStatsData.audio_volume_timeline);
             }
@@ -2046,7 +2064,7 @@
 
                 let roleBadge = '<span class="badge-role role-user">User</span>';
                 if (isGuest) {
-                    roleBadge = '<span class="badge-role role-guest">Incognito Guest</span>';
+                    roleBadge = '<span class="badge-role role-guest">Archived Guest (Legacy)</span>';
                 } else if (user.is_superuser) {
                     roleBadge = '<span class="badge-role role-staff">Superadmin</span>';
                 } else if (user.is_staff) {

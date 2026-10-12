@@ -2569,35 +2569,60 @@ body.sidebar-open #sidebarBackdrop {
     stroke: #6EE7B7;
 }
 
-/* Fixed Top Navigation Bar (Mobile Only) */
+/* Fixed Top Navigation Bar (Mobile Only) - Clean 3-Item Layout: Hamburger, Brand, New (+) */
 .fixed-top-nav {
     position: sticky;
     top: 0;
     left: 0;
     right: 0;
-    height: 52px;
-    background: rgba(13, 18, 28, 0.92);
+    height: 56px;
+    background: rgba(13, 18, 28, 0.95);
     border-bottom: 1px solid var(--border-panel);
     display: none;
     align-items: center;
     justify-content: space-between;
-    padding: 0 14px;
+    padding: 0 16px;
     gap: 12px;
     z-index: 990;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     width: 100%;
+    box-sizing: border-box;
 }
 
 .fixed-top-nav.mobile-visible {
     display: flex;
 }
 
+.fixed-top-nav .mobile-menu-btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    color: var(--text-primary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    margin-right: 4px !important;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.fixed-top-nav .mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
 .fixed-top-nav-brand {
     display: inline-flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 10px !important;
     text-decoration: none !important;
     cursor: pointer !important;
     white-space: nowrap !important;
@@ -2605,6 +2630,8 @@ body.sidebar-open #sidebarBackdrop {
     font-size: 19px !important;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     letter-spacing: -0.4px !important;
+    margin-right: auto !important;
+    margin-left: 2px !important;
 }
 
 .fixed-top-nav-brand div,
@@ -2620,14 +2647,15 @@ body.sidebar-open #sidebarBackdrop {
 .fixed-top-nav-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
 .btn-fixed-nav-new {
-    width: 33px !important;
-    height: 33px !important;
-    min-width: 33px !important;
-    min-height: 33px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
     padding: 0 !important;
     background: var(--spk-1-bg) !important;
     border: 1px solid var(--border-glow) !important;
@@ -2651,10 +2679,10 @@ body.sidebar-open #sidebarBackdrop {
 }
 
 .btn-fixed-nav-new svg {
-    width: 16px !important;
-    height: 16px !important;
+    width: 18px !important;
+    height: 18px !important;
     stroke: var(--emerald-primary) !important;
-    stroke-width: 2.4 !important;
+    stroke-width: 2.6 !important;
     display: block !important;
     transition: stroke 0.15s ease;
 }

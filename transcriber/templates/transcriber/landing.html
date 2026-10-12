@@ -57,6 +57,7 @@
                 </a>
                 {% else %}
                 <button type="button" class="btn-nav-signin" onclick="openAuthModal('login')">Sign In</button>
+                <button type="button" onclick="openAuthModal('register')" style="padding: 7px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; background: var(--brand-gradient); color: #030712; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">Sign Up</button>
                 {% endif %}
             </div>
         </div>
@@ -82,10 +83,17 @@
                 </p>
 
                 <div class="hero-cta-group">
+                    {% if user.is_authenticated %}
                     <a href="{% url 'transcriber:app' %}" class="btn-hero-primary">
-                        <span>Start Transcribing Free</span>
+                        <span>Open Workspace</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
+                    {% else %}
+                    <button type="button" onclick="openAuthModal('register')" class="btn-hero-primary" style="border:none; cursor:pointer;">
+                        <span>Get Started Free</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    {% endif %}
                     <a href="#demo" class="btn-hero-secondary">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         <span>Explore Demo</span>
@@ -311,11 +319,11 @@
 
                 <div class="faq-item" onclick="toggleFaq(this)">
                     <div class="faq-question">
-                        <span>Can I use the app as a guest without signing in?</span>
+                        <span>Do I need an account to transcribe audio?</span>
                         <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="faq-answer">
-                        Yes! NOVUscribe supports private Guest / Incognito mode out of the box. Creating an account allows you to save and access your past transcription history anytime.
+                        Yes, creating a free account is required to access transcription services, real-time live mic streaming, and to store your past transcripts securely.
                     </div>
                 </div>
             </div>
@@ -326,10 +334,17 @@
             <div class="cta-banner">
                 <h2 class="cta-title">Ready to Turn Speech into Structured Notes?</h2>
                 <p class="cta-subtitle">Jump straight into the NOVUscribe workspace and transcribe your audio files, videos, YouTube links, and live recordings.</p>
+                {% if user.is_authenticated %}
                 <a href="{% url 'transcriber:app' %}" class="btn-hero-primary" style="display:inline-flex;">
                     <span>Launch NOVUscribe Workspace</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
+                {% else %}
+                <button type="button" onclick="openAuthModal('register')" class="btn-hero-primary" style="display:inline-flex; border:none; cursor:pointer;">
+                    <span>Create Free Account & Start</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+                {% endif %}
             </div>
         </section>
 
@@ -494,6 +509,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = localStorage.getItem('novuscribe_theme') || 'dark';
             updateThemeIcons(currentTheme);
+
+            // Automatically open modal if redirected with ?auth=signup or ?auth=login
+            const urlParams = new URLSearchParams(window.location.search);
+            const authParam = urlParams.get('auth');
+            if (authParam === 'signup' || authParam === 'register') {
+                openAuthModal('register');
+            } else if (authParam === 'login' || authParam === 'signin') {
+                openAuthModal('login');
+            }
         });
 
         // 1.5-Second Word Rotator Animation
