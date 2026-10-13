@@ -200,6 +200,99 @@ def call_runpod_serverless(
     raise TimeoutError(f"RunPod execution exceeded {timeout_sec}s timeout.")
 
 
+def call_runpod_sync(
+    job_input: Dict[str, Any],
+    timeout_sec: int = 25
+) -> Dict[str, Any]:
+    """
+    Submits a job synchronously to RunPod Serverless via /runsync for sub-second, real-time responses.
+    If already completed by worker, output is returned directly in the response without polling or queue delays.
+    If the worker is currently cold/provisioning, gracefully polls /status with a tight 0.4s interval.
+    """
+    api_key, endpoint_id = get_runpod_config()
+    if not api_key or not endpoint_id:
+        raise ValueError("RUNPOD_API_KEY and RUNPOD_ENDPOINT_ID must be configured.")
+
+    runsync_url = f"https://api.runpod.ai/v2/{endpoint_id}/runsync"
+    status_url_base = f"https://api.runpod.ai/v2/{endpoint_id}/status"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    payload = {"input": job_input}
+    action = job_input.get('action', 'stream_chunk')
+    t0 = time.time()
+
+    try:
+        response = requests.post(runsync_url, json=payload, headers=headers, timeout=min(timeout_sec, 20))
+    except requests.exceptions.Timeout:
+        logger.warning(f"[RunPod Client] /runsync timed out for action={action}. Falling back to async...")
+        return call_runpod_serverless(job_input, timeout_sec=timeout_sec)
+    except Exception as e:
+        logger.warning(f"[RunPod Client] /runsync network error: {e}. Falling back to async...")
+        return call_runpod_serverless(job_input, timeout_sec=timeout_sec)
+
+    if response.status_code == 200:
+        res_json = response.json()
+        status = res_json.get("status")
+        job_id = res_json.get("id")
+
+        if status == "COMPLETED":
+            output = res_json.get("output", {})
+            if isinstance(output, dict) and output.get("status") == "error":
+                raise RuntimeError(f"RunPod model error: {output.get('error')}")
+            logger.info(f"[RunPod Client] /runsync completed directly in {time.time() - t0:.2f}s (action={action})")
+            return output
+        elif status in ("FAILED", "CANCELLED"):
+            raise RuntimeError(f"RunPod job {status}: {res_json.get('error')}")
+
+        # If job is in queue / in progress (worker cold or queued), poll with a tight 0.4s interval
+        remaining_sec = max(5, timeout_sec - int(time.time() - t0))
+        poll_interval = 0.4
+        max_polls = int(remaining_sec / poll_interval)
+
+        for _ in range(max_polls):
+            time.sleep(poll_interval)
+            try:
+                poll_resp = requests.get(f"{status_url_base}/{job_id}", headers=headers, timeout=6)
+                if poll_resp.status_code == 200:
+                    poll_data = poll_resp.json()
+                    curr_status = poll_data.get("status")
+                    if curr_status == "COMPLETED":
+                        output = poll_data.get("output", {})
+                        if isinstance(output, dict) and output.get("status") == "error":
+                            raise RuntimeError(f"RunPod model error: {output.get('error')}")
+                        logger.info(f"[RunPod Client] Polled job {job_id} COMPLETED in {time.time() - t0:.2f}s")
+                        return output
+                    elif curr_status in ("FAILED", "CANCELLED"):
+                        raise RuntimeError(f"RunPod job {curr_status}: {poll_data.get('error')}")
+            except Exception:
+                continue
+
+    elif response.status_code != 200:
+        logger.warning(f"[RunPod Client] /runsync returned {response.status_code}. Falling back to async...")
+        return call_runpod_serverless(job_input, timeout_sec=timeout_sec)
+
+    return call_runpod_serverless(job_input, timeout_sec=timeout_sec)
+
+
+def runpod_warmup(timeout_sec: int = 25) -> Dict[str, Any]:
+    """
+    Pings RunPod endpoint with a warmup action to wake serverless workers
+    and ensure models (Faster Whisper & CAM++) are 100% loaded and hot in GPU VRAM.
+    """
+    api_key, endpoint_id = get_runpod_config()
+    if not api_key or not endpoint_id:
+        return {"status": "error", "error": "RunPod not configured"}
+    job_input = {"action": "warmup"}
+    try:
+        return call_runpod_sync(job_input, timeout_sec=timeout_sec)
+    except Exception as e:
+        logger.warning(f"[RunPod Client] Warmup request error: {e}")
+        return {"status": "error", "error": str(e)}
+
+
 def runpod_transcribe(
     audio_path: str,
     language: str = "auto",
@@ -365,7 +458,7 @@ def runpod_stream_chunk(
     language: str = "auto",
     is_continuous: bool = False
 ) -> Dict[str, Any]:
-    """Transcribes a live mic chunk and tracks speaker voiceprint on RunPod Serverless."""
+    """Transcribes a live mic chunk and tracks speaker voiceprint on RunPod Serverless via low-latency /runsync."""
     audio_b64 = file_to_base64(chunk_path)
     job_input = {
         "action": "stream_chunk",
@@ -374,4 +467,5 @@ def runpod_stream_chunk(
         "language": language,
         "is_continuous": is_continuous
     }
-    return call_runpod_serverless(job_input, timeout_sec=20)
+    return call_runpod_sync(job_input, timeout_sec=20)
+

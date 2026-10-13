@@ -1678,8 +1678,8 @@
         let vadUserSpeaking = false;
         let vadSilenceStart = null;
         let vadSpeechStart = null;
-        const VAD_SILENCE_TIMEOUT_MS = 650;  // 650ms natural pause threshold
-        const VAD_MIN_SPEECH_DURATION_MS = 380; // 380ms minimum duration to avoid noise blips
+        const VAD_SILENCE_TIMEOUT_MS = 500;  // 500ms low-latency pause threshold
+        const VAD_MIN_SPEECH_DURATION_MS = 300; // 300ms minimum duration to avoid noise blips
         let speechBandNoiseFloor = 14;       // Adaptive noise floor tracking
         const PRE_SPEECH_BUFFER_COUNT = 6;   // ~340ms rolling ring buffer for speech onsets
         let preSpeechRingBuffer = [];
@@ -1915,13 +1915,15 @@
                     streamRecordedPcmBuffers = [...preSpeechRingBuffer];
                     preSpeechRingBuffer = [];
                 } else {
-                    // Continuous speech check: if >= 1.5s (~24000 samples) has accumulated while actively speaking,
-                    // dispatch an intermediate chunk so words stream in real-time as the speaker talks!
+                    // Low-latency dynamic chunk threshold:
+                    // First utterance chunk dispatches faster (~0.9s) so initial words appear without delay.
+                    // Subsequent continuous speech chunks dispatch every ~1.2s.
                     let sampleCount = 0;
                     for (let i = 0; i < streamRecordedPcmBuffers.length; i++) {
                         sampleCount += streamRecordedPcmBuffers[i].length;
                     }
-                    if (sampleCount >= 16000 * 1.5 && !isProcessingStreamChunk) {
+                    const minChunkDurationSec = (!activeTurnCard || wordStreamQueue.length === 0) ? 0.9 : 1.2;
+                    if (sampleCount >= 16000 * minChunkDurationSec && !isProcessingStreamChunk) {
                         const buffersToProcess = [...streamRecordedPcmBuffers];
                         streamRecordedPcmBuffers = []; // Reset for next chunk while user continues talking
                         queueSpeechChunk(buffersToProcess, true);

@@ -21,6 +21,7 @@ from .runpod_client import (
     runpod_transcribe,
     runpod_diarize,
     runpod_stream_chunk,
+    runpod_warmup,
 )
 
 try:
@@ -450,6 +451,11 @@ def stream_page_view(request):
     """Render the dedicated Real-Time Streaming interface - requires user account"""
     if not request.user.is_authenticated:
         return redirect('/?auth=login')
+    # Proactively warm up streaming models in background the moment user accesses the page
+    if is_runpod_configured():
+        threading.Thread(target=lambda: runpod_warmup(timeout_sec=25), daemon=True).start()
+    elif stt_service and not getattr(stt_service, 'warmed_up', False):
+        threading.Thread(target=stt_service.preload_model, daemon=True).start()
     history = Transcription.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'transcriber/streaming.html', {'history': history})
 
@@ -1360,11 +1366,18 @@ def stream_warmup_view(request):
     Called immediately when entering or hovering over the Real-Time Streaming mode so there is zero cold start.
     """
     if is_runpod_configured():
+        def _warmup_runpod():
+            try:
+                runpod_warmup(timeout_sec=25)
+            except Exception as e:
+                logging.warning(f"RunPod streaming warmup warning: {e}")
+
+        threading.Thread(target=_warmup_runpod, daemon=True).start()
         return JsonResponse({
             'success': True,
             'ready': True,
             'device': 'RunPod Cloud GPU',
-            'model': 'RunPod Serverless Whisper'
+            'model': 'RunPod Faster Whisper & CAM++'
         })
 
     def _warmup():
@@ -1500,7 +1513,7 @@ def stream_transcribe_chunk_view(request):
         # If it's a single word or 2-word phantom noise blip, discard as noise (unless part of continuous streaming speech)
         is_continuous = request.POST.get('is_continuous') == 'true'
         if not is_continuous and len(words) <= 2:
-            if clean_norm in NOISE_WORDS or len(clean_norm) <= 2 or duration_sec < 0.70:
+            if (clean_norm in NOISE_WORDS and duration_sec < 1.2) or len(clean_norm) <= 1 or duration_sec < 0.35:
                 logging.info(f"[STREAM-STT] Ignored noise artifact / phantom hallucination: '{text}' ({duration_sec:.2f}s)")
                 return JsonResponse({
                     'success': True,
