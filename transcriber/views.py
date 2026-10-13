@@ -104,7 +104,7 @@ def get_transcription_pipeline():
         return transcription_pipeline
 
     if torch is None:
-        raise RuntimeError("PyTorch is not available locally. Please configure RUNPOD_API_KEY and RUNPOD_ENDPOINT_ID to use RunPod Serverless GPU inference.")
+        raise RuntimeError("Audio transcription service is not configured or available.")
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
@@ -156,7 +156,7 @@ def run_whisper_transcription(audio_path, lang_code, return_timestamps=True):
     """Run Whisper for fine-tuned Luganda model using Swahili decoder token"""
     global transcription_pipeline
     if torch is None:
-        raise RuntimeError("PyTorch is not available locally. Please configure RUNPOD_API_KEY and RUNPOD_ENDPOINT_ID.")
+        raise RuntimeError("Audio transcription service is not configured or available.")
     with torch.inference_mode():
         generate_kwargs = {"task": "transcribe", "language": "<|sw|>"}
         try:
@@ -734,7 +734,7 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
             job_id,
             stage='transcribing',
             status_text='Transcribing Speech to Text...',
-            subtext='Phase 2: Initializing Neural Speech Recognition Model...',
+            subtext='Phase 2: Initializing speech transcription process...',
             progress_pct=15.0
         )
 
@@ -773,8 +773,8 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
             update_job_progress(
                 job_id,
                 stage='transcribing',
-                status_text='Dispatching to RunPod Cloud GPU...',
-                subtext=f'Preparing & offloading [{language}] audio to GPU worker...',
+                status_text='Preparing audio stream...',
+                subtext=f'Preparing & optimizing [{language}] audio for processing...',
                 progress_pct=18.0
             )
             logging.info(f'[RUNPOD ROUTING] Running RunPod Serverless transcription for [{language}] (diarize={diarize})')
@@ -783,8 +783,8 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                 # 1. Custom progress payload from worker (if available)
                 if isinstance(progress, dict):
                     stage = progress.get('stage', 'transcribing')
-                    status_text = progress.get('status_text') or progress.get('message', 'Processing on Cloud GPU...')
-                    subtext = progress.get('subtext', f'Active GPU computation ({int(elapsed)}s elapsed)')
+                    status_text = progress.get('status_text') or progress.get('message', 'Processing audio...')
+                    subtext = progress.get('subtext', f'Active audio processing ({int(elapsed)}s elapsed)')
                     pct = float(progress.get('progress_pct', progress.get('pct', 50.0)))
                     update_job_progress(
                         job_id,
@@ -795,29 +795,29 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                     )
                     return
 
-                # 2. Dynamic progress calculation based on RunPod worker lifecycle
+                # 2. Dynamic progress calculation based on worker lifecycle
                 if status == 'IN_QUEUE':
                     q_sec = int(elapsed)
                     update_job_progress(
                         job_id,
                         stage='transcribing',
-                        status_text='RunPod Cloud GPU: Provisioning Worker...',
-                        subtext=f'Phase 1: Booting NVIDIA GPU worker & loading weights ({q_sec}s elapsed)...',
+                        status_text='Provisioning processing environment...',
+                        subtext=f'Phase 1: Initializing speech processor ({q_sec}s elapsed)...',
                         progress_pct=min(32.0, 18.0 + elapsed * 1.2)
                     )
                 elif status == 'IN_PROGRESS':
-                    # Calculate active GPU time
+                    # Calculate active processing time
                     exec_sec = (execution_time / 1000.0) if execution_time else max(1.0, elapsed - 6.0)
                     
                     if diarize:
-                        # With diarization: 32% -> 65% STT, 65% -> 88% VAD & Diarization, 88% -> 95% formatting
+                        # With diarization: 32% -> 65% STT, 65% -> 88% Diarization, 88% -> 95% formatting
                         if exec_sec < 18.0:
                             trans_pct = min(65.0, 32.0 + exec_sec * 1.8)
                             update_job_progress(
                                 job_id,
                                 stage='transcribing',
-                                status_text=f'Neural Speech Recognition ({int(trans_pct)}%)',
-                                subtext=f'Phase 2: Whisper inference for [{language}] on GPU ({int(exec_sec)}s)...',
+                                status_text=f'Transcribing Speech ({int(trans_pct)}%)',
+                                subtext=f'Phase 2: Converting speech to text for [{language}] ({int(exec_sec)}s)...',
                                 progress_pct=trans_pct
                             )
                         elif exec_sec < 38.0:
@@ -825,8 +825,8 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                             update_job_progress(
                                 job_id,
                                 stage='diarizing',
-                                status_text=f'Acoustic Speaker Diarization ({int(diar_pct)}%)',
-                                subtext=f'Phase 3: FSMN-VAD voice detection & CAM++ speaker voiceprints ({int(exec_sec)}s)...',
+                                status_text=f'Identifying Speakers ({int(diar_pct)}%)',
+                                subtext=f'Phase 3: Detecting distinct speakers and voices ({int(exec_sec)}s)...',
                                 progress_pct=diar_pct
                             )
                         else:
@@ -844,8 +844,8 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                         update_job_progress(
                             job_id,
                             stage='transcribing',
-                            status_text=f'Neural Speech Recognition ({int(trans_pct)}%)',
-                            subtext=f'Phase 2: Whisper model inference on GPU ({int(exec_sec)}s)...',
+                            status_text=f'Transcribing Speech ({int(trans_pct)}%)',
+                            subtext=f'Phase 2: Converting speech to text ({int(exec_sec)}s)...',
                             progress_pct=trans_pct
                         )
                 elif status == 'COMPLETED':
@@ -873,7 +873,7 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
         elif not is_luganda and lang_code in ('en', 'fr', 'sw', 'ln'):
             # ------------------- Faster Whisper (CTranslate2 Medium / GPU) -------------------
             if not stt_service:
-                raise RuntimeError("Local STT service unavailable. Please configure RUNPOD_API_KEY and RUNPOD_ENDPOINT_ID.")
+                raise RuntimeError("Speech transcription service is currently unavailable.")
             target_whisper_lang = lang_code if lang_code in ('en', 'fr', 'sw', 'ln') else 'en'
             source_desc = "Live Recording" if is_live_recording else "Audio"
             logging.info(f'[STT ROUTING] Running Faster Whisper for [{language}/{target_whisper_lang}] {source_desc}: {audio_path}')
@@ -916,8 +916,8 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                 update_job_progress(
                     job_id,
                     stage='diarizing',
-                    status_text='Acoustic Speaker Diarization...',
-                    subtext='Phase 3: Extracting voiceprints with FSMN-VAD & CAM++...',
+                    status_text='Identifying Speakers...',
+                    subtext='Phase 3: Detecting distinct speakers and voices...',
                     progress_pct=82.0
                 )
                 logging.info("Running local GPU CAM++ sentence-level speaker diarization")
@@ -1221,7 +1221,7 @@ def diarize_transcription_view(request, tid):
                 num_speakers=num_speakers
             )
         else:
-            return JsonResponse({'error': 'Local Diarization engine unavailable and RunPod is not configured.'}, status=500)
+            return JsonResponse({'error': 'Speaker identification service is currently unavailable.'}, status=500)
 
 
         if formatted_text:
@@ -1376,8 +1376,8 @@ def stream_warmup_view(request):
         return JsonResponse({
             'success': True,
             'ready': True,
-            'device': 'RunPod Cloud GPU',
-            'model': 'RunPod SenseVoice-Small & CAM++'
+            'device': 'Cloud Engine',
+            'model': 'Speech Engine Ready'
         })
 
     def _warmup():
@@ -1391,8 +1391,8 @@ def stream_warmup_view(request):
 
     threading.Thread(target=_warmup, daemon=True).start()
     is_ready = bool(stt_service and stt_service.model is not None)
-    device_name = getattr(stt_service, 'device', 'cuda' if (torch and torch.cuda.is_available()) else 'cpu')
-    model_name = f"Faster Whisper {stt_service.model_size.capitalize() if (stt_service and getattr(stt_service, 'model_size', None)) else 'Medium'}"
+    device_name = 'Processing Engine'
+    model_name = 'Speech Engine'
     return JsonResponse({
         'success': True,
         'ready': is_ready,
@@ -1460,7 +1460,7 @@ def stream_transcribe_chunk_view(request):
         target_lang = 'en' if (not lang_lower or lang_lower == 'auto') else lang_lower
 
         if not stt_service:
-            return JsonResponse({'error': 'Local STT service unavailable and RunPod is not configured.', 'success': False}, status=500)
+            return JsonResponse({'error': 'Speech transcription service is currently unavailable.', 'success': False}, status=500)
 
         # 1. Transcribe: Faster Whisper Medium
         text = ""

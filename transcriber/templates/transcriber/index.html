@@ -807,7 +807,7 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2l2-7 4 14 4-18 4 14 2-7h2"/></svg>
                 <span class="btn-live-text">Live Recording</span>
             </button>
-            <button class="btn-stream-transcribe" onclick="window.location.href='/stream/'" title="Open Dedicated Live Stream Studio (Faster Whisper Medium)" style="width: 100%; padding: 9px 12px; background: rgba(6, 182, 212, 0.14) !important; border: 1px solid rgba(6, 182, 212, 0.45) !important; color: #38BDF8 !important; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease; box-shadow: 0 0 14px rgba(6, 182, 212, 0.18) !important;">
+            <button class="btn-stream-transcribe" onclick="window.location.href='/stream/'" title="Open Dedicated Live Stream Studio (Real-Time)" style="width: 100%; padding: 9px 12px; background: rgba(6, 182, 212, 0.14) !important; border: 1px solid rgba(6, 182, 212, 0.45) !important; color: #38BDF8 !important; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease; box-shadow: 0 0 14px rgba(6, 182, 212, 0.18) !important;">
                 <span class="pulse-dot" style="background:#06B6D4 !important; box-shadow:0 0 8px #06B6D4 !important;"></span>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -975,7 +975,7 @@
                         Speech-to-Text Intelligence
                     </div>
                     <h1>Transcribe speech to text.</h1>
-                    <p>Convert audio files, video files, or YouTube links into structured, editable dialogue portions powered by GPU Faster Whisper and Gemini.</p>
+                    <p>Convert audio files, video files, or YouTube links into structured, editable dialogue portions with automated speech recognition and AI dialogue formatting.</p>
                 </div>
                 
                 <div class="tabs-header">
@@ -1063,11 +1063,11 @@
                             <label for="language">Speech Language</label>
                             <!-- Hidden native select for form submission -->
                             <select name="language" id="language" style="display:none;">
-                                <option value="English" selected>English (Faster Whisper)</option>
-                                <option value="Lingala">Lingala (Faster Whisper / Large-v3)</option>
-                                <option value="Luganda">Luganda (Whisper Large-v3)</option>
-                                <option value="French">French (Faster Whisper)</option>
-                                <option value="Swahili">Swahili (Faster Whisper)</option>
+                                <option value="English" selected>English</option>
+                                <option value="Lingala">Lingala</option>
+                                <option value="Luganda">Luganda</option>
+                                <option value="French">French</option>
+                                <option value="Swahili">Swahili</option>
                             </select>
                             
                             <div class="custom-language-selector" id="custom-language-selector">
@@ -1078,45 +1078,45 @@
                                         </div>
                                         <div class="custom-lang-current">
                                             <span class="custom-lang-name" id="custom-lang-selected-name">English</span>
-                                            <span class="custom-lang-model-chip" id="custom-lang-selected-chip">Faster Whisper</span>
+                                            <span class="custom-lang-model-chip" id="custom-lang-selected-chip">Speech Recognition</span>
                                         </div>
                                     </div>
                                     <svg class="custom-lang-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </button>
                                 
                                 <div class="custom-lang-dropdown" id="custom-lang-dropdown" role="listbox">
-                                    <div class="custom-lang-option selected" data-value="English" data-name="English" data-chip="Faster Whisper" onclick="selectCustomLanguage('English', 'English', 'Faster Whisper')">
+                                    <div class="custom-lang-option selected" data-value="English" data-name="English" data-chip="Speech Recognition" onclick="selectCustomLanguage('English', 'English', 'Speech Recognition')">
                                         <div class="custom-lang-opt-left">
                                             <span class="custom-lang-opt-title">English</span>
-                                            <span class="custom-lang-opt-badge">Faster Whisper Medium / GPU</span>
+                                            <span class="custom-lang-opt-badge">Speech Recognition</span>
                                         </div>
                                         <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     </div>
-                                    <div class="custom-lang-option" data-value="Lingala" data-name="Lingala" data-chip="Faster Whisper / Large-v3" onclick="selectCustomLanguage('Lingala', 'Lingala', 'Faster Whisper / Large-v3')">
+                                    <div class="custom-lang-option" data-value="Lingala" data-name="Lingala" data-chip="Speech Recognition" onclick="selectCustomLanguage('Lingala', 'Lingala', 'Speech Recognition')">
                                         <div class="custom-lang-opt-left">
                                             <span class="custom-lang-opt-title">Lingala</span>
-                                            <span class="custom-lang-opt-badge">Faster Whisper / Large-v3</span>
+                                            <span class="custom-lang-opt-badge">Speech Recognition</span>
                                         </div>
                                         <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     </div>
-                                    <div class="custom-lang-option" data-value="Luganda" data-name="Luganda" data-chip="Whisper Large-v3" onclick="selectCustomLanguage('Luganda', 'Luganda', 'Whisper Large-v3')">
+                                    <div class="custom-lang-option" data-value="Luganda" data-name="Luganda" data-chip="Speech Recognition" onclick="selectCustomLanguage('Luganda', 'Luganda', 'Speech Recognition')">
                                         <div class="custom-lang-opt-left">
                                             <span class="custom-lang-opt-title">Luganda</span>
-                                            <span class="custom-lang-opt-badge">Whisper Large-v3 Fine-Tuned</span>
+                                            <span class="custom-lang-opt-badge">Speech Recognition</span>
                                         </div>
                                         <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     </div>
-                                    <div class="custom-lang-option" data-value="French" data-name="French" data-chip="Faster Whisper" onclick="selectCustomLanguage('French', 'French', 'Faster Whisper')">
+                                    <div class="custom-lang-option" data-value="French" data-name="French" data-chip="Speech Recognition" onclick="selectCustomLanguage('French', 'French', 'Speech Recognition')">
                                         <div class="custom-lang-opt-left">
                                             <span class="custom-lang-opt-title">French</span>
-                                            <span class="custom-lang-opt-badge">Faster Whisper Medium / GPU</span>
+                                            <span class="custom-lang-opt-badge">Speech Recognition</span>
                                         </div>
                                         <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     </div>
-                                    <div class="custom-lang-option" data-value="Swahili" data-name="Swahili" data-chip="Faster Whisper" onclick="selectCustomLanguage('Swahili', 'Swahili', 'Faster Whisper')">
+                                    <div class="custom-lang-option" data-value="Swahili" data-name="Swahili" data-chip="Speech Recognition" onclick="selectCustomLanguage('Swahili', 'Swahili', 'Speech Recognition')">
                                         <div class="custom-lang-opt-left">
                                             <span class="custom-lang-opt-title">Swahili</span>
-                                            <span class="custom-lang-opt-badge">Faster Whisper Medium / GPU</span>
+                                            <span class="custom-lang-opt-badge">Speech Recognition</span>
                                         </div>
                                         <svg class="custom-lang-opt-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     </div>
@@ -1129,7 +1129,7 @@
                             <div class="toggle-switch">
                                 <div class="toggle-switch-text">
                                     <h3>Identify Distinct Speakers</h3>
-                                    <p>Uses local GPU acoustic voiceprints (CAM++ & FSMN-VAD) to attribute distinct speakers</p>
+                                    <p>Uses voice analysis and acoustic speaker separation to attribute distinct speakers</p>
                                 </div>
                                 <label>
                                     <input type="checkbox" name="diarize" id="diarize" checked onchange="toggleDiarize(this)">
@@ -1175,7 +1175,7 @@
             </div>
         </div>
 
-        <!-- Screen 2: Workspace (Portion Editor & Gemini Co-Pilot) -->
+        <!-- Screen 2: Workspace (Portion Editor & AI Assistant) -->
         <div class="workspace-screen" id="workspace-screen">
             <div class="workspace-header">
                 <div class="workspace-title-info">
@@ -1275,7 +1275,7 @@
                     </div>
                 </div>
 
-                <!-- AI Co-Pilot Pane (Hidden when Gemini credits unavailable) -->
+                <!-- AI Co-Pilot Pane (Hidden when credits unavailable) -->
                 <div class="copilot-pane" id="copilot-pane" style="display: none !important;">
                     <div class="copilot-header">
                         <div class="copilot-header-icon-badge">
@@ -1283,7 +1283,7 @@
                         </div>
                         <div class="copilot-header-info">
                             <div class="copilot-header-title">AI Assistant</div>
-                            <div class="copilot-header-subtext" style="font-size: 11px; color: var(--emerald-primary); font-weight: 500; font-family: 'Plus Jakarta Sans', sans-serif;">Powered by Gemini</div>
+                            <div class="copilot-header-subtext" style="font-size: 11px; color: var(--emerald-primary); font-weight: 500; font-family: 'Plus Jakarta Sans', sans-serif;">Intelligent Dialogue Analysis</div>
                         </div>
                     </div>
 
@@ -1291,7 +1291,7 @@
                         <div class="chat-message ai">
                             <div class="chat-msg-header">
                                 <div class="ai-avatar-mini">✨</div>
-                                <span class="ai-name">Gemini</span>
+                                <span class="ai-name">AI Assistant</span>
                             </div>
                             <div class="chat-msg-body">
                                 Welcome to <strong>NOVUscribe Copilot</strong>! I can generate executive summaries, extract action items, break down speaker dialogue, or answer any questions about this transcript.
@@ -1308,7 +1308,7 @@
 
                     <div class="copilot-input-area">
                         <div class="copilot-input-container">
-                            <textarea id="chat-input" placeholder="Ask Gemini about this transcript..." onkeydown="handleChatSubmit(event)"></textarea>
+                            <textarea id="chat-input" placeholder="Ask AI Assistant about this transcript..." onkeydown="handleChatSubmit(event)"></textarea>
                             <button class="btn-copilot-send" id="btn-chat-send" onclick="sendChatMessage()" title="Send prompt">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                             </button>
@@ -1417,7 +1417,7 @@
                     </div>
                     <div class="kpi-num" style="font-size:28px; font-weight:800; font-family:'JetBrains Mono',monospace; color:#F9FAFB;" id="embKpiTotalJobs">--</div>
                     <div style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px; display:flex; justify-content:space-between;">
-                        <span>100% RunPod GPU</span>
+                        <span>Cloud Accelerated</span>
                         <span style="font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; color:var(--cyan-light); background:rgba(6,182,212,0.15); padding:2px 6px; border-radius:4px;">THROUGHPUT</span>
                     </div>
                 </div>
@@ -3710,7 +3710,7 @@
 
             const aiBtn = document.getElementById('btn-ai-identify');
             const origHtml = aiBtn.innerHTML;
-            aiBtn.innerHTML = `<span>Attributing Speakers (GPU)...</span>`;
+            aiBtn.innerHTML = `<span>Attributing Speakers...</span>`;
             aiBtn.disabled = true;
 
             fetch(`/api/diarize/${currentTranscriptionId}/`, {
@@ -4321,7 +4321,7 @@
             })
             .catch(err => {
                 loadingBubble.remove();
-                appendMessage('ai', "⚠️ Failed to reach Gemini helper: " + err);
+                appendMessage('ai', "⚠️ Failed to reach AI helper: " + err);
             });
         }
 
@@ -4355,7 +4355,7 @@
                 header.className = 'chat-msg-header';
                 header.innerHTML = `
                     <div class="ai-avatar-mini">✨</div>
-                    <span class="ai-name">Gemini</span>
+                    <span class="ai-name">AI Assistant</span>
                 `;
                 const body = document.createElement('div');
                 body.className = 'chat-msg-body';

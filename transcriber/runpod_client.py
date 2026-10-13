@@ -367,7 +367,7 @@ def runpod_transcribe(
                 if progress_callback:
                     if status == "IN_QUEUE":
                         sub_pct = chunk_base_pct + chunk_span_pct * 0.15
-                        st_text = f"Chunk {i+1}/{num_chunks}: Provisioning GPU..."
+                        st_text = f"Chunk {i+1}/{num_chunks}: Preparing audio processor..."
                     elif status == "IN_PROGRESS":
                         exec_sec = (execution_time / 1000.0) if execution_time else max(1.0, elapsed - 4.0)
                         sub_pct = chunk_base_pct + min(chunk_span_pct * 0.95, (exec_sec / 25.0) * chunk_span_pct)
@@ -382,7 +382,7 @@ def runpod_transcribe(
                         progress={
                             "stage": "transcribing" if (i < num_chunks - 1) else "finalizing",
                             "status_text": st_text,
-                            "subtext": f"Phase 2 & 3: Neural Whisper & CAM++ on Chunk {i+1} of {num_chunks}...",
+                            "subtext": f"Phase 2 & 3: Transcribing audio & identifying speakers on Chunk {i+1} of {num_chunks}...",
                             "progress_pct": round(sub_pct, 1)
                         }
                     )
