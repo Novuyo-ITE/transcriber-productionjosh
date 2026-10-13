@@ -45,20 +45,16 @@ def filter_streaming_hallucinations(text: str) -> str:
     words = norm.split()
 
     PHANTOM_PATTERNS = {
-        "yeah", "yeha", "yep", "yes", "mhm", "uhhuh", "uh huh",
-        "hello", "hello hello", "hi", "hey",
-        "yeah hello", "yeha hello", "hello yeah", "hello yeha", "yeha yeha", "yeah yeah",
-        "thank you", "thanks", "thanks for watching", "thank you for watching", "please subscribe",
-        "bye", "bye bye", "goodbye",
-        "you", "the", "so", "ok", "okay", "alright", "right",
-        "subtitles", "transcript", "caption", "watching"
+        "thanks for watching", "thank you for watching", "please subscribe",
+        "like and subscribe", "subtitles", "transcript", "caption", "watching",
+        "closed captions", "subtitles by"
     }
 
     phrase = " ".join(words)
-    if not phrase or phrase in PHANTOM_PATTERNS:
+    if phrase in PHANTOM_PATTERNS:
         return ""
 
-    if len(words) <= 1 and (len(phrase) <= 3 or phrase in PHANTOM_PATTERNS):
+    if len(words) <= 1 and (len(phrase) <= 1 or phrase in PHANTOM_PATTERNS):
         return ""
 
     # 3. Clean typos and disfluencies

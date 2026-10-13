@@ -1377,7 +1377,7 @@ def stream_warmup_view(request):
             'success': True,
             'ready': True,
             'device': 'RunPod Cloud GPU',
-            'model': 'RunPod Faster Whisper & CAM++'
+            'model': 'RunPod SenseVoice-Small & CAM++'
         })
 
     def _warmup():
@@ -1495,10 +1495,8 @@ def stream_transcribe_chunk_view(request):
         clean_norm = text.lower().strip().strip('.,!?:;"\'-')
 
         NOISE_WORDS = {
-            "you", "thank you", "thanks", "yeah", "yeha", "so", "bye", "uh", "um", "ah", "oh",
-            "huh", "mhm", "the", "a", "an", "ok", "okay", "right", "subtitles",
-            "transcript", "caption", "watching", "subscribe", "bye bye", "am", "is", "it",
-            "hello", "hello hello", "hi", "hey", "yeah hello", "yeha hello", "hello yeah"
+            "subtitles", "transcript", "caption", "watching", "subscribe",
+            "thanks for watching", "thank you for watching", "please subscribe", "like and subscribe"
         }
 
         # Check audio duration to detect transient noise bursts
@@ -1510,10 +1508,10 @@ def stream_transcribe_chunk_view(request):
         except Exception:
             pass
 
-        # If it's a single word or 2-word phantom noise blip, discard as noise (unless part of continuous streaming speech)
+        # If it's a phantom subtitle/YouTube artifact or single-character noise blip, discard
         is_continuous = request.POST.get('is_continuous') == 'true'
         if not is_continuous and len(words) <= 2:
-            if (clean_norm in NOISE_WORDS and duration_sec < 1.2) or len(clean_norm) <= 1 or duration_sec < 0.35:
+            if clean_norm in NOISE_WORDS or len(clean_norm) <= 1:
                 logging.info(f"[STREAM-STT] Ignored noise artifact / phantom hallucination: '{text}' ({duration_sec:.2f}s)")
                 return JsonResponse({
                     'success': True,

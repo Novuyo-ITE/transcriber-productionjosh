@@ -458,7 +458,7 @@ def runpod_stream_chunk(
     language: str = "auto",
     is_continuous: bool = False
 ) -> Dict[str, Any]:
-    """Transcribes a live mic chunk and tracks speaker voiceprint on RunPod Serverless via low-latency /runsync."""
+    """Transcribes a live mic chunk and tracks speaker voiceprint on RunPod Serverless."""
     audio_b64 = file_to_base64(chunk_path)
     job_input = {
         "action": "stream_chunk",
@@ -467,5 +467,6 @@ def runpod_stream_chunk(
         "language": language,
         "is_continuous": is_continuous
     }
-    return call_runpod_sync(job_input, timeout_sec=20)
+    return call_runpod_serverless(job_input, timeout_sec=20)
+
 

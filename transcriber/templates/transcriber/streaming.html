@@ -1118,15 +1118,15 @@
                             <span class="badge-studio-live" style="background: rgba(6, 182, 212, 0.15) !important; border: 1px solid rgba(6, 182, 212, 0.4) !important; color: #38BDF8 !important;">LIVE</span>
                         </div>
                         <div style="font-size: 11.5px; color: var(--text-muted, #94A3B8);">
-                            Continuous multi-speaker conversation transcription powered by Faster Whisper Medium
+                            Continuous multi-speaker conversation transcription powered by SenseVoice-Small & CAM++
                         </div>
                     </div>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <div class="model-engine-badge" title="Faster Whisper Medium Speech Recognition + CAM++ Acoustic Speaker Tracking" style="background: rgba(6, 182, 212, 0.12) !important; border-color: rgba(6, 182, 212, 0.35) !important; color: #38BDF8 !important;">
+                    <div class="model-engine-badge" title="SenseVoice-Small Speech Recognition + CAM++ Acoustic Speaker Tracking" style="background: rgba(6, 182, 212, 0.12) !important; border-color: rgba(6, 182, 212, 0.35) !important; color: #38BDF8 !important;">
                         <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #38BDF8; box-shadow: 0 0 8px #38BDF8;"></span>
-                        Faster Whisper Medium • CAM++ Voiceprint
+                        SenseVoice Small • CAM++ Voiceprint
                     </div>
                 </div>
             </header>
@@ -1678,8 +1678,8 @@
         let vadUserSpeaking = false;
         let vadSilenceStart = null;
         let vadSpeechStart = null;
-        const VAD_SILENCE_TIMEOUT_MS = 500;  // 500ms low-latency pause threshold
-        const VAD_MIN_SPEECH_DURATION_MS = 300; // 300ms minimum duration to avoid noise blips
+        const VAD_SILENCE_TIMEOUT_MS = 650;  // 650ms natural pause threshold
+        const VAD_MIN_SPEECH_DURATION_MS = 380; // 380ms minimum duration to avoid noise blips
         let speechBandNoiseFloor = 14;       // Adaptive noise floor tracking
         const PRE_SPEECH_BUFFER_COUNT = 6;   // ~340ms rolling ring buffer for speech onsets
         let preSpeechRingBuffer = [];
@@ -1777,7 +1777,7 @@
                 document.getElementById('stream-latency-tag').style.display = 'inline-block';
 
                 const statusLabel = document.getElementById('stream-status-label');
-                statusLabel.innerText = 'STREAM ACTIVE • FASTER WHISPER READY';
+                statusLabel.innerText = 'STREAM ACTIVE • SENSEVOICE READY';
                 statusLabel.style.color = '#34D399';
                 document.getElementById('stream-pulse').style.background = '#10B981';
                 document.getElementById('stream-pulse').style.boxShadow = '0 0 10px #10B981';
@@ -1816,7 +1816,7 @@
                 pauseBtn.style.background = 'rgba(245, 158, 11, 0.15)';
                 pauseBtn.style.borderColor = 'rgba(245, 158, 11, 0.4)';
                 pauseBtn.style.color = '#FBBF24';
-                statusLabel.innerText = 'STREAM ACTIVE • FASTER WHISPER READY';
+                statusLabel.innerText = 'STREAM ACTIVE • SENSEVOICE READY';
                 statusLabel.style.color = '#34D399';
                 document.getElementById('stream-pulse').style.background = '#10B981';
                 document.getElementById('stream-pulse').style.boxShadow = '0 0 10px #10B981';
@@ -1915,15 +1915,13 @@
                     streamRecordedPcmBuffers = [...preSpeechRingBuffer];
                     preSpeechRingBuffer = [];
                 } else {
-                    // Low-latency dynamic chunk threshold:
-                    // First utterance chunk dispatches faster (~0.9s) so initial words appear without delay.
-                    // Subsequent continuous speech chunks dispatch every ~1.2s.
+                    // Continuous speech check: if >= 1.5s (~24000 samples) has accumulated while actively speaking,
+                    // dispatch an intermediate chunk so words stream in real-time as the speaker talks!
                     let sampleCount = 0;
                     for (let i = 0; i < streamRecordedPcmBuffers.length; i++) {
                         sampleCount += streamRecordedPcmBuffers[i].length;
                     }
-                    const minChunkDurationSec = (!activeTurnCard || wordStreamQueue.length === 0) ? 0.9 : 1.2;
-                    if (sampleCount >= 16000 * minChunkDurationSec && !isProcessingStreamChunk) {
+                    if (sampleCount >= 16000 * 1.5 && !isProcessingStreamChunk) {
                         const buffersToProcess = [...streamRecordedPcmBuffers];
                         streamRecordedPcmBuffers = []; // Reset for next chunk while user continues talking
                         queueSpeechChunk(buffersToProcess, true);
@@ -1941,7 +1939,7 @@
 
                         const speechDurationMs = vadSpeechStart ? (now - vadSpeechStart) : 0;
                         if (streamRecordedPcmBuffers.length > 0) {
-                            showTypingBubble('Faster Whisper transcribing...');
+                            showTypingBubble('SenseVoice transcribing...');
                             const buffersToProcess = [...streamRecordedPcmBuffers];
                             streamRecordedPcmBuffers = [];
                             queueSpeechChunk(buffersToProcess, false);
