@@ -17,7 +17,8 @@
             }
         })();
     </script>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=22.0">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=23.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         /* Embedded Analytics & Customer Evaluation Screen (Admin Gideoni Only) - Fully Scrollable & No Fixed Height Constraints */
@@ -776,15 +777,13 @@
     <div class="sidebar" id="mainSidebar">
         <!-- Brand Logo Header -->
         <div class="logo-container">
-            <a href="#" class="sidebar-brand-full" onclick="showDashboard()">
-                <div class="sidebar-brand-mini-icon">N</div>
-                <div>
-                    <span class="brand-novu">Novu</span><span class="brand-scribe">scribe</span>
-                </div>
+            <a href="#" class="sidebar-brand-full" onclick="showDashboard()" style="display: flex; align-items: center; gap: 9px; text-decoration: none;">
+                <img src="{% static 'images/logo_icon.png' %}" alt="Novuscribe Icon" class="sidebar-brand-icon-img">
+                <img src="{% static 'images/novuscribe_full_logo.png' %}" alt="Novuscribe" class="sidebar-brand-wordmark-img">
             </a>
             <!-- Mini Brand Button (Click to Expand when collapsed) -->
-            <button id="sidebarExpandBtn" type="button" title="Expand Sidebar" class="sidebar-brand-mini" onclick="toggleSidebar()">
-                <div class="sidebar-brand-mini-icon">N</div>
+            <button id="sidebarExpandBtn" type="button" title="Expand Sidebar" class="sidebar-brand-mini" onclick="toggleSidebar()" style="background: transparent; border: none; padding: 0; cursor: pointer;">
+                <img src="{% static 'images/logo_icon.png' %}" alt="Novuscribe Icon" class="sidebar-brand-icon-img">
             </button>
             <!-- Modern Sidebar Panel Collapse Button -->
             <button id="sidebarToggleBtn" type="button" title="Collapse Sidebar" onclick="toggleSidebar()">
@@ -947,11 +946,9 @@
         <button class="mobile-menu-btn" id="mobile-menu-btn-top" onclick="openMobileDrawer()" title="Open Navigation Drawer">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <div class="fixed-top-nav-brand" onclick="showDashboard()" style="cursor: pointer;">
-            <div class="sidebar-brand-mini-icon">N</div>
-            <div>
-                <span class="brand-novu">Novu</span><span class="brand-scribe">scribe</span>
-            </div>
+        <div class="fixed-top-nav-brand" onclick="showDashboard()" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <img src="{% static 'images/logo_icon.png' %}" alt="Novuscribe Icon" class="sidebar-brand-icon-img" style="width: 26px !important; height: 26px !important; min-width: 26px !important; min-height: 26px !important;">
+            <img src="{% static 'images/novuscribe_full_logo.png' %}" alt="Novuscribe" class="sidebar-brand-wordmark-img" style="height: 20px !important;">
         </div>
         <div class="fixed-top-nav-actions">
             <button type="button" class="btn-fixed-nav-new" onclick="showDashboard(); closeMobileDrawer();" title="New Transcription">

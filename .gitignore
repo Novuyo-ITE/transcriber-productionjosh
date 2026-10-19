@@ -40,3 +40,13 @@ runpod_deployment/
 .vscode/
 .idea/
 *.swp
+
+# Local system migration scripts
+*.bat
+*.ps1
+
+# Mobile Flutter build artifacts
+transcriber_mobile/.dart_tool/
+transcriber_mobile/build/
+transcriber_mobile/.flutter-plugins
+transcriber_mobile/.flutter-plugins-dependencies

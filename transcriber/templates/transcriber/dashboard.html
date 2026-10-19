@@ -15,7 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <!-- Base Stylesheet -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=23.0">
 
     <style>
         :root {
@@ -1159,11 +1160,11 @@
 
     <!-- Top Navigation Bar -->
     <header class="dash-nav">
-        <a href="/" class="dash-brand">
-            <div class="brand-badge-mini">N</div>
+        <a href="/" class="dash-brand" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+            <img src="{% static 'images/logo_icon.png' %}" alt="Novuscribe Icon" style="width: 34px; height: 34px; border-radius: 8px; object-fit: cover; flex-shrink: 0; box-shadow: 0 2px 12px rgba(16,185,129,0.35);">
             <div class="brand-title-wrap">
-                <span class="brand-title"><span style="color:#10B981;">Novu</span>scribe</span>
-                <span class="brand-subtitle">
+                <img src="{% static 'images/novuscribe_full_logo.png' %}" alt="Novuscribe" style="height: 22px; width: auto; object-fit: contain;">
+                <span class="brand-subtitle" style="display: flex; align-items: center; gap: 5px; margin-top: 2px;">
                     <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10B981; box-shadow:0 0 6px #10B981;"></span>
                     Analytics & Evaluation
                 </span>

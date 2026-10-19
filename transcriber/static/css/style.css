@@ -529,6 +529,31 @@ html.theme-light #btn-name-speakers:hover svg {
     margin: 0 !important;
 }
 
+img.sidebar-brand-mini-icon,
+img.brand-logo-icon,
+.sidebar-brand-icon-img {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border-radius: 7px !important;
+    object-fit: cover !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3) !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+
+.sidebar-brand-wordmark-img {
+    height: 22px !important;
+    width: auto !important;
+    max-width: 140px !important;
+    object-fit: contain !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
 .sidebar-actions {
     padding: 14px 14px 6px 14px !important;
     width: 100% !important;

@@ -796,23 +796,33 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                     return
 
                 # 2. Dynamic progress calculation based on worker lifecycle
-                if status == 'IN_QUEUE':
+                if status == 'COMPLETED':
+                    update_job_progress(
+                        job_id,
+                        stage='finalizing',
+                        status_text='Finalizing Transcription...',
+                        subtext='Phase 4: Structuring concise portions and timeline sync...',
+                        progress_pct=96.0
+                    )
+                    return
+
+                # Calculate active processing time
+                exec_sec = (execution_time / 1000.0) if execution_time else max(0.0, elapsed - 3.0)
+
+                if elapsed < 4.0:
                     q_sec = int(elapsed)
                     update_job_progress(
                         job_id,
                         stage='transcribing',
                         status_text='Provisioning processing environment...',
                         subtext=f'Phase 1: Initializing speech processor ({q_sec}s elapsed)...',
-                        progress_pct=min(32.0, 18.0 + elapsed * 1.2)
+                        progress_pct=min(30.0, 18.0 + elapsed * 3.0)
                     )
-                elif status == 'IN_PROGRESS':
-                    # Calculate active processing time
-                    exec_sec = (execution_time / 1000.0) if execution_time else max(1.0, elapsed - 6.0)
-                    
+                else:
                     if diarize:
-                        # With diarization: 32% -> 65% STT, 65% -> 88% Diarization, 88% -> 95% formatting
-                        if exec_sec < 18.0:
-                            trans_pct = min(65.0, 32.0 + exec_sec * 1.8)
+                        # With diarization: 30% -> 65% STT, 65% -> 88% Diarization, 88% -> 95% formatting
+                        if exec_sec < 16.0:
+                            trans_pct = min(65.0, 30.0 + exec_sec * 2.2)
                             update_job_progress(
                                 job_id,
                                 stage='transcribing',
@@ -820,8 +830,8 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                                 subtext=f'Phase 2: Converting speech to text for [{language}] ({int(exec_sec)}s)...',
                                 progress_pct=trans_pct
                             )
-                        elif exec_sec < 38.0:
-                            diar_pct = min(88.0, 65.0 + (exec_sec - 18.0) * 1.2)
+                        elif exec_sec < 34.0:
+                            diar_pct = min(88.0, 65.0 + (exec_sec - 16.0) * 1.3)
                             update_job_progress(
                                 job_id,
                                 stage='diarizing',
@@ -830,7 +840,7 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                                 progress_pct=diar_pct
                             )
                         else:
-                            fin_pct = min(94.0, 88.0 + (exec_sec - 38.0) * 0.4)
+                            fin_pct = min(94.0, 88.0 + (exec_sec - 34.0) * 0.4)
                             update_job_progress(
                                 job_id,
                                 stage='finalizing',
@@ -839,8 +849,8 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                                 progress_pct=fin_pct
                             )
                     else:
-                        # Transcription only (no diarization): 32% -> 92%
-                        trans_pct = min(92.0, 32.0 + exec_sec * 2.5)
+                        # Transcription only (no diarization): 30% -> 94%
+                        trans_pct = min(94.0, 30.0 + exec_sec * 3.5)
                         update_job_progress(
                             job_id,
                             stage='transcribing',
@@ -848,14 +858,6 @@ def _run_transcription_job(job_id, audio_path, original_name, language, lang_cod
                             subtext=f'Phase 2: Converting speech to text ({int(exec_sec)}s)...',
                             progress_pct=trans_pct
                         )
-                elif status == 'COMPLETED':
-                    update_job_progress(
-                        job_id,
-                        stage='finalizing',
-                        status_text='Finalizing Transcription...',
-                        subtext='Phase 4: Structuring concise portions and timeline sync...',
-                        progress_pct=96.0
-                    )
 
             runpod_out = runpod_transcribe(
                 audio_path,
@@ -1306,6 +1308,12 @@ def login_view(request):
         return JsonResponse({'success': False, 'error': 'Username and password are required'}, status=400)
 
     user = authenticate(request, username=username, password=password)
+    if user is None:
+        # Allow logging in with email or case-insensitive username (crucial for PostgreSQL on Railway)
+        matched_user = User.objects.filter(username__iexact=username).first() or User.objects.filter(email__iexact=username).first()
+        if matched_user:
+            user = authenticate(request, username=matched_user.username, password=password)
+
     if user is not None:
         login(request, user)
         return JsonResponse({
@@ -1333,7 +1341,7 @@ def register_view(request):
     if not username or not password:
         return JsonResponse({'success': False, 'error': 'Username and password are required'}, status=400)
 
-    if User.objects.filter(username=username).exists():
+    if User.objects.filter(username__iexact=username).exists():
         return JsonResponse({'success': False, 'error': 'Username already registered'}, status=400)
 
     try:
@@ -1436,12 +1444,15 @@ def stream_transcribe_chunk_view(request):
             for chunk in audio_file.chunks():
                 dest.write(chunk)
 
+        lang_lower = (lang or 'auto').lower().strip()
+        target_lang = 'en' if (not lang_lower or lang_lower == 'auto') else LANG_MAP.get(lang.capitalize(), LANG_MAP.get(lang, lang_lower))
+
         if is_runpod_configured():
             is_cont = request.POST.get('is_continuous') == 'true'
             runpod_res = runpod_stream_chunk(
                 chunk_path=temp_path,
                 session_id=session_id,
-                language=lang,
+                language=target_lang,
                 is_continuous=is_cont
             )
             if os.path.exists(temp_path):
@@ -1456,8 +1467,6 @@ def stream_transcribe_chunk_view(request):
             })
 
         t0 = time.time()
-        lang_lower = (lang or 'auto').lower().strip()
-        target_lang = 'en' if (not lang_lower or lang_lower == 'auto') else lang_lower
 
         if not stt_service:
             return JsonResponse({'error': 'Speech transcription service is currently unavailable.', 'success': False}, status=500)
@@ -1726,8 +1735,10 @@ def dashboard_stats_api_view(request):
        - Duration length tiers (<2m, 2-10m, 10-30m, 30m+)
        - Language distribution (Luganda, English, Swahili, French, Lingala)
     """
-    if not is_gideoni_admin(request.user):
-        return JsonResponse({'success': False, 'error': 'Unauthorized: Analytics dashboard is restricted to admin Gideoni.'}, status=403)
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Unauthorized: Please log in to view dashboard analytics.'}, status=401)
+
+    is_admin = is_gideoni_admin(request.user) or request.user.is_staff
 
     from collections import defaultdict
     from datetime import datetime, timedelta
@@ -1737,7 +1748,11 @@ def dashboard_stats_api_view(request):
     user_id_param = request.GET.get('user_id', '').strip()
     now = timezone.now()
 
-    qs = Transcription.objects.all().order_by('created_at')
+    if is_admin:
+        qs = Transcription.objects.all().order_by('created_at')
+    else:
+        qs = Transcription.objects.filter(user=request.user).order_by('created_at')
+
     if time_range == '7d':
         cutoff = now - timedelta(days=7)
         qs = qs.filter(created_at__gte=cutoff)
@@ -1778,7 +1793,10 @@ def dashboard_stats_api_view(request):
                 target_user_info = None
 
     all_transcriptions = list(qs)
-    all_users = list(User.objects.all().order_by('date_joined'))
+    if is_admin:
+        all_users = list(User.objects.all().order_by('date_joined'))
+    else:
+        all_users = [request.user]
 
     total_seconds = 0.0
     timeline = defaultdict(lambda: {'count': 0, 'seconds': 0.0})

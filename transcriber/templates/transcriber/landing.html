@@ -27,19 +27,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Landing Page CSS -->
-    <link rel="stylesheet" href="{% static 'css/landing.css' %}?v=7.0">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}?v=8.0">
 </head>
 <body>
 
     <!-- Navigation Header (Minimal: Brand + Sign In) -->
     <header class="landing-nav">
         <div class="container nav-container">
-            <a href="/" class="brand-logo">
-                <div class="brand-logo-icon">N</div>
-                <div class="brand-logo-text">
-                    <span class="brand-novu">Novu</span><span class="brand-scribe">scribe</span>
-                </div>
+            <a href="/" class="brand-logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+                <img src="{% static 'images/logo_icon.png' %}" alt="Novuscribe Icon" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover; flex-shrink: 0; box-shadow: 0 2px 12px rgba(16,185,129,0.35);">
+                <img src="{% static 'images/novuscribe_full_logo.png' %}" alt="Novuscribe" style="height: 25px; width: auto; object-fit: contain;">
             </a>
 
             <div class="nav-actions">
@@ -345,9 +343,10 @@
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container footer-content">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span class="brand-novu" style="font-weight:800; font-family:var(--font-heading);">Novu</span><span class="brand-scribe" style="color:var(--text-muted);">scribe</span>
-                <span>• AI Speech & Dialogue Intelligence Platform</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="{% static 'images/logo_icon.png' %}" alt="Novuscribe Icon" style="width: 20px; height: 20px; border-radius: 5px; object-fit: cover;">
+                <img src="{% static 'images/novuscribe_full_logo.png' %}" alt="Novuscribe" style="height: 18px; width: auto; object-fit: contain; opacity: 0.9;">
+                <span style="color:var(--text-muted); font-size: 13px;">• AI Speech & Dialogue Intelligence Platform</span>
             </div>
             <div>
                 <span>© 2026 NOVUscribe. All rights reserved.</span>

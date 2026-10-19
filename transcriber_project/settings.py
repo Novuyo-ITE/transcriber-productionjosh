@@ -114,16 +114,6 @@ def _configure_database():
         while raw_url and (raw_url[0] in ('"', "'", '\\') or raw_url[-1] in ('"', "'", '\\')):
             raw_url = raw_url.strip('"\'\\').strip()
 
-    # If empty and running in Railway, default to the user's Railway PostgreSQL URL
-    if not raw_url and (
-        os.getenv('RAILWAY_ENVIRONMENT')
-        or os.getenv('RAILWAY_ENVIRONMENT_NAME')
-        or os.getenv('RAILWAY_PROJECT_ID')
-        or os.getenv('RAILWAY_STATIC_URL')
-        or os.getenv('RAILWAY_PUBLIC_DOMAIN')
-    ):
-        raw_url = 'postgresql://postgres:<password>@<host>:<port>/railway'
-
     # Fallback to local SQLite if no valid database URL
     if not raw_url:
         return {
