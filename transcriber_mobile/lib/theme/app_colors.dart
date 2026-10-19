@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Emerald Brand Design System
-  static const Color emeraldPrimary = Color(0xFF10B981);
-  static const Color emeraldLight = Color(0xFF34D399);
-  static const Color emeraldDark = Color(0xFF059669);
-  static const Color emeraldGlow = Color(0x4010B981);
+  // Radiant Mint-Emerald Brand Design System (matching novuscribe_full_logo.png)
+  static const Color emeraldPrimary = Color(0xFF01D9A1);
+  static const Color emeraldLight = Color(0xFF10F29B);
+  static const Color emeraldDark = Color(0xFF00B383);
+  static const Color emeraldGlow = Color(0x4001D9A1);
 
   static const LinearGradient brandGradient = LinearGradient(
-    colors: [Color(0xFF10B981), Color(0xFF22C55E), Color(0xFF059669)],
+    colors: [Color(0xFF10F29B), Color(0xFF01D9A1), Color(0xFF00A87A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient brandGradientHorizontal = LinearGradient(
-    colors: [Color(0xFF10B981), Color(0xFF22C55E), Color(0xFF059669)],
+    colors: [Color(0xFF10F29B), Color(0xFF01D9A1), Color(0xFF00A87A)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
@@ -26,7 +26,7 @@ class AppColors {
   static const Color darkBgPanelAlpha = Color(0xBF111827);
   static const Color darkBgInput = Color(0xFF12151C);
   static const Color darkBorderPanel = Color(0x14FFFFFF);
-  static const Color darkBorderGlow = Color(0x5910B981);
+  static const Color darkBorderGlow = Color(0x5901D9A1);
   static const Color darkBorderInput = Color(0x1FFFFFFF);
   
   static const Color darkTextPrimary = Color(0xFFF3F4F6);
@@ -39,7 +39,7 @@ class AppColors {
   static const Color lightBgPanel = Color(0xFFFFFFFF);
   static const Color lightBgInput = Color(0xFFF1F5F9);
   static const Color lightBorderPanel = Color(0x14000000);
-  static const Color lightBorderGlow = Color(0x59059669);
+  static const Color lightBorderGlow = Color(0x5900B383);
   static const Color lightBorderInput = Color(0x1F000000);
   
   static const Color lightTextPrimary = Color(0xFF0F172A);

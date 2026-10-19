@@ -55,28 +55,12 @@ class _SettingsProfileScreenState extends State<SettingsProfileScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Novu',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'scribe',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                            color: AppColors.emeraldPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
+                  Image.asset(
+                    'assets/novuscribe_full_logo.png',
+                    height: 22,
+                    fit: BoxFit.contain,
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     'Profile & Settings',
                     style: GoogleFonts.plusJakartaSans(

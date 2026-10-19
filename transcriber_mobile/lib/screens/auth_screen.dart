@@ -106,27 +106,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 14),
 
                   Center(
-                    child: RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Novu',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 26,
-                              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'scribe',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 26,
-                              color: AppColors.emeraldPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: Image.asset(
+                      'assets/novuscribe_full_logo.png',
+                      height: 38,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: 4),

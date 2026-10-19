@@ -95,30 +95,28 @@ class _AuthDialogState extends State<AuthDialog> {
             // Brand Logo & Header
             Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.emeraldPrimary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'N',
-                    style: TextStyle(
-                      color: Color(0xFF030712),
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18,
-                    ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 30,
+                    height: 30,
+                    fit: BoxFit.cover,
                   ),
                 ),
                 const SizedBox(width: 10),
+                Image.asset(
+                  'assets/novuscribe_full_logo.png',
+                  height: 20,
+                  fit: BoxFit.contain,
+                ),
+                const Spacer(),
                 Text(
-                  _isRegister ? 'Create Novuscribe Account' : 'Sign In to Novuscribe',
+                  _isRegister ? 'Register' : 'Sign In',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: AppColors.emeraldPrimary,
                   ),
                 ),
               ],
